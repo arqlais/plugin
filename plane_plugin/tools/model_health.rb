@@ -1,6 +1,6 @@
 # Saúde do modelo: encontra e corrige o que deixa o arquivo pesado ou bagunçado
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module ModelHealth

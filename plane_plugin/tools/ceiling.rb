@@ -1,6 +1,6 @@
 # Forro de gesso/drywall a partir do piso, com sanca opcional
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Ceiling

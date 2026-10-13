@@ -7,7 +7,7 @@
 #   e abrindo portas/gavetas com Interagir, mesmo sem o plugin.
 # - "Atualizar" remonta pelo cálculo do plugin; "Diagnóstico" grava um relatório do bloco.
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Joinery

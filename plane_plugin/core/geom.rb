@@ -1,7 +1,7 @@
 # Matemática 2D pura (pontos como [x, y]) + referencial de uma face.
 # A parte 2D não depende do SketchUp e é testada em dev/test_geom.rb.
 
-module Plane
+module PlaneLA
   module Plugin
     module Geom2
       EPS = 1e-9

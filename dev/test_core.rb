@@ -22,7 +22,7 @@ def file_loaded(_f) = nil
 IDENTITY = nil
 
 ROOT_DIR = File.expand_path('..', __dir__)
-module Plane
+module PlaneLA
   module Plugin
     PLUGIN_NAME = 'Planê Plugin'
     VERSION = '0.4.1'
@@ -30,12 +30,12 @@ module Plane
   end
 end
 %w[registry license helpers geom nesting dc_formula dc_tree].each { |f| require File.join(ROOT_DIR, 'plane_plugin', 'core', f) }
-module Plane::Plugin::Dialog; def self.push(*); end; end
+module PlaneLA::Plugin::Dialog; def self.push(*); end; end
 require File.join(ROOT_DIR, 'plane_plugin', 'core', 'updater')
 require File.join(ROOT_DIR, 'plane_plugin', 'tools', 'joinery_spec')
 Dir[File.join(ROOT_DIR, 'plane_plugin', 'tools', '*.rb')].sort.each { |f| require f }
 
-P = Plane::Plugin
+P = PlaneLA::Plugin
 G = P::Geom2
 
 class TestCore < Minitest::Test

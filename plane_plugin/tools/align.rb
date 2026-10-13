@@ -1,6 +1,6 @@
 # Alinhar e distribuir grupos e componentes
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Align

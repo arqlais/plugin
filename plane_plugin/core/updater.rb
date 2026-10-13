@@ -8,7 +8,7 @@ require 'json'
 require 'digest'
 require 'tmpdir'
 
-module Plane
+module PlaneLA
   module Plugin
     module Updater
       MANIFEST_URL = 'https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json'.freeze

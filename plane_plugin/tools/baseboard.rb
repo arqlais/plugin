@@ -1,6 +1,6 @@
 # Rodapé automático: contorna o piso (e os pilares) pulando as portas marcadas
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Baseboard

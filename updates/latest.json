@@ -1,6 +1,6 @@
 {
-  "version": "0.4.1",
+  "version": "0.4.2",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/plane_plugin.rbz",
-  "sha256": "a96b84497570ca2f8622f00f29a1504a9608d98b450b0f456935aad959dec659",
-  "notes": ["Marcenaria refeita: o módulo sai montado e estica sem deformar","Dobradiças, corrediças e travessa da gaveta","Botões de Diagnóstico e Testar redesenho"]
+  "sha256": "f4986d3ee576ce84cd19f4ee1352e071a89ee2255c8650cb2e88023fdbe56fdc",
+  "notes": ["Carregamento à prova de erro, com mensagem do problema","Nome interno exclusivo e caminhos com acento"]
 }

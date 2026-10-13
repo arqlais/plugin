@@ -38,6 +38,7 @@ vendas/keygen.rb                gera chaves. NUNCA vai no .rbz nem para cliente
 dev/build.sh                    gera dist/*.rbz e atualiza updates/
 dev/preview.js                  abre o painel com mock e tira prints (Playwright)
 dev/test_core.rb                testes da parte que não depende do SketchUp
+dev/load_test.rb + dev/stub/    carrega o .rbz com a API do SketchUp simulada (ruby -I dev/stub dev/load_test.rb)
 docs/                           prints das telas
 ```
 
@@ -100,8 +101,9 @@ Próximo nível que ela quer (imagens de referência): catálogo detalhado como 
 - **Código 100% original.** Projetos antigos dela tinham plugins de terceiros modificados para remover licença: nada disso entra aqui.
 - Antes de vender: `DEV_MODE = false` em `core/license.rb` e trocar o `SECRET` (o `keygen.rb` lê de lá). Com o repo público, o SECRET fica visível: o ideal é validar a chave online pelo app dela (Next.js + Redis + Mercado Pago PIX, já existente).
 - Toda alteração geométrica dentro de `Helpers.operation` (um Ctrl+Z desfaz tudo).
-- Compatível com SketchUp 2019+ (Ruby 2.5): evitar `&.`, `tally`, `filter_map`, sintaxe de Ruby 3.
-- Antes de entregar: `ruby dev/test_core.rb`, `node dev/preview.js docs`, `sh dev/build.sh`. Entregar o `.rbz` + prints e explicar em linguagem simples o que testar.
+- Namespace Ruby é `PlaneLA::Plugin` (o nome `Plane` sozinho era genérico demais). `main.rb` carrega cada arquivo com `safe_require` e mostra os erros num messagebox + `%TEMP%/plane_plugin_erros.txt`.
+- Ela usa **SketchUp 2026 (Ruby 3.2)** no Windows. Compatível com SketchUp 2019+ (Ruby 2.5): evitar `&.`, `tally`, `filter_map`, sintaxe de Ruby 3.
+- Antes de entregar: `ruby dev/test_core.rb`, `node dev/preview.js docs`, `sh dev/build.sh`, `ruby -I dev/stub dev/load_test.rb`. Entregar o `.rbz` + prints e explicar em linguagem simples o que testar.
 
 ## Próximos passos combinados
 1. Ela testa a v0.4 (principalmente bloco dinâmico, paredes, vãos e paginação) e manda prints → corrigir.

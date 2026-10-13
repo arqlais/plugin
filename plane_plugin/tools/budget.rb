@@ -3,7 +3,7 @@
 require 'json'
 require 'tmpdir'
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Budget

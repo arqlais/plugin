@@ -1,7 +1,7 @@
 # Receita do módulo de marcenaria (independente do SketchUp).
 # Eixos: X = largura (0 à esquerda), Y = profundidade (0 = frente), Z = altura (0 = piso). Medidas em cm.
 
-module Plane
+module PlaneLA
   module Plugin
     module JoinerySpec
       T = DCTree

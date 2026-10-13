@@ -1,6 +1,6 @@
 # Paginação de piso e de parede: peças com rejunte, amarração, ângulo, recortes e compra
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Tiling

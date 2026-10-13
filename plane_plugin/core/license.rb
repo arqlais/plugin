@@ -8,7 +8,7 @@
 require 'digest'
 require 'json'
 
-module Plane
+module PlaneLA
   module Plugin
     module License
       DEV_MODE = true

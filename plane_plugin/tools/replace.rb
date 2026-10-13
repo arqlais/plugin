@@ -1,6 +1,6 @@
 # Selecionar iguais e substituir componentes
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Replace

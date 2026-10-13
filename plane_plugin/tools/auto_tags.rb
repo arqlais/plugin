@@ -1,6 +1,6 @@
 # Etiquetas automáticas: organiza o modelo por tipo de objeto e liga/desliga com um clique
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module AutoTags

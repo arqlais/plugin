@@ -1,6 +1,6 @@
 # Escada reta calculada pela fórmula de Blondel (2e + p entre 63 e 64 cm)
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Stairs

@@ -1,6 +1,6 @@
 # Quantitativo: m² por material (piso, parede, teto, inclinado), itens do Planê e componentes
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Takeoff

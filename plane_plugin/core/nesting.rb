@@ -1,7 +1,7 @@
 # Plano de corte simples (prateleiras / guilhotina), sem depender do SketchUp.
 # Testado em dev/test_geom.rb
 
-module Plane
+module PlaneLA
   module Plugin
     module Nesting
       module_function

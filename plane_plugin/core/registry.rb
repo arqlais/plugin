@@ -1,6 +1,6 @@
 # Catálogo de ferramentas, pacotes e abas
 
-module Plane
+module PlaneLA
   module Plugin
     module Registry
       # Pacotes vendidos separadamente. A chave PRO libera todos.

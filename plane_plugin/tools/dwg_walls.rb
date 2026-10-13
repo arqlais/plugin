@@ -1,7 +1,7 @@
 # DWG → Paredes: lê as linhas de uma planta importada, encontra pares paralelos
 # (as duas faces de cada parede), levanta as paredes e coloca verga/peitoril nos vãos.
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module DwgWalls

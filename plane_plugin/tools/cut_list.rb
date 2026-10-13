@@ -1,6 +1,6 @@
 # Lista de peças + plano de corte + fita de borda + ferragens
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module CutList

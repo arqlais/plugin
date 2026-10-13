@@ -1,6 +1,6 @@
 # Paredes: desenhar clicando pontos, ou gerar a partir de linhas selecionadas
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Walls

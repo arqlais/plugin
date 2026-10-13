@@ -1,6 +1,6 @@
 # Portas, janelas e passagens: clique na parede e o vão é aberto na espessura toda
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Openings

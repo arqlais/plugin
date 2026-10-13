@@ -1,6 +1,6 @@
 # Telhado de 1, 2 ou 4 águas a partir de uma face (contorno da cobertura)
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Roofs

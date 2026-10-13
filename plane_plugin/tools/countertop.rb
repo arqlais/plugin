@@ -1,6 +1,6 @@
 # Recorte de cuba e cooktop no tampo (de um módulo Planê ou de qualquer grupo de tampo)
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module Countertop

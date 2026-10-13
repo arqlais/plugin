@@ -1,6 +1,6 @@
 # Ferramentas de clique no modelo usadas pelas ferramentas do plugin
 
-module Plane
+module PlaneLA
   module Plugin
     module Pickers
       # Clica pontos em sequência (paredes, rodapé manual…).

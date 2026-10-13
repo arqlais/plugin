@@ -1,6 +1,6 @@
 # Índices urbanísticos: taxa de ocupação, coeficiente de aproveitamento e taxa de permeabilidade
 
-module Plane
+module PlaneLA
   module Plugin
     module Tools
       module UrbanIndex

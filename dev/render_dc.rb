@@ -3,11 +3,11 @@
 # Projeção oblíqua: frente (Y=0) virada para quem olha, lateral direita e topo visíveis.
 
 ROOT_DIR = File.expand_path('..', __dir__)
-module Plane; module Plugin; end; end
+module PlaneLA; module Plugin; end; end
 %w[dc_formula dc_tree].each { |f| require File.join(ROOT_DIR, 'plane_plugin', 'core', f) }
 require File.join(ROOT_DIR, 'plane_plugin', 'tools', 'joinery_spec')
 
-S = Plane::Plugin::JoinerySpec
+S = PlaneLA::Plugin::JoinerySpec
 out = ARGV[0] || File.join(ROOT_DIR, 'docs')
 Dir.mkdir(out) unless Dir.exist?(out)
 COLORS = Hash[(S::MAT_FRENTE + S::MAT_TAMPO).map { |_l, n, h| [n, h] }].merge(S::FIXED)

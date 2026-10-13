@@ -2,7 +2,7 @@
 
 require 'json'
 
-module Plane
+module PlaneLA
   module Plugin
     module Helpers
       PREF = 'PlanePlugin'.freeze

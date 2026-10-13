@@ -7,7 +7,7 @@
 
 require 'json'
 
-module Plane
+module PlaneLA
   module Plugin
     module Dialog
       @dlg = nil

@@ -6,7 +6,7 @@
 # IF, MAX, MIN, AND, OR, NOT, ABS, ROUND, FLOOR, CEILING, ANIMATE (ignorado)
 # e referências: nome, Parent!nome, LenX/LenY/LenZ.
 
-module Plane
+module PlaneLA
   module Plugin
     module DCFormula
       class Error < StandardError; end
