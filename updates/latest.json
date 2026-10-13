@@ -1,6 +1,6 @@
 {
-  "version": "0.4.0",
+  "version": "0.4.1",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/plane_plugin.rbz",
-  "sha256": "9ba2c1589f9f81c79508423390ff50d569545164405f700be2a98152f95f7f92",
-  "notes": ["Novo nome e visual: Planê, rosa e lilás","19 ferramentas: paredes, DWG, telhado, forro, orçamento e mais","Plano de corte e atualização automática"]
+  "sha256": "a96b84497570ca2f8622f00f29a1504a9608d98b450b0f456935aad959dec659",
+  "notes": ["Marcenaria refeita: o módulo sai montado e estica sem deformar","Dobradiças, corrediças e travessa da gaveta","Botões de Diagnóstico e Testar redesenho"]
 }

@@ -7,7 +7,7 @@ module Plane
         extend self
         H = Helpers
 
-        SKIP = %w[puxador acabamento].freeze
+        SKIP = %w[puxador acabamento ferragem].freeze
         EDGE_ALL = %w[porta frente_gaveta].freeze
         EDGE_ONE = %w[caixa gaveta].freeze
 
@@ -90,21 +90,13 @@ module Plane
           end
         end
 
-        def hinges(h)
-          return 2 if h <= 900
-          return 3 if h <= 1600
-          return 4 if h <= 2200
-          5
-        end
 
         def hardware(parts)
           hw = Hash.new(0)
           parts.each do |x|
             case x[:name]
-            when 'Porta' then hw['Dobradiça 35 mm com amortecedor'] += hinges(x[:l])
-            when 'Porta basculante'
-              hw['Dobradiça 35 mm (basculante)'] += 2
-              hw['Pistão a gás (par)'] += 1
+            when 'Dobradiça' then hw['Dobradiça 35 mm com amortecedor'] += 1
+            when 'Porta basculante' then hw['Pistão a gás (par)'] += 1
             when 'Frente da gaveta' then hw['Corrediça telescópica (par)'] += 1
             when 'Puxador barra' then hw['Puxador barra 128 mm'] += 1
             end

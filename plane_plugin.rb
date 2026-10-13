@@ -8,7 +8,7 @@ module Plane
   module Plugin
     PLUGIN_ID   = 'plane_plugin'.freeze
     PLUGIN_NAME = 'Planê Plugin'.freeze
-    VERSION     = '0.4.0'.freeze
+    VERSION     = '0.4.1'.freeze
 
     unless file_loaded?(__FILE__)
       ext = SketchupExtension.new(PLUGIN_NAME, File.join(PLUGIN_ID, 'main'))

@@ -549,7 +549,7 @@ const FORMS = {
         {k:'lado',type:'seg',label:'Lado da parede',def:'esquerda',full:1,opts:[['esquerda','Esquerda da linha'],['direita','Direita da linha']]},
         {type:'acts',full:1,acts:[['distribute','Distribuir na linha selecionada','grid']]}]}],
     acts:[['insert','Inserir bloco dinâmico','plus',1]],
-    more:[['read','Ler módulo','read'],['update','Atualizar selecionados','refresh'],['library','Salvar biblioteca .skp','file'],['toggle','Abrir / fechar','eye']],
+    more:[['read','Ler módulo','read'],['update','Atualizar selecionados','refresh'],['library','Salvar biblioteca .skp','file'],['redraw','Testar redesenho do SketchUp','sparkle'],['diagnose','Diagnóstico','info']],
     prev:p=>prevCabinet(p),
     hint:'O bloco é um componente dinâmico do SketchUp: estique com a Escala (S), troque opções em Janela › Opções do componente e abra portas com a ferramenta Interagir.' },
   cut_list:{ secs:[
@@ -1071,7 +1071,7 @@ const MOCK = {
     ['wall_tiling','Paginação de parede','rev','rev','Revestimento de parede com a mesma lógica do piso: azulejo, porcelanato, subway.',['Selecione a parede','Escolha peça e rejunte','Paginar']],
     ['baseboard','Rodapé','rev','rev','Contorna o piso e os pilares, pula as portas e calcula as barras.',['Selecione o piso','Shift + clique nas linhas das portas','Gerar rodapé']],
     ['ceiling','Forro e sanca','rev','rev','Forro de gesso no pé-direito certo, com sanca e conta de placas.',['Selecione o piso','Informe o pé-direito','Gerar forro']],
-    ['joinery','Marcenaria dinâmica','marc','marc','Módulos em componente dinâmico: estica com a Escala, abre com Interagir.',['Escolha o tipo e as medidas','Escolha acabamentos','Clique para inserir']],
+    ['joinery','Marcenaria dinâmica','marc','marc','Módulos em componente dinâmico: estica com a Escala sem deformar, abre com Interagir.',['Escolha o tipo e as medidas','Escolha acabamentos','Clique para inserir']],
     ['cut_list','Lista de peças e plano de corte','marc','marc','Peças com medidas reais, chapas encaixadas, fita de borda e ferragens.',['Selecione os móveis','Gerar lista','Ver plano de corte e exportar']],
     ['countertop','Recorte de cuba e cooktop','marc','marc','Abre o furo no tampo e já encaixa a cuba ou o cooktop.',['Selecione o módulo com tampo','Escolha cuba ou cooktop','Recortar']],
     ['takeoff','Quantitativo','quant','quant','m² de piso, parede e teto por material, itens e componentes, em planilha.',['Pinte o modelo com materiais','Gerar quantitativo','Exportar para Excel']],

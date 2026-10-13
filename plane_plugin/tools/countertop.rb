@@ -37,7 +37,7 @@ module Plane
 
         # Copia o tampo dinâmico para um grupo comum e esconde o original
         def detach_top(inst)
-          leaf = inst.definition.entities.to_a.find { |e| e.is_a?(Sketchup::Group) && e.get_attribute(H::DICT, 'part') == 'Tampo' }
+          leaf = inst.definition.entities.to_a.find { |e| H.instance?(e) && e.get_attribute(H::DICT, 'part') == 'Tampo' }
           raise 'Este módulo está sem tampo. Ative "Tampo" nas opções antes.' unless leaf && !leaf.hidden?
           bb = Geom::BoundingBox.new
           [[0, 0, 0], [1, 1, 1]].each { |q| bb.add(Geom::Point3d.new(*q).transform(leaf.transformation)) }

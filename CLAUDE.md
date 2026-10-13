@@ -51,7 +51,7 @@ docs/                           prints das telas
 `base` Essencial (grátis) · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `PLANE-<ARQ|REV|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.4.0, todas escritas do zero nesta versão, nenhuma testada no SketchUp)
+## Ferramentas — status (v0.4.x; só a marcenaria foi testada por ela, e falhou na 0.4.0)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria) | arq |
@@ -70,18 +70,26 @@ Chave: `PLANE-<ARQ|REV|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(
 | budget | Orçamento (preços salvos no .skp), MO, BDI, proposta HTML→PDF | quant |
 | model_health, align, replace, auto_tags | Essenciais | base |
 
-## Marcenaria dinâmica — decisões importantes
-Ela quer **literalmente componentes dinâmicos (DC) nativos**, no estilo das bibliotecas do Fábio Coutinho:
-esticar com a **Escala**, editar em **Janela › Opções do componente**, abrir portas/gavetas com **Interagir**, funcionar **sem o plugin**.
-- `tools/joinery.rb`, dicionário `dynamic_attributes`. Redesenho via `$dc_observers.get_latest_class.redraw_with_undo(inst)`.
-- **Unidades (mudou na v0.4):** `_lengthunits = CENTIMETERS`; fórmulas em cm; valores de comprimento guardados em polegadas (cm/2,54). Se as medidas saírem erradas no teste, o primeiro suspeito é isto.
-- Estrutura: raiz (definição de componente, sem geometria) → peças-folha (grupo com cubo de 1" escalado por LenX/LenY/LenZ) e agrupadores (Porta esquerda/direita com `ANIMATE("rotz",…)`, Basculante com `rotx`, Gaveta = slot com `copies`/`COPY` + "Corpo da gaveta" que anima `y` com `ANIMATE("y",0,-abre)`).
-- Fórmulas só alcançam `Parent!`; por isso os agrupadores repassam atributos (lf, hf, ef, mf, px, pz, py…).
-- `onclick` gravado em `onclick` e `_onclick_formula`. **Ponto de risco** se a animação não funcionar.
-- Rótulos de listas codificados em `%XX` (UTF-8), mantendo `_ . -`. **Ponto de risco:** se aparecer `%20` nas opções, mudar `enc()`.
-- `tampovis` (escondido) permite o recorte de cuba trocar o tampo dinâmico por um grupo com furo.
-- "Salvar biblioteca .skp" grava 9 blocos com `definition.save_as` — **segundo produto vendável**.
-- A lista de peças lê as medidas reais (escala × bounds) e ignora peças escondidas.
+## Marcenaria dinâmica — como funciona (v0.4.1, refeita depois do teste da Laís)
+Ela quer **literalmente componentes dinâmicos (DC) nativos**, no padrão das bibliotecas profissionais (Fábio Coutinho, AFC):
+esticar com a **Escala sem deformar**, editar em **Janela › Opções do componente**, abrir portas/gavetas com **Interagir**, funcionar **sem o plugin**.
+Na v0.4.0 o bloco saiu desmontado (peças espalhadas e com tamanho errado): eu deixava o redesenho do DC montar tudo e gravava os atributos fora do padrão.
+
+Arquitetura atual:
+- `core/dc_formula.rb`: avaliador das fórmulas DC (IF, AND, OR, MAX, Parent!x, textos…).
+- `core/dc_tree.rb`: árvore de entidades (root/node/leaf) com atributos; calcula posição e tamanho de cada peça em cm.
+- `tools/joinery_spec.rb`: a receita do módulo (independente do SketchUp). Gavetas (6) e prateleiras (6) são vagas fixas ligadas/desligadas por `Hidden` (sem `Copies`).
+- `tools/joinery.rb`: monta no SketchUp **já calculado** (peça = componente com cubo de 1" escalado) e grava as fórmulas para o DC continuar funcionando. "Atualizar" remonta pelo cálculo do plugin. Botões "Testar redesenho do SketchUp" e "Diagnóstico" (txt com a árvore) para depurar.
+- `dev/render_dc.rb` desenha os módulos calculados (prints em `docs/marcenaria-modulos.png`); `dev/test_core.rb` testa 720 combinações.
+
+Padrão de atributos, copiado da estrutura de um bloco DC real (biblioteca AFC de pontos elétricos que ela mandou; o `.skp` 2022 tem um ZIP com `model.dat`, onde os dicionários aparecem como chave `\xb66`+u32+texto e valor `\xa48`+u32+(`\xad8` texto | `\xa98` double)):
+- Atributos do sistema com rótulo exato: `_lenx_label='LenX'`, `X`, `Y`, `Z`, `RotZ`, `Hidden`, `Material`, `onClick`, `Name`. Nas peças, só `_label` + `_formula` + valor (sem units/formulaunits).
+- Atributos próprios: `_k_label`, `_k_access` (NONE/TEXTBOX/LIST/VIEW), `_k_formlabel`, `_k_units`, `_k_formulaunits`, `_k_options` ('&' quando vazio), valor gravado como **texto**; comprimentos em polegadas.
+- `_lengthunits = CENTIMETERS`; fórmulas em cm; `_lenx_nominal` etc. na raiz.
+- Ainda NÃO confirmado no SketchUp: animação `onClick` (`_onclick_formula` + `onclick`) e o redesenho do DC depois da Escala.
+- "Salvar biblioteca .skp" grava 9 blocos (`definition.save_as`) — segundo produto vendável.
+
+Próximo nível que ela quer (imagens de referência): catálogo detalhado como as bibliotecas profissionais — portas com batente/guarnição e símbolo de abertura em planta + etiqueta (P1, medidas), tampos (frontão, saia 45°, rebaixo, cuba esculpida), módulos de lixeira, roupeiro, porta escamoteável, puxadores perfilados. Fazer um de cada vez, sempre com teste + render antes de entregar.
 
 ## Atualização automática
 - `Updater` lê `https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json` 8 s depois de abrir o SketchUp; se a versão for maior, baixa o `.rbz`, confere SHA256 e roda `Sketchup.install_from_archive`. Depois pede para reiniciar o SketchUp.

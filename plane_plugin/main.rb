@@ -12,6 +12,8 @@ module Plane
     require File.join(ROOT, 'core', 'helpers')
     require File.join(ROOT, 'core', 'geom')
     require File.join(ROOT, 'core', 'nesting')
+    require File.join(ROOT, 'core', 'dc_formula')
+    require File.join(ROOT, 'core', 'dc_tree')
     require File.join(ROOT, 'core', 'pickers')
     require File.join(ROOT, 'core', 'updater')
     require File.join(ROOT, 'core', 'dialog')
@@ -19,7 +21,7 @@ module Plane
     %w[
       walls openings dwg_walls stairs roofs urban_index
       tiling baseboard ceiling
-      joinery cut_list countertop
+      joinery_spec joinery cut_list countertop
       takeoff budget
       model_health align replace auto_tags
     ].each { |f| require File.join(ROOT, 'tools', f) }
