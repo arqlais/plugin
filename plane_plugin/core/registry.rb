@@ -8,12 +8,14 @@ module PlaneLA
         base:  { name: 'Essencial',     free: true,  color: 'gray' },
         arq:   { name: 'Arquitetura',   free: false, color: 'pink' },
         rev:   { name: 'Revestimentos', free: false, color: 'lilac' },
+        pres:  { name: 'Apresentação',  free: false, color: 'lilac' },
         marc:  { name: 'Marcenaria',    free: false, color: 'pink' },
         quant: { name: 'Quantitativo',  free: false, color: 'lilac' }
       }.freeze
 
       TABS = {
         home:  { name: 'Início' },
+        pres:  { name: 'Apresentação' },
         arq:   { name: 'Arquitetura' },
         rev:   { name: 'Revestimentos' },
         marc:  { name: 'Marcenaria' },

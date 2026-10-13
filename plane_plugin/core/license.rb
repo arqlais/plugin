@@ -1,6 +1,6 @@
 # Licenças por pacote
 #
-# Chave: PLANE-<ARQ|REV|MARC|QUANT|PRO>-<5 caracteres>-<8 hex>
+# Chave: PLANE-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 caracteres>-<8 hex>
 # Verificador = 8 primeiros hex de SHA256("SECRET|PACOTE|SERIAL")
 #
 # ANTES DE VENDER: DEV_MODE = false e trocar o SECRET (o vendas/keygen.rb lê daqui).
@@ -14,8 +14,8 @@ module PlaneLA
       DEV_MODE = true
       SECRET   = 'troque-este-segredo-antes-de-vender'.freeze
       PREF     = 'PlanePlugin'.freeze
-      CODES    = %w[ARQ REV MARC QUANT PRO].freeze
-      PATTERN  = /\APLANE-(ARQ|REV|MARC|QUANT|PRO)-([A-Z0-9]{5})-([0-9A-F]{8})\z/
+      CODES    = %w[ARQ REV PRES MARC QUANT PRO].freeze
+      PATTERN  = /\APLANE-(ARQ|REV|PRES|MARC|QUANT|PRO)-([A-Z0-9]{5})-([0-9A-F]{8})\z/
 
       module_function
 

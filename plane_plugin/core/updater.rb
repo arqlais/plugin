@@ -2,7 +2,8 @@
 #
 # O plugin lê updates/latest.json (no GitHub). Se houver versão maior que a instalada,
 # baixa o .rbz, confere o SHA256 e instala com Sketchup.install_from_archive.
-# Preferência "auto_update" (padrão: ligada) instala sem perguntar.
+# Nunca instala sozinho com o SketchUp aberto: a checagem automática só AVISA (no painel);
+# a instalação acontece quando a pessoa clica em atualizar. Preferência "auto_update" = só checar.
 
 require 'json'
 require 'digest'
@@ -19,7 +20,7 @@ module PlaneLA
       module_function
 
       def auto?
-        Helpers.pref('auto_update', true) != false
+        Helpers.pref('auto_update', true) != false # true = procurar novidades ao abrir (só avisa)
       end
 
       def set_auto(on)
@@ -63,9 +64,7 @@ module PlaneLA
         @last = info
         if newer?(info['version'])
           notify(state: 'available', version: info['version'], notes: info['notes'] || [])
-          if auto? && !manual
-            download(info)
-          elsif manual
+          if manual
             ask = UI.messagebox("Planê Plugin #{info['version']} disponível.\n\n#{Array(info['notes']).join("\n")}\n\nAtualizar agora?", MB_YESNO)
             download(info) if ask == IDYES
           end

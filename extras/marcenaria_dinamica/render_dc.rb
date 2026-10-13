@@ -1,11 +1,10 @@
 # Desenha os módulos de marcenaria calculados (sem SketchUp) em SVG, para conferir a montagem.
-# Uso: ruby dev/render_dc.rb pasta_de_saida
+# Uso: ruby extras/marcenaria_dinamica/render_dc.rb pasta_de_saida
 # Projeção oblíqua: frente (Y=0) virada para quem olha, lateral direita e topo visíveis.
 
-ROOT_DIR = File.expand_path('..', __dir__)
+ROOT_DIR = File.expand_path('../..', __dir__)
 module PlaneLA; module Plugin; end; end
-%w[dc_formula dc_tree].each { |f| require File.join(ROOT_DIR, 'plane_plugin', 'core', f) }
-require File.join(ROOT_DIR, 'plane_plugin', 'tools', 'joinery_spec')
+%w[dc_formula dc_tree joinery_spec].each { |f| require File.join(__dir__, f) }
 
 S = PlaneLA::Plugin::JoinerySpec
 out = ARGV[0] || File.join(ROOT_DIR, 'docs')

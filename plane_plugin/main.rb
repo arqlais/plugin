@@ -38,15 +38,16 @@ module PlaneLA
       report_errors
     end
 
-    %w[registry license helpers geom nesting dc_formula dc_tree pickers updater dialog].each do |f|
+    %w[registry license helpers geom nesting pickers updater dialog].each do |f|
       safe_require('core', f)
     end
     %w[
       walls openings dwg_walls stairs roofs urban_index
       tiling baseboard ceiling
-      joinery_spec joinery cut_list countertop
-      takeoff budget
-      model_health align replace auto_tags
+      cut_list countertop
+      scenes export_images room_tags
+      takeoff budget furniture
+      model_health align replace auto_tags measure isolate
     ].each { |f| safe_require('tools', f) }
 
     unless file_loaded?(__FILE__)
@@ -83,7 +84,7 @@ module PlaneLA
 
       # mostra erros (se houver) e procura atualização em silêncio depois que o SketchUp abrir
       UI.start_timer(3, false) { report_errors }
-      UI.start_timer(8, false) { Updater.check(false) if defined?(Updater) }
+      UI.start_timer(20, false) { Updater.check(false) if defined?(Updater) && Updater.auto? }
       file_loaded(__FILE__)
     end
   end

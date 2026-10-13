@@ -49,10 +49,10 @@ docs/                           prints das telas
 - O painel tem **mock** do `sketchup` para abrir no navegador (`window.__MOCK__`, `window.__MOCK_RUN__`). `node dev/preview.js docs` tira os prints e falha se houver erro de JS.
 
 ### Pacotes (core/registry.rb)
-`base` Essencial (grátis) · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
-Chave: `PLANE-<ARQ|REV|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
+`base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
+Chave: `PLANE-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.4.x; só a marcenaria foi testada por ela, e falhou na 0.4.0)
+## Ferramentas — status (v0.5.0; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria) | arq |
@@ -64,14 +64,19 @@ Chave: `PLANE-<ARQ|REV|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(
 | tiling / wall_tiling | Paginação de piso e de parede (rejunte, ½ ⅓, ângulo, furos, caixas, rejunte kg) | rev |
 | baseboard | Rodapé (pula linhas de porta selecionadas com Shift, pilares) | rev |
 | ceiling | Forro com sanca, placas | rev |
-| joinery | Marcenaria em componente dinâmico nativo | marc |
 | cut_list | Lista de peças + plano de corte + fita + ferragens + CSV | marc |
 | countertop | Recorte de cuba/cooktop no tampo | marc |
 | takeoff | Quantitativo por material (piso/parede/teto) + itens + CSV | quant |
 | budget | Orçamento (preços salvos no .skp), MO, BDI, proposta HTML→PDF | quant |
-| model_health, align, replace, auto_tags | Essenciais | base |
+| scenes | Cenas automáticas: plantas por nível (corte 1,20), cobertura, cortes AA/BB, 4 fachadas, perspectiva | pres |
+| export_images | Exportar todas as cenas em PNG/JPG (largura, proporção, transparente) | pres |
+| room_tags | Etiqueta de ambiente (texto 3D no piso ou rótulo) + quadro de áreas CSV; guarda persistent_id da face | pres |
+| furniture | Ficha de mobiliário (dict `plane_item`), relatório por ambiente, CSV, caderno HTML com miniaturas | quant |
+| model_health, align, replace, auto_tags, measure, isolate | Essenciais (grátis) | base |
 
-## Marcenaria dinâmica — como funciona (v0.4.1, refeita depois do teste da Laís)
+## Marcenaria dinâmica — PAUSADA (fora do plugin desde a v0.5; código em `extras/marcenaria_dinamica/`)
+Ela pediu para tirar e fazer depois, à parte. Tudo abaixo continua valendo para quando voltar.
+
 Ela quer **literalmente componentes dinâmicos (DC) nativos**, no padrão das bibliotecas profissionais (Fábio Coutinho, AFC):
 esticar com a **Escala sem deformar**, editar em **Janela › Opções do componente**, abrir portas/gavetas com **Interagir**, funcionar **sem o plugin**.
 Na v0.4.0 o bloco saiu desmontado (peças espalhadas e com tamanho errado): eu deixava o redesenho do DC montar tudo e gravava os atributos fora do padrão.
@@ -93,7 +98,8 @@ Padrão de atributos, copiado da estrutura de um bloco DC real (biblioteca AFC d
 Próximo nível que ela quer (imagens de referência): catálogo detalhado como as bibliotecas profissionais — portas com batente/guarnição e símbolo de abertura em planta + etiqueta (P1, medidas), tampos (frontão, saia 45°, rebaixo, cuba esculpida), módulos de lixeira, roupeiro, porta escamoteável, puxadores perfilados. Fazer um de cada vez, sempre com teste + render antes de entregar.
 
 ## Atualização automática
-- `Updater` lê `https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json` 8 s depois de abrir o SketchUp; se a versão for maior, baixa o `.rbz`, confere SHA256 e roda `Sketchup.install_from_archive`. Depois pede para reiniciar o SketchUp.
+- `Updater` lê `https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json` 20 s depois de abrir o SketchUp e **só avisa** no painel. Desde a v0.5 **nunca instala sozinho** (ela reclamou do SketchUp instável); instala só quando ela clica (baixa o `.rbz`, confere SHA256, `Sketchup.install_from_archive`, pede para reiniciar).
+- Atenção: o LIA Render oficial e o LAVI Render dela (LIA modificado, backup no repo privado `lavi-app`, ramo `backup/lavi-render-v4`) usam a mesma pasta `thebox_render`: instalar um sobrescreve o outro.
 - Para publicar versão nova: subir `VERSION` em `plane_plugin.rb`, `sh dev/build.sh "nota 1" "nota 2"`, commit e merge no branch padrão.
 - **Precisa de repositório público** (ou mover `updates/` para um host público, ex. o LAVI APP / site da Planê). Se o repo ficar privado, a atualização para de funcionar.
 

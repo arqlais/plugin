@@ -92,7 +92,7 @@ module PlaneLA
       end
 
       def favorites
-        json_pref('favorites', %w[walls tiling joinery takeoff])
+        json_pref('favorites', %w[scenes export_images room_tags measure])
       end
 
       def toggle_favorite(id)

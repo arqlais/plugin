@@ -26,16 +26,13 @@ const url = 'file://' + path.join(__dirname, '..', 'plane_plugin', 'ui', 'index.
     console.log('print', name);
   };
   const tool = async id => { await page.click(`[data-tab="${TABS[id]}"]`); await page.click(`.tool[data-tool="${id}"]`); };
-  const TABS = { walls: 'arq', openings: 'arq', stairs: 'arq', roofs: 'arq', dwg_walls: 'arq', urban_index: 'arq', tiling: 'rev', wall_tiling: 'rev', baseboard: 'rev', ceiling: 'rev', joinery: 'marc', cut_list: 'marc', countertop: 'marc', takeoff: 'quant', budget: 'quant', model_health: 'base', align: 'base', replace: 'base', auto_tags: 'base' };
+  const TABS = { walls: 'arq', openings: 'arq', stairs: 'arq', roofs: 'arq', dwg_walls: 'arq', urban_index: 'arq', tiling: 'rev', wall_tiling: 'rev', baseboard: 'rev', ceiling: 'rev', scenes: 'pres', export_images: 'pres', room_tags: 'pres', furniture: 'quant', measure: 'base', isolate: 'base', cut_list: 'marc', countertop: 'marc', takeoff: 'quant', budget: 'quant', model_health: 'base', align: 'base', replace: 'base', auto_tags: 'base' };
 
   await shot('01-inicio');
-  await page.click('[data-tab="marc"]'); await shot('02-aba-marcenaria');
+  await page.click('[data-tab="pres"]'); await shot('02-aba-apresentacao');
 
-  await tool('joinery'); await shot('03-marcenaria');
-  await page.click('[data-set="matfrente"][data-v="PLN_Freijo"]');
-  await page.click('.card[data-set="frente"][data-v="3"]');
-  await page.click('.card[data-set="puxador"][data-v="2"]');
-  await shot('04-marcenaria-gavetas', true);
+  await tool('scenes'); await page.click('[data-act="create"]'); await shot('03-cenas', true);
+  await tool('room_tags'); await shot('04-ambientes', true);
 
   await tool('tiling');
   await page.click('.card[data-set="padrao"][data-v="meia"]');
@@ -56,7 +53,7 @@ const url = 'file://' + path.join(__dirname, '..', 'plane_plugin', 'ui', 'index.
   await page.click('#btnTheme');
   await page.click('[data-tab="home"]');
   await shot('12-inicio-escuro');
-  await tool('joinery'); await shot('13-marcenaria-escuro');
+  await tool('export_images'); await shot('13-exportar-escuro');
   await page.click('#btnLic'); await shot('14-licenca-escuro');
 
   await browser.close();
