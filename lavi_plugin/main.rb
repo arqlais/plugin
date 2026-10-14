@@ -15,7 +15,7 @@ module LAVIStudio
     TOOLBAR = [
       %i[scenes export_images room_tags sun],
       %i[edges materials texmap lights scatter],
-      %i[walls openings dwg_walls stairs railing roofs dims],
+      %i[walls openings dwg_walls stairs railing structure roofs dims],
       %i[tiling ripado baseboard ceiling],
       %i[takeoff cut_list],
       %i[measure isolate shape array fix_faces model_health]
@@ -50,7 +50,7 @@ module LAVIStudio
       safe_require('core', f)
     end
     %w[
-      walls openings dwg_walls stairs railing roofs
+      walls openings dwg_walls stairs railing structure roofs
       tiling baseboard ceiling ripado
       cut_list countertop
       scenes export_images room_tags sun

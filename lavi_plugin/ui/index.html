@@ -367,6 +367,7 @@ const IC = {
   railing:'M3 20h18M3 8h18M5 8v12M9 8v12M13 8v12M17 8v12M21 8v12',
   scatter:'M3 20h18M6 16v-3M5 14l1-1 1 1M12 17v-5M10.5 13.5L12 12l1.5 1.5M18 15v-3M17 13l1-1 1 1M8 8h.01M16 6h.01M13 4h.01',
   sun:'M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4M8 12a4 4 0 0 1 8 0 4 4 0 0 1-8 0',
+  structure:'M3 5h18v4H3zM6 9v12M18 9v12M4 21h4M16 21h4',
   ripado:'M4 3v18M8 3v18M12 3v18M16 3v18M20 3v18',
   ceiling:'M3 4h18M5 4v3h14V4M12 7v3M8.5 14a3.5 3.5 0 0 1 7 0zM12 16.5v1',
   pres:'M3 4h18v12H3zM8 20h8M12 16v4',
@@ -525,6 +526,8 @@ P.gc_cabos=GC('<path d="M6 20L38 2" stroke-width="2"/><path d="M6 24l32-18M6 28l
 P.gc_mureta=GC('<path d="M6 34V20L38 2v14z" fill="currentColor" fill-opacity=".3"/>');
 P.rip_v=PIC('<path d="M10 8v32M17 8v32M24 8v32M31 8v32M38 8v32"/>');
 P.rip_h=PIC('<path d="M6 12h36M6 19h36M6 26h36M6 33h36"/>');
+P.st_pilar=PIC('<path d="M18 6h12v36H18z" fill="currentColor" fill-opacity=".15"/><path d="M14 42h20"/>');
+P.st_viga=PIC('<path d="M4 16h40v10H4z" fill="currentColor" fill-opacity=".15"/><path d="M8 26v16M40 26v16"/>');
 P.sh_tudo=PIC('<path d="M10 16a6 6 0 0 1 6-6h18a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6z" fill="currentColor" fill-opacity=".15"/><path d="M14 13l4-4M36 13l3-3M14 33l4-4" stroke-dasharray="1.5 2"/>');
 P.sh_chanfro=PIC('<path d="M10 15l5-5h20l5 5v16l-5 5H15l-5-5z" fill="currentColor" fill-opacity=".15"/><path d="M15 10v26M35 10v26M10 15h30M10 31h30" stroke-dasharray="1.5 2"/>');
 P.sh_cantos=PIC('<path d="M8 32V14a6 6 0 0 1 6-6h24v24z" fill="currentColor" fill-opacity=".15"/>');
@@ -743,6 +746,23 @@ const FORMS = {
         {k:'horas',type:'text',label:'Horários',def:'9, 12, 15'}]}],
     acts:[['scenes','Criar cenas','sun',1],['now','Ver agora','eye'],['off','Desligar sombras','x']], prev:p=>prevSun(p),
     hint:'O Norte do SketchUp fica no eixo verde; se o terreno é girado, ajuste o Norte. Não cria nenhum objeto: só liga as sombras certas e grava em cada cena (leve).' },
+  structure:{ secs:[
+      {t:'Criar', f:[
+        {k:'modo',type:'cards',full:1,def:'pilar',opts:[['pilar','Pilares','st_pilar'],['viga','Vigas','st_viga']]}]},
+      {t:'Pilar', when:p=>p.modo!=='viga', f:[
+        {k:'forma',type:'seg',label:'Seção',def:'retangular',full:1,opts:[['retangular','Retangular'],['redondo','Redondo']]},
+        {k:'larg',type:'num',label:'Largura',unit:'cm',def:20,chips:[15,20,25,30],when:p=>p.forma!=='redondo'},
+        {k:'prof',type:'num',label:'Profundidade',unit:'cm',def:20,chips:[20,30,40,50],when:p=>p.forma!=='redondo'},
+        {k:'diam',type:'num',label:'Diâmetro',unit:'cm',def:30,chips:[20,25,30,40],when:p=>p.forma==='redondo'},
+        {k:'giro',type:'num',label:'Girar',unit:'graus',def:0,chips:[0,45,90],when:p=>p.forma!=='redondo'},
+        {k:'alt',type:'num',label:'Altura',unit:'cm',def:280,chips:[260,280,300]}]},
+      {t:'Viga', when:p=>p.modo==='viga', f:[
+        {k:'vb',type:'num',label:'Largura (b)',unit:'cm',def:15,chips:[12,15,20]},
+        {k:'vh',type:'num',label:'Altura (h)',unit:'cm',def:40,chips:[30,40,50,60]},
+        {k:'topo',type:'num',label:'Topo da viga acima da linha',unit:'cm',def:280,chips:[260,280,300]}]}],
+    acts:p=>p.modo==='viga'?[['viga_lines','Nas linhas selecionadas','structure',1],['viga_click','Clicar o caminho','pin']]:[['pilar_click','Clicar onde vão','pin',1],['pilar_faces','Das faces selecionadas','structure']],
+    allActs:['pilar_click','pilar_faces','viga_lines','viga_click'],
+    hint:'Pilares iguais viram cópias do mesmo componente (leve). Da planta do DWG: selecione os quadradinhos/círculos dos pilares (faces) e levante todos de uma vez. Vigas: selecione o eixo e a viga fica pendurada abaixo do topo.' },
   ripado:{ secs:[
       {t:'Ripas', f:[
         {k:'sentido',type:'cards',full:1,def:'vertical',opts:[['vertical','Em pé','rip_v'],['horizontal','Deitadas','rip_h']]},
@@ -1644,6 +1664,7 @@ const MOCK = {
     ['railing','Guarda-corpo','arq','arq','Vidro, montantes, cabos, mureta ou corrimão na varanda, mezanino ou borda de laje.',['Selecione as linhas da borda (ou clique)','Escolha o modelo e a altura','Criar']],
     ['scatter','Espalhar objetos','render','pres','Grama, pedrisco, plantas e pedras espalhados numa face, girados e com tamanhos variados.',['Selecione a face (e os objetos)','Escolha quantidade e variação','Espalhar']],
     ['sun','Estudo de sol','pres','pres','Cidade, dia e horário: liga as sombras certas e cria as cenas do estudo de insolação.',['Escolha a cidade','Marque dias e horários','Criar cenas']],
+    ['structure','Pilares e vigas','arq','arq','Pilares clicando ou dos quadradinhos do DWG, vigas nas linhas, com volume de concreto.',['Escolha pilar ou viga e o tamanho','Clique ou selecione','Criar']],
     ['ripado','Ripado','rev','rev','Ripas na parede, forro, porta ou painel, com fundo, recuo e conta de barras.',['Selecione ou clique na face','Escolha ripa, espaço e sentido','Criar ripado']],
     ['ceiling','Forro e moldura','rev','rev','Forro rebaixado com tabica e cortineiro, sanca aberta ou fechada, ou só moldura de teto.',['Selecione o piso (e a linha da janela)','Escolha o tipo e as medidas','Gerar']],
     ['scenes','Cenas automáticas','pres','pres','Plantas por nível, cobertura, cortes AA/BB, 4 fachadas e perspectiva num clique.',['Informe os níveis','Marque o que quer','Criar cenas']],

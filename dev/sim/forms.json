@@ -203,6 +203,27 @@
   ]
  },
  {
+  "id": "structure",
+  "defaults": {
+   "modo": "pilar",
+   "forma": "retangular",
+   "larg": 20,
+   "prof": 20,
+   "diam": 30,
+   "giro": 0,
+   "alt": 280,
+   "vb": 15,
+   "vh": 40,
+   "topo": 280
+  },
+  "acts": [
+   "pilar_click",
+   "pilar_faces",
+   "viga_lines",
+   "viga_click"
+  ]
+ },
+ {
   "id": "ripado",
   "defaults": {
    "sentido": "vertical",

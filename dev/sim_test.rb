@@ -884,6 +884,31 @@ check('sun · cidade, dias e horários viram cenas de sombra') do
   "#{pgs.size} cenas (#{pgs.first.name} … #{pgs.last.name}), cada uma com seu horário · criar de novo substitui"
 end
 
+check('structure · pilares clicados, da planta e vigas nas linhas') do
+  fresh
+  ok!(run(:structure, 'pilar_click', 'forma' => 'retangular', 'larg' => 20, 'prof' => 40, 'alt' => 280))
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300)])
+  ps = m.entities.grep(Sketchup::ComponentInstance).reject { |i| i.is_a?(Sketchup::Group) }
+  expect(ps.size == 3 && ps.map(&:definition).uniq.size == 1, "#{ps.size} pilares, #{ps.map(&:definition).uniq.size} componente(s)")
+  bb = ps[1].bounds
+  dims = [bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z].map { |v| (v * 2.54).round }
+  expect(dims == [20, 40, 280], "pilar #{dims.inspect}")
+  q = m.entities.add_face(pt(600, 0), pt(620, 0), pt(620, 20), pt(600, 20))
+  c = m.entities.add_face(*(0...16).map { |k| a = 2 * Math::PI * k / 16; pt(700 + 15 * Math.cos(a), 15 * Math.sin(a)) })
+  sel(q, c)
+  r = ok!(run(:structure, 'pilar_faces', 'alt' => 300))
+  gs = m.entities.grep(Sketchup::Group).select { |g| g.name == 'Pilar' }
+  expect(gs.size == 2 && gs.all? { |g| ((g.bounds.max.z - g.bounds.min.z) * 2.54).round == 300 }, 'pilares da planta')
+  es = [m.entities.add_line(pt(0, 0), pt(400, 0)), m.entities.add_line(pt(400, 0), pt(400, 300))]
+  sel(es)
+  v = ok!(run(:structure, 'viga_lines', 'vb' => 15, 'vh' => 40, 'topo' => 280))
+  vg = m.entities.grep(Sketchup::Group).find { |g| g.name == 'Viga' }
+  zb = [(vg.bounds.min.z * 2.54).round, (vg.bounds.max.z * 2.54).round]
+  expect(zb == [240, 280], "viga de #{zb.inspect}")
+  expect(v['stats'][0][1] == '7,00 m', "comprimento #{v['stats'][0][1]}")
+  "3 pilares 20×40×280 (1 componente) · 2 da planta com 300 cm · viga 15×40 de #{v['stats'][0][1]} entre 240 e 280 cm"
+end
+
 check('ripado · parede com porta, em pé e deitado, fundo, barras') do
   fresh
   f = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))
