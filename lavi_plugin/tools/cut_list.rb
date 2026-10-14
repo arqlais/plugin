@@ -18,6 +18,11 @@ module LAVIStudio
           case action
           when 'list', 'plan'
             report(parts, rows, p)
+          when 'labels'
+            res = report(parts, rows, p)
+            path = labels_html(res, rows, p)
+            UI.openURL("file:///#{path.tr('\\', '/')}")
+            H.ok('Etiquetas e plano abertos no navegador: imprima em A4 (Ctrl+P), escala 100%.', stats: [['Etiquetas', rows.sum { |r| r[:qty] }.to_s]])
           when 'csv'
             out = [%w[Peça Qtd Comprimento(mm) Largura(mm) Espessura(mm) Material Fita(m)]]
             rows.each { |r| out << [r[:name], r[:qty], r[:l], r[:w], r[:t], r[:mat], r[:fita]] }
@@ -51,7 +56,9 @@ module LAVIStudio
             if H.kind_of(e) == 'part'
               out << part_of(e, t, mat, e.get_attribute(H::DICT, 'part'), e.get_attribute(H::DICT, 'mk'))
             elsif generic && leaf?(e)
-              out << part_of(e, t, mat, e.respond_to?(:definition) && e.is_a?(Sketchup::ComponentInstance) ? e.definition.name : (e.name.empty? ? 'Peça' : e.name), 'caixa')
+              nm = e.name.to_s
+              nm = e.definition.name if nm.empty? && !e.is_a?(Sketchup::Group)
+              out << part_of(e, t, mat, nm.empty? ? 'Peça' : nm, 'caixa')
             else
               walk(H.entities_of(e).to_a, t, out, generic, mat)
             end
@@ -115,10 +122,12 @@ module LAVIStudio
         # ---- relatório + plano de corte ------------------------------------------
         def report(parts, rows, p)
           opts = { sheet_w: H.num(p['chapa_c'], 2750), sheet_h: H.num(p['chapa_l'], 1840),
-                   kerf: H.num(p['serra'], 4), trim: H.num(p['refilo'], 10), rotate: p['veio'] != true && p['veio'] != 'true' }
+                   kerf: H.num(p['serra'], 4), trim: H.num(p['refilo'], 10), rotate: p['veio'] != true && p['veio'] != 'true',
+                   method: p['metodo'].to_s == 'livre' ? 'livre' : 'guilhotina' }
+          rows.each_with_index { |r, i| r[:id] = i + 1 }
           by_mat = Hash.new { |h, k| h[k] = [] }
           rows.each do |r|
-            r[:qty].times { by_mat["#{r[:mat]} · #{H.br(r[:t], 1)} mm"] << { w: r[:l], h: r[:w], label: r[:name] } }
+            r[:qty].times { by_mat["#{r[:mat]} · #{H.br(r[:t], 1)} mm"] << { w: r[:l], h: r[:w], label: r[:name], id: r[:id] } }
           end
           plans = by_mat.map do |mat, pcs|
             sheets = Nesting.pack(pcs, opts)
@@ -134,9 +143,80 @@ module LAVIStudio
           fita.each { |m, v| stats << ["Fita · #{m}", "#{H.br(v * 1.1)} m (+10%)"] if v > 0 }
           stats << ['Tampos', "#{tampos.size} · #{H.br(tampos.sum { |x| x[:l] * x[:w] } / 1e6)} m²"] unless tampos.empty?
           H.ok("#{rows.sum { |r| r[:qty] }} peças lidas.",
-               stats: stats, rows: rows.map { |r| r.slice(:name, :qty, :l, :w, :t, :mat, :fita) },
+               stats: stats, rows: rows.map { |r| r.slice(:id, :name, :qty, :l, :w, :t, :mat, :fita) },
                plans: plans, hardware: hardware(parts).to_a,
                sheet: { w: opts[:sheet_w], h: opts[:sheet_h] })
+        end
+
+        # ---- etiquetas + plano para imprimir ---------------------------------------
+        def esc(s)
+          s.to_s.gsub('&', '&amp;').gsub('<', '&lt;').gsub('>', '&gt;').gsub('"', '&quot;')
+        end
+
+        def fita_txt(r)
+          if EDGE_ALL.include?(r[:mk]) then 'fita nos 4 lados'
+          elsif EDGE_ONE.include?(r[:mk]) then 'fita em 1 lado comprido'
+          else 'sem fita'
+          end
+        end
+
+        def sheet_svg(sh, w = 180)
+          s = w / sh[:w].to_f
+          h = sh[:h] * s
+          parts = sh[:parts].map do |pt|
+            big = pt[:w] * s > 9 && pt[:h] * s > 5
+            "<rect x='#{(pt[:x] * s).round(2)}' y='#{(pt[:y] * s).round(2)}' width='#{(pt[:w] * s).round(2)}' height='#{(pt[:h] * s).round(2)}' fill='#F4E8E5' stroke='#3E4B57' stroke-width='.25'/>" +
+              (big ? "<text x='#{((pt[:x] + pt[:w] / 2) * s).round(2)}' y='#{((pt[:y] + pt[:h] / 2) * s + 1.2).round(2)}' font-size='3.2' text-anchor='middle' fill='#3E4B57'>#{pt[:id]}</text>" : '')
+          end.join
+          "<svg viewBox='0 0 #{w} #{h.round(2)}' width='#{w}mm' height='#{h.round(2)}mm'><rect width='#{w}' height='#{h.round(2)}' fill='#fff' stroke='#8B939A' stroke-width='.3'/>#{parts}</svg>"
+        end
+
+        def labels_html(res, rows, p)
+          cols, lw, lh = p['etiqueta'].to_s == '2x7' ? [2, 99, 38] : [3, 70, 37]
+          proj = esc(p['projeto'])
+          labels = []
+          rows.each do |r|
+            r[:qty].times do |k|
+              labels << "<div class='lb' style='width:#{lw}mm;height:#{lh}mm'><div class='top'><b class='id'>#{r[:id]}</b><span>#{esc(r[:name])}</span><em>#{k + 1}/#{r[:qty]}</em></div>"                         "<div class='dim'>#{H.br(r[:l], 0)} × #{H.br(r[:w], 0)} × #{H.br(r[:t], 1)} mm</div>"                         "<div class='sub'>#{esc(r[:mat])} · #{fita_txt(r)}</div><div class='pj'>#{proj}</div></div>"
+            end
+          end
+          plan = ''
+          if p['plano'] != false && p['plano'] != 'false'
+            plan = res[:plans].map do |pl|
+              "<section class='pl'><h2>#{esc(pl[:mat])} · #{pl[:count]} chapa(s) · #{H.br(pl[:aproveitamento], 1)}% aproveitado</h2>" +
+                pl[:sheets].each_with_index.map { |sh, i| "<figure><figcaption>Chapa #{i + 1} · #{sh[:parts].size} peças</figcaption>#{sheet_svg(sh)}</figure>" }.join + '</section>'
+            end.join
+            plan += "<section class='pl'><h2>Peças</h2><table><tr><th>Nº</th><th>Peça</th><th>Qtd</th><th>C × L × E (mm)</th><th>Material</th><th>Fita</th></tr>" +
+                    rows.map { |r| "<tr><td>#{r[:id]}</td><td>#{esc(r[:name])}</td><td>#{r[:qty]}</td><td>#{H.br(r[:l], 0)} × #{H.br(r[:w], 0)} × #{H.br(r[:t], 1)}</td><td>#{esc(r[:mat])}</td><td>#{fita_txt(r)}</td></tr>" }.join +
+                    '</table></section>'
+          end
+          html = <<~HTML
+            <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Plano de corte e etiquetas</title>
+            <style>
+            @page{size:A4;margin:10mm}
+            body{font-family:Poppins,Arial,sans-serif;color:#3E4B57;margin:0}
+            h1{font-size:18px;margin:0 0 4px} .hd{color:#8B939A;font-size:11px;margin-bottom:10px}
+            h2{font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin:12px 0 6px}
+            .pl{break-after:page} figure{display:inline-block;margin:0 6mm 6mm 0;vertical-align:top} figcaption{font-size:10px;margin-bottom:2px}
+            table{border-collapse:collapse;font-size:10px;width:100%} td,th{border-bottom:1px solid #EBE1DC;padding:3px 4px;text-align:left}
+            .grid{display:grid;grid-template-columns:repeat(#{cols},#{lw}mm);gap:0;justify-content:center}
+            .lb{box-sizing:border-box;padding:2.5mm 3mm;border:.2mm dashed #D6B3AB;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;break-inside:avoid}
+            .top{display:flex;gap:2mm;align-items:baseline;font-size:10px} .top span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+            .id{font-size:16px;color:#A88A80} em{font-style:normal;font-size:9px;color:#8B939A}
+            .dim{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600}
+            .sub{font-size:8.5px;color:#3E4B57} .pj{font-size:8px;color:#8B939A}
+            @media print{.lb{border-color:#eee}}
+            </style></head><body>
+            <h1>Plano de corte</h1><div class="hd">#{proj} · lavi</div>
+            #{plan}
+            <div class="grid">#{labels.join}</div>
+            </body></html>
+          HTML
+          dir = File.join(Dir.tmpdir, "lavi_corte_#{Time.now.to_i}")
+          Dir.mkdir(dir) unless Dir.exist?(dir)
+          path = File.join(dir, 'plano_e_etiquetas.html')
+          File.write(path, html, encoding: 'UTF-8')
+          path
         end
 
         Registry.register(:cut_list, name: 'Lista de peças e plano de corte', tab: :marc, package: :marc, handler: self,

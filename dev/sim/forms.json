@@ -275,10 +275,15 @@
    "serra": 4,
    "refilo": 10,
    "veio": false,
-   "genericos": true
+   "genericos": true,
+   "metodo": "guilhotina",
+   "etiqueta": "3x8",
+   "projeto": "",
+   "plano": true
   },
   "acts": [
    "list",
+   "labels",
    "csv"
   ]
  },

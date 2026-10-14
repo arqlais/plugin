@@ -403,7 +403,18 @@ check('cut_list · lista, plano de corte e CSV') do
   box(78.2, 0, 1.8, 1.8, 55, 68.2, name: 'Lateral')
   r = ok!(run(:cut_list, 'list'))
   c = ok!(run(:cut_list, 'csv'))
-  "#{r['stats'].map { |s| s.join(' ') }.join(', ')} · #{c['msg']}"
+  expect(r['rows'].all? { |x| x['id'] }, 'peças sem número')
+  ok!(run(:cut_list, 'labels', 'projeto' => 'Cozinha Ana', 'etiqueta' => '3x8'))
+  url = UI.log.reverse.find { |x| x[0] == :openURL }
+  html = url && File.read(url[1].sub('file:///', '/').sub(%r{\A//}, '/'), encoding: 'UTF-8')
+  expect(html && html.scan("class='lb'").size == 4, 'etiquetas: esperava 4')
+  expect(html.include?('Cozinha Ana') && html.include?('<svg'), 'plano/projeto na folha')
+  pcs = Array.new(40) { |i| { w: [600, 450, 900][i % 3], h: [300, 550][i % 2], label: 'x', id: i % 3 + 1 } }
+  g = P::Nesting.pack(pcs, sheet_w: 2750, sheet_h: 1840, method: 'guilhotina').size
+  l = P::Nesting.pack(pcs, sheet_w: 2750, sheet_h: 1840, method: 'livre').size
+  sh = P::Nesting.pack_shelf(pcs, sheet_w: 2750, sheet_h: 1840).size
+  expect(g <= sh && l <= sh, "encaixe novo pior que o antigo (#{g}/#{l} vs #{sh})")
+  "#{r['stats'].map { |s| s.join(' ') }.join(', ')} · #{c['msg']} · 4 etiquetas + plano em HTML · 40 peças: prateleiras #{sh}, guilhotina #{g}, CNC #{l} chapas"
 end
 
 check('countertop · recorte por medida') do

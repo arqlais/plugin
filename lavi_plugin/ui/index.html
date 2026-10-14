@@ -812,8 +812,14 @@ const FORMS = {
         {k:'serra',type:'num',label:'Espessura da serra',unit:'mm',def:4},
         {k:'refilo',type:'num',label:'Refilo',unit:'mm',def:10},
         {k:'veio',type:'tg',label:'Respeitar o veio (não girar)',def:false,full:1},
-        {k:'genericos',type:'tg',label:'Ler também grupos comuns (móveis modelados em grupos)',def:true,full:1}]}],
-    acts:[['list','Gerar lista e plano de corte','play',1],['csv','Excel','file']],
+        {k:'genericos',type:'tg',label:'Ler também grupos comuns (móveis modelados em grupos)',def:true,full:1}]},
+      {t:'Encaixe', f:[
+        {k:'metodo',type:'seg',label:'Corte',def:'guilhotina',full:1,opts:[['guilhotina','Esquadrejadeira'],['livre','CNC (mais apertado)']]}]},
+      {t:'Etiquetas', opt:1, closed:1, f:[
+        {k:'etiqueta',type:'seg',label:'Folha',def:'3x8',full:1,opts:[['3x8','A4 · 3 × 8 (70 × 37)'],['2x7','A4 · 2 × 7 (99 × 38)']]},
+        {k:'projeto',type:'text',label:'Projeto / cliente',def:''},
+        {k:'plano',type:'tg',label:'Imprimir o plano de corte junto',def:true,full:1}]}],
+    acts:[['list','Gerar lista e plano de corte','play',1],['labels','Etiquetas','file'],['csv','Excel','file']],
     hint:'Selecione os móveis (ou nada, para ler o modelo todo). Peças escondidas pelas opções do bloco não entram.',
     render:r=>renderCut(r) },
   countertop:{ secs:[
@@ -1317,7 +1323,7 @@ function statsHtml(stats){
 function renderCut(r){
   let h='';
   if(r.rows&&r.rows.length){ h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>Peça</th><th class="n">Qtd</th><th class="n">C × L × E (mm)</th></tr></thead><tbody>${
-    r.rows.map(x=>`<tr><td>${esc(x.name)}<br><small style="color:var(--muted)">${esc(x.mat)}</small></td><td class="n">${x.qty}</td><td class="n">${br(x.l,0)} × ${br(x.w,0)} × ${br(x.t,1)}</td></tr>`).join('')}</tbody></table></div>`; }
+    r.rows.map(x=>`<tr><td>${x.id?`<b style="color:#A88A80">${x.id}</b> `:''}${esc(x.name)}<br><small style="color:var(--muted)">${esc(x.mat)}</small></td><td class="n">${x.qty}</td><td class="n">${br(x.l,0)} × ${br(x.w,0)} × ${br(x.t,1)}</td></tr>`).join('')}</tbody></table></div>`; }
   if(r.plans) r.plans.forEach(pl=>{
     h+=`<div class="sheets"><div class="sh" style="display:flex;justify-content:space-between;font-size:12px"><b>${esc(pl.mat)}</b><span class="mono">${pl.count} chapa(s) · ${br(pl.aproveitamento,1)}%</span></div>`;
     pl.sheets.slice(0,12).forEach((sh,i)=>{ h+=`<div class="sheet"><div class="sh"><b>Chapa ${i+1}</b><span class="mono">${sh.parts.length} peças</span></div>${sheetSvg(sh)}</div>`; });
@@ -1325,12 +1331,12 @@ function renderCut(r){
   if(r.hardware&&r.hardware.length) h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>Ferragens</th><th class="n">Qtd</th></tr></thead><tbody>${r.hardware.map(x=>`<tr><td>${esc(x[0])}</td><td class="n">${esc(x[1])}</td></tr>`).join('')}</tbody></table></div>`;
   return h;
 }
-const PCOLORS=['#F6DDF4','#EEF6C2','#EFE5E1','#F3C9EF','#E5EE9C','#EFEFEF'];
+const PCOLORS=['#F4E8E5','#E8ECEF','#EFE5E1','#E6DDD8','#DDE3E8','#F5F1EE'];
 function sheetSvg(sh){
   const W=360, s=W/sh.w, H=sh.h*s; const lab={};
   const parts=sh.parts.map(p=>{ const k=p.label; if(!(k in lab)) lab[k]=Object.keys(lab).length;
     const c=PCOLORS[lab[k]%PCOLORS.length], t=p.w*s>46&&p.h*s>14;
-    return `<g><rect x="${p.x*s}" y="${p.y*s}" width="${p.w*s}" height="${p.h*s}" fill="${c}" stroke="#3E4B57" stroke-width=".8"/>${t?`<text x="${p.x*s+3}" y="${p.y*s+10}" font-size="8" font-family="Poppins" fill="#3E4B57">${esc(p.label)}</text><text x="${p.x*s+3}" y="${p.y*s+19}" font-size="7" font-family="JetBrains Mono" fill="#6B7682">${Math.round(p.w)}×${Math.round(p.h)}</text>`:''}</g>`; }).join('');
+    return `<g><rect x="${p.x*s}" y="${p.y*s}" width="${p.w*s}" height="${p.h*s}" fill="${c}" stroke="#3E4B57" stroke-width=".8"/>${t?`<text x="${p.x*s+3}" y="${p.y*s+10}" font-size="8" font-family="Poppins" fill="#3E4B57">${p.id?`<tspan fill="#A88A80" font-weight="600">${p.id}</tspan> `:''}${esc(p.label)}</text><text x="${p.x*s+3}" y="${p.y*s+19}" font-size="7" font-family="JetBrains Mono" fill="#6B7682">${Math.round(p.w)}×${Math.round(p.h)}</text>`:''}</g>`; }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" width="100%"><rect width="${W}" height="${H}" fill="var(--card)" stroke="var(--line2)"/>${parts}</svg>`;
 }
 function renderTakeoff(r){
