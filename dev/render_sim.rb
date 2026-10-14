@@ -52,6 +52,8 @@ def collect(ents, tr, mat, out)
       out[:dims] << [e.start[1].transform(tr), e.end[1].transform(tr), e.offset_vector.transform(tr)]
     when Sketchup::Edge
       out[:edges] << [e.start.position.transform(tr), e.end.position.transform(tr)] if e.faces.empty?
+    when Sketchup::Text
+      out[:texts] = (out[:texts] || []) << [e.point.transform(tr), e.text.to_s]
     when Sketchup::ConstructionPoint
       q = e.position.transform(tr)
       out[:marks] = (out[:marks] || []) << q
@@ -112,6 +114,12 @@ def render(name, title, view: :iso, az: -55, el: 32, w: 860, h: 560)
   (data[:marks] || []).each do |q|
     c = tx.call(proj.call(q))
     svg << %(<circle cx="#{c[0]}" cy="#{c[1]}" r="14" fill="none" stroke="#C0392B" stroke-width="2.5"/><path d="M#{c[0] - 8} #{c[1] - 8}l16 16m0 -16l-16 16" stroke="#C0392B" stroke-width="2.5"/>)
+  end
+  (data[:texts] || []).each do |q, t|
+    c = tx.call(proj.call(q))
+    t.split("\n").each_with_index do |ln, i|
+      svg << %(<text x="#{c[0]}" y="#{c[1] + i * 14}" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="#{i.zero? ? 700 : 400}" fill="#A88A80" paint-order="stroke" stroke="#F5F1EE" stroke-width="3">#{ln}</text>)
+    end
   end
   data[:dims].each do |a, b, o|
     pa = tx.call(proj.call(a.offset(o))); pb = tx.call(proj.call(b.offset(o)))
@@ -421,4 +429,31 @@ scene('22-vaos-posicao') do
   e1 = m.entities.add_dimension_linear(pt(-7.5, -7.5, 0), pt(32.5, -7.5, 0), Geom::Vector3d.new(0, -40, 0))
   e2 = m.entities.add_dimension_linear(pt(312.5, -7.5, 0), pt(407.5, -7.5, 0), Geom::Vector3d.new(0, -40, 0))
   render('22-vaos-posicao', 'Janela a 40 cm da ponta esquerda, porta a 15 cm da ponta direita', az: -90, el: 8)
+end
+
+scene('27-porta-completa') do
+  run(:walls, 'draw')
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)], closed: true)
+  w = m.entities.grep(Sketchup::ComponentInstance).first
+  face, tr = all_faces(w.definition.entities, w.transformation).select { |f, t| f.normal.transform(t).y < -0.9 }.max_by { |f, _| f.area }
+  run(:openings, 'place', 'tipo' => 'porta', 'larg' => 80, 'alt' => 210, 'posicao' => 'canto', 'lado' => 'esquerda', 'dist' => 30, 'abre' => 'dentro', 'dobradica' => 'esquerda')
+  click_face(face, pt(200, -7.5, 150), tr)
+  run(:openings, 'place', 'tipo' => 'porta', 'larg' => 70, 'alt' => 210, 'posicao' => 'canto', 'lado' => 'direita', 'dist' => 30, 'abre' => 'fora', 'dobradica' => 'direita', 'cor_porta' => '#EDEAE4')
+  click_face(face, pt(200, -7.5, 150), tr)
+  run(:openings, 'place', 'tipo' => 'janela', 'larg' => 100, 'alt' => 100, 'peit' => 110, 'posicao' => 'canto', 'lado' => 'esquerda', 'dist' => 160)
+  click_face(face, pt(200, -7.5, 150), tr)
+  render('27-porta-completa', 'Portas com batente e guarnição (P1 abre para fora da sala, P2 para dentro) e janela J1', az: -70, el: 22)
+end
+
+scene('28-porta-planta') do
+  run(:walls, 'draw')
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)], closed: true)
+  w = m.entities.grep(Sketchup::ComponentInstance).first
+  face, tr = all_faces(w.definition.entities, w.transformation).select { |f, t| f.normal.transform(t).y < -0.9 }.max_by { |f, _| f.area }
+  run(:openings, 'place', 'tipo' => 'porta', 'larg' => 80, 'alt' => 210, 'posicao' => 'canto', 'lado' => 'esquerda', 'dist' => 30, 'abre' => 'dentro', 'dobradica' => 'esquerda')
+  click_face(face, pt(200, -7.5, 150), tr)
+  run(:openings, 'place', 'tipo' => 'porta', 'larg' => 70, 'alt' => 210, 'posicao' => 'canto', 'lado' => 'direita', 'dist' => 30, 'abre' => 'fora', 'dobradica' => 'direita')
+  click_face(face, pt(200, -7.5, 150), tr)
+  # corte a 1,20 m: tira o que está acima para ver a planta
+  render('28-porta-planta', 'Planta: abertura das portas desenhada no piso e etiquetas P1/P2', view: :top)
 end

@@ -747,6 +747,35 @@ check('openings · distância da ponta, de um ponto e digitada') do
   "esquerda 60 cm → 52,5–132,5 · direita 60 cm → 267,5–347,5 · ponto + 5 cm digitado → 145–215"
 end
 
+check('openings · porta com batente, guarnição, abertura na planta e P1/P2') do
+  fresh
+  ok!(run(:walls, 'draw'))
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)], closed: true)
+  wall = m.entities.grep(Sketchup::ComponentInstance).first
+  face, tr = all_faces(wall.definition.entities, wall.transformation).select { |f, t| f.normal.transform(t).y < -0.9 }.max_by { |f, _| f.area }
+  ok!(run(:openings, 'place', 'tipo' => 'porta', 'larg' => 80, 'alt' => 210, 'posicao' => 'canto', 'lado' => 'esquerda', 'dist' => 30, 'bat_larg' => 3, 'guarn_larg' => 5, 'abre' => 'dentro', 'dobradica' => 'esquerda'))
+  click_face(face, pt(200, -7.5, 150), tr)
+  r = pushed.last
+  expect(r['ok'] && r['msg'].start_with?('P1'), r['msg'])
+  porta = wall.definition.entities.grep(Sketchup::ComponentInstance).find { |g| g.name == 'Porta' }
+  partes = porta.definition.entities.grep(Sketchup::ComponentInstance).map(&:name).sort
+  expect(partes == %w[Batente Folha Guarnição], "partes #{partes.inspect}")
+  folha = porta.definition.entities.grep(Sketchup::ComponentInstance).find { |g| g.name == 'Folha' }
+  fw = ((folha.bounds.max.x - folha.bounds.min.x) * 2.54).round(1)
+  expect((fw - 73.4).abs < 0.2, "folha com #{fw} cm (esperava 80 − 2×3 − 0,6)")
+  gb = porta.definition.entities.grep(Sketchup::ComponentInstance).find { |g| g.name == 'Guarnição' }.bounds
+  gw = ((gb.max.x - gb.min.x) * 2.54).round
+  expect(gw == 90, "guarnição com #{gw} cm de largura total (esperava 80 + 2×5)")
+  ab = wall.definition.entities.grep(Sketchup::ComponentInstance).find { |g| g.name == 'Abertura da porta' }
+  expect(ab && ab.definition.entities.grep(Sketchup::Edge).size == 13, 'abertura na planta')
+  t1 = wall.definition.entities.grep(Sketchup::Text).map(&:text)
+  ok!(run(:openings, 'place', 'tipo' => 'porta', 'larg' => 70, 'posicao' => 'canto', 'lado' => 'direita', 'dist' => 30))
+  click_face(face, pt(200, -7.5, 150), tr)
+  t2 = wall.definition.entities.grep(Sketchup::Text).map(&:text)
+  expect(t1.first.start_with?("P1\n80 × 210") && t2.any? { |x| x.start_with?('P2') }, "etiquetas #{t2.inspect}")
+  "partes: #{partes.join(', ')} · folha #{fw} cm · guarnição #{gw} cm · abertura com 13 linhas · #{t2.map { |x| x.split("\n").first }.join(', ')}"
+end
+
 check('stairs · guarda-corpo de vidro, montantes, cabos, mureta, corrimão') do
   out = []
   %w[corrimao vidro montantes cabos mureta].each_with_index do |g, i|

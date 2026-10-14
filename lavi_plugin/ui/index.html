@@ -580,8 +580,19 @@ const FORMS = {
         {k:'larg',type:'num',label:'Largura',unit:'cm',def:80,chips:[60,70,80,90]},
         {k:'alt',type:'num',label:'Altura',unit:'cm',def:210},
         {k:'peit',type:'num',label:'Peitoril',unit:'cm',def:0},
-        {k:'inserir',type:'tg',label:'Colocar porta / vidro pronto',def:true}
+        {k:'inserir',type:'tg',label:'Colocar porta / vidro pronto',def:true},
+        {k:'etiqueta',type:'tg',label:'Etiqueta na planta (P1, J1 e medidas)',def:true,full:1,when:p=>p.tipo!=='vao'}
       ]},
+      {t:'Porta', when:p=>(p.tipo||'porta')==='porta'&&p.inserir!==false, f:[
+        {k:'abre',type:'seg',label:'Abre para',def:'dentro',full:1,opts:[['dentro','O lado do clique'],['fora','O outro lado']]},
+        {k:'dobradica',type:'seg',label:'Dobradiça',def:'esquerda',full:1,opts:[['esquerda','Esquerda'],['direita','Direita']]},
+        {k:'batente',type:'tg',label:'Batente',def:true,full:1},
+        {k:'bat_larg',type:'num',label:'Largura do batente',unit:'cm',def:3,chips:[3,4,5],step:.5,when:p=>p.batente!==false},
+        {k:'guarnicao',type:'tg',label:'Guarnição dos dois lados',def:true,full:1},
+        {k:'guarn_larg',type:'num',label:'Largura da guarnição',unit:'cm',def:5,chips:[4,5,7,10],step:.5,when:p=>p.guarnicao!==false},
+        {k:'folha_esp',type:'num',label:'Espessura da folha',unit:'cm',def:3.5,step:.5},
+        {k:'cor_porta',type:'color',label:'Cor',def:'#B98B62'},
+        {k:'simbolo',type:'tg',label:'Desenhar a abertura no piso (planta)',def:true,full:1}]},
       {t:'Posição na parede', f:[
         {k:'posicao',type:'seg',label:'Onde fica',def:'canto',full:1,opts:[['canto','Da ponta da parede'],['ponto','De um ponto'],['clique','Centro no clique']]},
         {k:'dist',type:'num',label:'Distância até o vão',unit:'cm',def:60,chips:[10,15,30,60,100],when:p=>p.posicao!=='clique'},
@@ -1223,7 +1234,18 @@ function prevOpening(p){
    
    <rect x="${ox}" y="${base-(pe+lh)*s}" width="${lw*s}" height="${lh*s}" fill="none" stroke="#3E4B57" stroke-width="1.5"/>
    ${dimH(ox,ox+lw*s,base-(pe+lh)*s-8,br(lw,0))}${dimV(base-(pe+lh)*s,base-pe*s,ox+lw*s+10,br(lh,0))}${pe>0?dimV(base-pe*s,base,ox-40,br(pe,0)):''}
-   <path d="M4 ${base}H${W-4}" stroke="var(--ink2)"/></svg>`;
+   <path d="M4 ${base}H${W-4}" stroke="var(--ink2)"/></svg>${(p.tipo||'porta')==='porta'&&p.inserir!==false?prevDoorPlan(p):''}`;
+}
+function prevDoorPlan(p){
+  const W=300,H=150, s=1.1, lw=num(p.larg,80), t=15, bat=p.batente!==false?num(p.bat_larg,3):0, g=p.guarnicao!==false?num(p.guarn_larg,5):0;
+  const x0=W/2-lw*s/2, yW=40, esq=p.dobradica!=='direita', dentro=p.abre!=='fora', L=(lw-2*bat)*s, dir=dentro?1:-1;
+  const yFace=dentro?yW+t*s:yW, hx=esq?x0+bat*s:x0+(lw-bat)*s, sx=esq?1:-1;
+  let gfx=`<rect x="10" y="${yW}" width="${x0-10}" height="${t*s}" fill="var(--line2)"/><rect x="${x0+lw*s}" y="${yW}" width="${W-10-x0-lw*s}" height="${t*s}" fill="var(--line2)"/>`;
+  if(bat) gfx+=`<rect x="${x0}" y="${yW}" width="${bat*s}" height="${t*s}" fill="#B98B62"/><rect x="${x0+(lw-bat)*s}" y="${yW}" width="${bat*s}" height="${t*s}" fill="#B98B62"/>`;
+  if(g) gfx+=[yW-1.2,yW+t*s].map(y=>`<rect x="${x0-g*s}" y="${y}" width="${g*s}" height="1.2" fill="#3E4B57"/><rect x="${x0+lw*s}" y="${y}" width="${g*s}" height="1.2" fill="#3E4B57"/>`).join('');
+  gfx+=`<path d="M${hx} ${yFace}V${yFace+dir*L}" stroke="#3E4B57" stroke-width="2"/><path d="M${hx} ${yFace+dir*L}A${L} ${L} 0 0 ${(dir>0)===esq?0:1} ${hx+sx*L} ${yFace}" fill="none" stroke="#A88A80" stroke-dasharray="3 2"/>`;
+  gfx+=`<text x="${W/2}" y="${dentro?yW-8:yW+t*s+16}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#A88A80">P1 · ${br(lw,0)} × ${br(num(p.alt,210),0)}</text>`;
+  return `<span class="tagline">PLANTA · ABRE PARA ${dentro?'O LADO DO CLIQUE':'O OUTRO LADO'}</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${gfx}</svg>`;
 }
 function prevRoof(p){
   const i=num(p.incl,30), min={ceramica:30,concreto:30,fibrocimento:10,metalica:5}[p.telha]||0;

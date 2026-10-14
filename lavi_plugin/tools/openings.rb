@@ -1,4 +1,5 @@
-# Portas, janelas e passagens: clique na parede e o vão é aberto na espessura toda
+# Portas, janelas e passagens: clique na parede e o vão é aberto na espessura toda.
+# Porta com batente, guarnição dos dois lados, folha, abertura desenhada no piso (planta) e etiqueta P1/J1.
 
 module LAVIStudio
   module Plugin
@@ -94,10 +95,14 @@ module LAVIStudio
             f = ents.add_face(p1, p2, p3, p4)
             f.reverse! if f.normal.dot(n) < 0
             f.pushpull(-thick)
-            filler(ents, p['tipo'], p1, u, n, w, h, thick) if p['inserir'] != false && p['inserir'] != 'false'
+            if p['inserir'] != false && p['inserir'] != 'false'
+              p['tipo'] == 'porta' ? door(ents, p1, u, n, w, h, thick, p) : filler(ents, p['tipo'], p1, u, n, w, h, thick)
+            end
+            @code = label(ents, p, p1, u, n, w, h, sill, thick) if %w[porta janela basculante].include?(p['tipo'].to_s) && p['etiqueta'] != false && p['etiqueta'] != 'false'
           end
           Dialog.push('result', tool: 'openings', ok: true,
-                                msg: "Vão de #{H.br(H.to_cm(w), 0)} × #{H.br(H.to_cm(h), 0)} cm aberto#{ref} (parede de #{H.br(H.to_cm(thick), 1)} cm).")
+                                msg: "#{@code ? @code + ' · ' : ''}Vão de #{H.br(H.to_cm(w), 0)} × #{H.br(H.to_cm(h), 0)} cm aberto#{ref} (parede de #{H.br(H.to_cm(thick), 1)} cm).")
+          @code = nil
         rescue StandardError => e
           Dialog.push('result', tool: 'openings', ok: false, msg: e.message)
         end
@@ -159,6 +164,97 @@ module LAVIStudio
           grp.layer = H.tag('lavi · Esquadrias')
         end
 
+        # caixa alinhada à parede: de o, a ao longo de u, b ao longo de v e c ao longo de d
+        def box(ents, o, u, a, v, b, d, c)
+          f = rect(ents, o, u, a, v, b)
+          return unless f
+          f.pushpull(f.normal.dot(d) > 0 ? c : -c)
+        end
+
+        # porta completa: batente na espessura da parede, guarnição dos dois lados, folha e abertura na planta
+        def door(ents, p1, u, n, w, h, thick, p)
+          back = n.reverse
+          grp = ents.add_group
+          e = grp.entities
+          wood = H.material("lavi Porta #{p['cor_porta'].to_s.delete('#')}", p['cor_porta'] || 'B98B62')
+          bat = p['batente'] != false && p['batente'] != 'false' ? H.cm([H.num(p['bat_larg'], 3), 0.5].max) : 0
+          if bat > 0
+            g = e.add_group
+            box(g.entities, p1, u, bat, Z_AXIS, h, back, thick)
+            box(g.entities, p1.offset(u, w - bat), u, bat, Z_AXIS, h, back, thick)
+            box(g.entities, p1.offset(u, bat).offset(Z_AXIS, h - bat), u, w - 2 * bat, Z_AXIS, bat, back, thick)
+            g.name = 'Batente'
+          end
+          if p['guarnicao'] != false && p['guarnicao'] != 'false'
+            gl = H.cm([H.num(p['guarn_larg'], 5), 1].max)
+            ge = H.cm([H.num(p['guarn_esp'], 1), 0.3].max)
+            g = e.add_group
+            [[p1, n], [p1.offset(back, thick), back]].each do |o, out|
+              box(g.entities, o.offset(u, -gl), u, gl, Z_AXIS, h + gl, out, ge)
+              box(g.entities, o.offset(u, w), u, gl, Z_AXIS, h + gl, out, ge)
+              box(g.entities, o.offset(Z_AXIS, h), u, w, Z_AXIS, gl, out, ge)
+            end
+            g.name = 'Guarnição'
+          end
+          leaf = H.cm([H.num(p['folha_esp'], 3.5), 1].max)
+          gap = 0.3.cm
+          lw = w - 2 * bat - 2 * gap
+          lh = h - bat - gap - 0.8.cm
+          dentro = p['abre'].to_s != 'fora'
+          o = p1.offset(u, bat + gap).offset(Z_AXIS, 0.8.cm).offset(back, dentro ? 0 : thick - leaf)
+          g = e.add_group
+          box(g.entities, o, u, lw, Z_AXIS, lh, back, leaf)
+          g.name = 'Folha'
+          grp.material = wood
+          grp.name = 'Porta'
+          grp.layer = H.tag('lavi · Esquadrias')
+          H.mark(grp, 'door', 'larg_cm' => H.to_cm(w), 'alt_cm' => H.to_cm(h))
+          swing(ents, p1, u, n, thick, bat, lw, dentro, p) if p['simbolo'] != false && p['simbolo'] != 'false'
+          grp
+        end
+
+        # abertura da porta desenhada no piso: folha aberta a 90° e o arco (aparece na planta)
+        def swing(ents, p1, u, n, thick, bat, lw, dentro, p)
+          side = dentro ? n : n.reverse
+          esq = p['dobradica'].to_s != 'direita'
+          base = p1.offset(n.reverse, dentro ? 0 : thick).offset(Z_AXIS, 0.1.cm)
+          hinge = base.offset(u, esq ? bat : bat + lw + 0.6.cm)
+          along = esq ? u : u.reverse
+          g = ents.add_group
+          ge = g.entities
+          tip_open = hinge.offset(side, lw)
+          ge.add_line(hinge, tip_open)
+          k = 12
+          pts = (0..k).map do |i|
+            a = Math::PI / 2 * i / k
+            v1 = along.clone
+            v1.length = lw * Math.cos(a)
+            v2 = side.clone
+            v2.length = lw * Math.sin(a)
+            hinge.offset(v1).offset(v2)
+          end
+          pts.each_cons(2) { |a, b| ge.add_line(a, b) }
+          g.name = 'Abertura da porta'
+          g.layer = H.tag('lavi · Abertura em planta')
+        end
+
+        # etiqueta P1 / J1 com as medidas, no meio do vão (para a planta)
+        def label(ents, p, p1, u, n, w, h, sill, thick)
+          porta = p['tipo'] == 'porta'
+          key = porta ? 'n_porta' : 'n_janela'
+          k = H.model.get_attribute(H::DICT, key, 0).to_i + 1
+          H.model.set_attribute(H::DICT, key, k)
+          code = "#{porta ? 'P' : 'J'}#{k}"
+          txt = "#{code}\n#{H.br(H.to_cm(w), 0)} × #{H.br(H.to_cm(h), 0)}#{porta ? '' : " / #{H.br(H.to_cm(sill), 0)}"}"
+          at = p1.offset(u, w / 2.0).offset(n.reverse, thick / 2.0).offset(Z_AXIS, -sill + 0.2.cm)
+          t = ents.add_text(txt, at)
+          if t
+            t.layer = H.tag('lavi · Etiquetas de esquadria')
+            t.set_attribute(H::DICT, 'codigo', code) if t.respond_to?(:set_attribute)
+          end
+          code
+        end
+
         def rect(ents, o, u, w, v, h)
           a = u.clone
           a.length = w
@@ -168,7 +264,7 @@ module LAVIStudio
         end
 
         Registry.register(:openings, name: 'Portas e janelas', tab: :arq, package: :arq, handler: self,
-                                     desc: 'Clique na parede para abrir o vão e já colocar a porta ou a janela.',
+                                     desc: 'Abre o vão na distância certa e coloca porta com batente e guarnição (abertura na planta e P1) ou janela.',
                                      steps: ['Escolha o tipo e as medidas', 'Clique na parede', 'Esc para terminar'])
       end
     end
