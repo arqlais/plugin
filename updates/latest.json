@@ -1,6 +1,6 @@
 {
   "version": "0.7.0",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "c9da77da92ff5e7d125fc3d89a8335bd85c70f020150797beb8c40be9d8571ef",
+  "sha256": "3fd03ce53248599e918edf02d20cb3c6a99d2ef886c77cecf00602ef35ffc350",
   "notes": ["Visual novo, mais limpo: fonte Poppins, lista simples, campos em linhas","Ícones da barra mais finos e ícone principal sem fundo verde","Paredes: digite 5 e Enter para fazer 5 m","Exportar imagens: formatos de feed/story/A4, moldura e grade de terços, atalhos de câmera","Painel volta ao tamanho normal ao clicar no ícone","Orçamento removido"]
 }
