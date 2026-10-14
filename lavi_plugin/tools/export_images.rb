@@ -110,7 +110,7 @@ module LAVIStudio
             attr_accessor :ratio
 
             def initialize
-              super('lavi.frame', 'LAVI · moldura da imagem', description: 'Recorte do formato escolhido e grade de terços.')
+              super('lavi.frame', 'lavi · moldura da imagem', description: 'Recorte do formato escolhido e grade de terços.')
             end
 
             def draw(view)

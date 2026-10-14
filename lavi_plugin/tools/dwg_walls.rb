@@ -24,7 +24,7 @@ module LAVIStudio
           return H.ok('Análise pronta. Se os números fizerem sentido, clique em Levantar paredes.', stats: stats) if action == 'analyze'
           return H.err('Não encontrei pares de linhas paralelas na faixa de espessura informada.') if walls.empty?
           z = H.cm(H.num(p['z'], 0))
-          H.operation('LAVI · DWG → Paredes') { build(walls, gaps, z, p) }
+          H.operation('lavi · DWG → Paredes') { build(walls, gaps, z, p) }
           H.ok("#{walls.size} paredes levantadas e #{gaps.size} vãos tratados.", stats: stats)
         end
 
@@ -178,7 +178,7 @@ module LAVIStudio
           ents = H.model.active_entities
           root = ents.add_group
           root.name = 'Paredes (DWG)'
-          mat = H.material('LAVI_Parede', 'F2F0EC')
+          mat = H.material('lavi_Parede', 'F2F0EC')
           walls.each { |w| box(root.entities, rect(w), z, alt, mat, 'Parede') }
           if p['vergas'] != false && p['vergas'] != 'false'
             gaps.each do |g|
@@ -187,7 +187,7 @@ module LAVIStudio
               box(root.entities, g[:poly], z, sill, mat, 'Peitoril') if g[:window] && sill > 0
             end
           end
-          root.layer = H.tag('LAVI · Paredes')
+          root.layer = H.tag('lavi · Paredes')
           H.mark(root, 'wall', 'alt_cm' => H.to_cm(alt))
         end
 

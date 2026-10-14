@@ -24,7 +24,7 @@ module LAVIStudio
             return H.err('Escolha o componente novo na lista.') unless defn
             insts = H.selection.grep(Sketchup::ComponentInstance)
             return H.err('Selecione os componentes que serão trocados.') if insts.empty?
-            H.operation('LAVI · Substituir') do
+            H.operation('lavi · Substituir') do
               insts.each do |i|
                 i.definition = defn
               end

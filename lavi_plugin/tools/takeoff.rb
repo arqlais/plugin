@@ -72,7 +72,7 @@ module LAVIStudio
                 ck = H.kind_of(e.definition)
                 if ck == 'cabinet'
                   next if skip_joinery
-                elsif top || !e.definition.name.start_with?('LAVI')
+                elsif top || !e.definition.name.start_with?('lavi')
                   comps[e.definition.name] += 1
                 end
               end

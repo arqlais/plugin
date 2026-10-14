@@ -31,10 +31,10 @@ module LAVIStudio
     def self.report_errors
       return if LOAD_ERRORS.empty?
       log = File.join(Dir.tmpdir, 'lavi_plugin_erros.txt')
-      text = "LAVI #{VERSION} · SketchUp #{Sketchup.version} · Ruby #{RUBY_VERSION}\n\n#{LOAD_ERRORS.join("\n\n")}"
+      text = "lavi #{VERSION} · SketchUp #{Sketchup.version} · Ruby #{RUBY_VERSION}\n\n#{LOAD_ERRORS.join("\n\n")}"
       File.write(log, text, encoding: 'UTF-8') rescue nil
-      puts "[LAVI] #{text}"
-      UI.messagebox("LAVI: algumas partes não carregaram.\n\n#{LOAD_ERRORS.map { |l| l.lines.first }.join}\n" \
+      puts "[lavi] #{text}"
+      UI.messagebox("lavi: algumas partes não carregaram.\n\n#{LOAD_ERRORS.map { |l| l.lines.first }.join}\n" \
                     "Tire um print desta mensagem e mande para o suporte.\nDetalhes em: #{log}")
     end
 
@@ -83,7 +83,7 @@ module LAVIStudio
         cmd.small_icon = icon
         cmd.large_icon = icon
         cmd.tooltip = PLUGIN_NAME
-        cmd.status_bar_text = 'Abre o painel do LAVI'
+        cmd.status_bar_text = 'Abre o painel do lavi'
         tb.add_item(cmd)
         TOOLBAR.each do |group|
           tb.add_separator

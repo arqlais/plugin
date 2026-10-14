@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LAVI</title>
+<title>lavi</title>
 <style>
 @font-face{font-family:Poppins;font-weight:400;src:url(fonts/poppins-regular.woff2) format('woff2')}
 @font-face{font-family:Poppins;font-weight:500;src:url(fonts/poppins-medium.woff2) format('woff2')}
@@ -12,7 +12,7 @@
 @font-face{font-family:'JetBrains Mono';font-weight:400;src:url(fonts/jetbrains-mono-latin-400-normal.woff2) format('woff2')}
 @font-face{font-family:'JetBrains Mono';font-weight:500;src:url(fonts/jetbrains-mono-latin-500-normal.woff2) format('woff2')}
 
-/* LAVI · paleta das referências dela: cinza, orquídea, lima, mulberry, pink. Sem degradê.
+/* lavi · paleta das referências dela: cinza, orquídea, lima, mulberry, pink. Sem degradê.
    Estrutura: marca + barra de ícones (só o principal colorido) + lista limpa por grupo. */
 :root{
   --bg:#F5F1EE; --card:#FFFFFF; --card2:#FAF7F5; --ink:#3E4B57; --ink2:#56636E; --muted:#8B939A;
@@ -40,7 +40,7 @@ body{background:var(--bg);color:var(--ink);font:400 13px/1.45 var(--ui);-webkit-
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pink);outline-offset:2px}
 input,select,textarea{font:inherit;color:var(--ink)}
-svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .mono{font-family:var(--mono)}
 
 #app{display:flex;flex-direction:column;height:100vh}
@@ -49,7 +49,7 @@ header.top{display:flex;align-items:center;gap:8px;padding:18px 18px 14px}
 .logo{width:30px;height:30px;display:grid;place-items:center;flex:none;color:var(--mul)}
 :root[data-theme="dark"] .logo{color:var(--orchid)}
 .logo svg{width:30px;height:30px}
-.brand b{font:600 24px/1 var(--ui);letter-spacing:-.02em;color:var(--ink)}
+.brand b{font:600 25px/1 var(--ui);letter-spacing:-.03em;color:var(--ink)}
 .brand b .dot{color:var(--pink)}
 :root[data-theme="dark"] .brand b{color:var(--ink)}
 .brand b em{font-style:normal}
@@ -66,7 +66,7 @@ header.top{display:flex;align-items:center;gap:8px;padding:18px 18px 14px}
 
 /* barra de ícones */
 nav.tabs{margin:0 18px 6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:5px 6px;display:flex;flex-wrap:wrap;align-items:center;gap:2px;flex:none}
-.ri svg.i{width:18px;height:18px;stroke-width:1.3}
+.ri svg.i{width:18px;height:18px;stroke-width:1.2}
 .ri{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--ink2);transition:background .15s,color .15s;position:relative}
 .ri:hover{background:var(--card2);color:var(--ink)}
 .ri.on{background:var(--sel);color:var(--on-sel)}
@@ -325,7 +325,7 @@ textarea.ta{width:100%;min-height:70px;border:1px solid var(--line);border-radiu
   <header class="top">
     <div class="brand" data-tab="home" role="button" title="Início" style="cursor:pointer">
       <div class="logo" aria-hidden="true" id="logo"></div>
-      <div><b>LAVI<span class="dot">.</span></b><small id="ver">plugin</small></div>
+      <div><b>lavi<span class="dot">.</span></b><small id="ver">plugin</small></div>
     </div>
     <button class="iconbtn" id="btnLic" aria-label="Licença e atualizações" title="Licença e atualizações"></button>
     <button class="iconbtn" id="btnTheme" aria-label="Modo escuro" title="Modo claro / escuro"></button>
@@ -339,7 +339,7 @@ textarea.ta{width:100%;min-height:70px;border:1px solid var(--line);border-radiu
 
 <script>
 /* ===================================================================
-   LAVI · painel
+   lavi · painel
    Contrato: sketchup.run(JSON {req, tool, action, params}) → PLN.onResult([req, res])
    Eventos do Ruby: PLN.on(evento, dados)  ·  Estado inicial: PLN.init(state)
    Fora do SketchUp o painel usa o mock (window.__MOCK__) para prévias.
@@ -364,17 +364,17 @@ const IC = {
   roofs:'M2 12l10-8 10 8M5 10v10h14V10M10 20v-5h4v5',
   urban_index:'M3 3h18v18H3zM7 17L17 7M8 8h.01M16 16h.01',
   tiling:'M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18',
-  baseboard:'M4 3v17h17M4 15h17M8 15v5M14 15v5',
-  ceiling:'M2 5h20M5 5v3h14V5M12 8v4M9 12h6l-1 3h-4z',
+  baseboard:'M5 3v18h16M5 17h14v4M9 8h6',
+  ceiling:'M3 4h18M5 4v3h14V4M12 7v3M8.5 14a3.5 3.5 0 0 1 7 0zM12 16.5v1',
   pres:'M3 4h18v12H3zM8 20h8M12 16v4',
   scenes:'M3 5h18v14H3zM3 9h18M7 5l2 4M12 5l2 4M17 5l2 4',
   export_images:'M3 6h12v12H3zM3 15l3-3 3 3 2-2 4 4M18 4v9M15 10l3 3 3-3',
   room_tags:'M3 4h18v16H3zM12 4v7H3M8 15h8M8 18h5',
   furniture:'M5 11V7a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4M3 11a2 2 0 0 1 4 0v3h10v-3a2 2 0 0 1 4 0v6H3zM6 17v3M18 17v3',
   measure:'M3 17L17 3l4 4L7 21zM7 13l2 2M10 10l2 2M13 7l2 2',
-  isolate:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M2 12h3M19 12h3',
+  isolate:'M3 7V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4M12 7l4 2.5v5L12 17l-4-2.5v-5zM8 9.5l4 2.5 4-2.5M12 12v5',
   cut_list:'M3 4h18v16H3zM3 11h10M13 4v16M13 14h8M6.5 7.5h3',
-  countertop:'M3 9h18M3 9v3h18V9M8 12v2a4 4 0 0 0 8 0v-2M12 9V5h3',
+  countertop:'M2 8h20v3H2zM7 11v1.5a5 5 0 0 0 10 0V11M12 3.5v4.5M12 3.5h3',
   takeoff:'M9 3h6v3H9zM7 4.5H5v16.5h14V4.5h-2M8 11h8M8 15h5',
   model_health:'M3 12h4l2.5-5 4 10 2.5-5H21',
   align:'M4 3v18M8 6h12v4H8zM8 14h7v4H8z',
@@ -409,7 +409,7 @@ const IC = {
 const ic = (k, cls) => `<svg class="i ${cls||''}" viewBox="0 0 24 24" aria-hidden="true"><path d="${IC[k]||IC.sparkle}"/></svg>`;
 
 /* ---------------- pictogramas das escolhas ---------------- */
-const PIC = (inner, vb) => `<svg class="pic" viewBox="${vb||'0 0 46 40'}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">${inner}</svg>`;
+const PIC = (inner, vb) => `<svg class="pic" viewBox="${vb||'0 0 46 40'}" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round">${inner}</svg>`;
 const P = {
   centro: PIC('<rect x="6" y="14" width="34" height="12" fill="currentColor" opacity=".18"/><path d="M4 20h38" stroke-dasharray="3 2" stroke="var(--pink)"/>'),
   esquerda: PIC('<rect x="6" y="8" width="34" height="12" fill="currentColor" opacity=".18"/><path d="M4 20h38" stroke-dasharray="3 2" stroke="var(--pink)"/>'),
@@ -810,7 +810,7 @@ function tilePict(pat){
   const p={padrao:pat,pc:pat==='damas'?10:pat==='organica'?11:pat==='chevron'||pat==='espinha'?14:16,pl:pat==='damas'?10:pat==='organica'?9:pat==='chevron'||pat==='espinha'?4:7,rej:12,amarr:'meia'};
   const r=tilePieces(p,40,[-23,-20]), a=num(r.base,0);
   const polys=r.pieces.map(t=>`<polygon points="${t.pts.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}"${pat==='damas'&&t.k?' fill="currentColor" fill-opacity=".35"':''}/>`).join('');
-  return `<svg class="pic" viewBox="0 0 46 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"><defs><clipPath id="pc_${pat}"><rect x="5" y="5" width="36" height="30" rx="3"/></clipPath></defs><g clip-path="url(#pc_${pat})"><g transform="translate(23 20) rotate(${-a}) scale(1 -1)">${polys}</g></g></svg>`;
+  return `<svg class="pic" viewBox="0 0 46 40" fill="none" stroke="currentColor" stroke-width=".9" stroke-linejoin="round"><defs><clipPath id="pc_${pat}"><rect x="5" y="5" width="36" height="30" rx="3"/></clipPath></defs><g clip-path="url(#pc_${pat})"><g transform="translate(23 20) rotate(${-a}) scale(1 -1)">${polys}</g></g></svg>`;
 }
 TILE_PATS.forEach(x=>{ P['pat_'+x[0]]=tilePict(x[0]); });
 function prevTiles(p){
@@ -942,7 +942,7 @@ function renderTakeoff(r){
   let h='';
   if(r.materials&&r.materials.length) h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>Material</th><th class="n">Piso</th><th class="n">Parede</th><th class="n">Teto</th><th class="n">Total m²</th></tr></thead><tbody>${
     r.materials.map(m=>`<tr><td>${esc(m[0])}</td><td class="n">${br(m[1])}</td><td class="n">${br(m[2])}</td><td class="n">${br(m[3])}</td><td class="n"><b>${br(m[5])}</b></td></tr>`).join('')}</tbody></table></div>`;
-  if(r.items&&r.items.length) h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>Itens do LAVI</th><th class="n">Qtd</th></tr></thead><tbody>${r.items.map(i=>`<tr><td>${esc(i[0])}</td><td class="n">${br(i[1],i[2]==='un'?0:2)} ${esc(i[2])}</td></tr>`).join('')}</tbody></table></div>`;
+  if(r.items&&r.items.length) h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>Itens do lavi</th><th class="n">Qtd</th></tr></thead><tbody>${r.items.map(i=>`<tr><td>${esc(i[0])}</td><td class="n">${br(i[1],i[2]==='un'?0:2)} ${esc(i[2])}</td></tr>`).join('')}</tbody></table></div>`;
   if(r.components&&r.components.length) h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>Componentes</th><th class="n">Qtd</th></tr></thead><tbody>${r.components.map(c=>`<tr><td>${esc(c[0])}</td><td class="n">${c[1]}</td></tr>`).join('')}</tbody></table></div>`;
   return h;
 }
@@ -1215,7 +1215,7 @@ function setTheme(t){ document.documentElement.dataset.theme=t; $('#btnTheme').i
 window.PLN = {
   init(state){
     S.state=state; S.update=state.update||null; setTheme(state.theme||'light');
-    $('#btnLic').innerHTML=ic('key'); $('#sIcon').innerHTML=ic('search'); $('#logo').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6"><path d="M4 4h16v16H4zM14 4v6M4 13h7" stroke="currentColor"/><path d="M11 13A7 7 0 0 1 4 20" stroke="#A88A80"/></svg>';
+    $('#btnLic').innerHTML=ic('key'); $('#sIcon').innerHTML=ic('search'); $('#logo').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.3"><path d="M4 4h16v16H4zM14 4v6M4 13h7" stroke="currentColor"/><path d="M11 13A7 7 0 0 1 4 20" stroke="#A88A80"/></svg>';
     if(state.open && toolById(state.open)) go('tool:'+state.open, state.open);
     else if(state.open==='license') go('license');
     else render();
@@ -1260,9 +1260,9 @@ const MOCK = {
     ['model_health','Saúde do modelo','base','base','Encontra o que pesa e bagunça o arquivo e corrige com um clique.',['Analisar','Marcar o que corrigir','Corrigir']],
     ['align','Alinhar e distribuir','base','base','Alinha pela borda ou centro e distribui com espaço igual.',['Selecione os objetos','Escolha eixo e modo','Aplicar']],
     ['replace','Selecionar e substituir','base','base','Seleciona todas as cópias e troca por outro componente mantendo a posição.',['Selecione um componente','Selecionar iguais','Escolha o novo e troque']],
-    ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do LAVI em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
+    ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do lavi em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
   ],
-  state(){ return { name:'LAVI', version:'0.6.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
+  state(){ return { name:'lavi', version:'0.6.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
     packages:[{id:'base',name:'Essencial',free:true,active:true},{id:'arq',name:'Arquitetura',active:true},{id:'rev',name:'Revestimentos',active:true},{id:'pres',name:'Apresentação',active:true},{id:'marc',name:'Marcenaria',active:true},{id:'quant',name:'Quantitativo',active:false}],
     tools:this.tools.map(t=>({id:t[0],name:t[1],tab:t[2],package:t[3],desc:t[4],steps:t[5],status:'ready',locked:t[3]==='quant'})) }; },
   run(tool, action, p){
@@ -1285,7 +1285,7 @@ const MOCK = {
       items:[['Paginação de piso',48.2,'m²'],['Rodapé',38.6,'m'],['Portas',7,'un'],['Janelas',5,'un']],components:[['Cadeira Eames',6],['Sofá 3 lugares',1],['Pendente cobre',3]]};
     if(tool==='model_health') return {ok:true,msg:'2 ponto(s) de atenção.',score:76,stats:[['Faces','48.210',null],['Arestas','96.533',null],['Componentes sem uso','37',false],['Materiais sem uso','12',false],['Linhas soltas','0',true],['Faces pintadas só no verso','0',true],['Profundidade de grupos','4',true],['Tamanho do arquivo','38,2 MB',true]]};
     if(tool==='urban_index') return {ok:true,msg:'Índices atualizados.',stats:[['Terreno','300,00 m²'],['Projeção','168,00 m²'],['Área construída','312,50 m²'],['Área permeável','48,00 m²'],['Taxa de ocupação','56,0 %',true],['Coef. de aproveitamento','1,04',true],['Taxa de permeabilidade','16,0 %',true]]};
-    if(tool==='auto_tags') return {ok:true,msg:'42 objetos organizados em 6 etiquetas.',tags:[['Mobiliário',true,18],['Vegetação',true,9],['Iluminação',true,7],['LAVI · Paredes',true,1],['LAVI · Marcenaria',false,9],['Pessoas',true,3]]};
+    if(tool==='auto_tags') return {ok:true,msg:'42 objetos organizados em 6 etiquetas.',tags:[['Mobiliário',true,18],['Vegetação',true,9],['Iluminação',true,7],['lavi · Paredes',true,1],['lavi · Marcenaria',false,9],['Pessoas',true,3]]};
     if(tool==='replace'&&action==='list') return {ok:true,msg:'3 componentes.',defs:[['Cadeira Eames',6],['Cadeira Wishbone',0],['Pendente cobre',3]]};
     if(action==='place'||action==='draw'||action==='insert') return {ok:true,picking:true,msg:'Clique no modelo (prévia: fora do SketchUp).'};
     return {ok:true,msg:'Feito (prévia fora do SketchUp).'};

@@ -14,7 +14,7 @@ module LAVIStudio
             sel = H.selection.to_a
             return H.err('Selecione o que quer manter visível.') if sel.empty?
             n = 0
-            H.operation('LAVI · Isolar seleção') do
+            H.operation('lavi · Isolar seleção') do
               m.active_entities.each do |e|
                 next if sel.include?(e) || !e.respond_to?(:hidden?) || e.hidden?
                 next if e.is_a?(Sketchup::Edge) && e.faces.any? { |f| sel.include?(f) }
@@ -27,7 +27,7 @@ module LAVIStudio
             H.ok("#{n} itens escondidos. Clique em Mostrar tudo para voltar.")
           when 'restore'
             n = 0
-            H.operation('LAVI · Mostrar tudo') do
+            H.operation('lavi · Mostrar tudo') do
               each_marked(m.entities) do |e|
                 e.hidden = false
                 e.delete_attribute(H::DICT, 'isolado')

@@ -21,10 +21,10 @@ module LAVIStudio
           old_cam = view.camera
           old_sec = ro['DisplaySectionPlanes']
           made = []
-          H.operation('LAVI · Cenas automáticas') do
+          H.operation('lavi · Cenas automáticas') do
             popt['ShowTransition'] = false
             ro['DisplaySectionPlanes'] = false
-            tag = H.tag('LAVI · Cortes')
+            tag = H.tag('lavi · Cortes')
             c = bb.center
             d = bb.diagonal
             if on?(p['plantas'])

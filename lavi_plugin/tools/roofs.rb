@@ -45,7 +45,7 @@ module LAVIStudio
             Geom::Point3d.new(u.x * gx + v.x * gy, u.y * gx + v.y * gy, z0 + z)
           end
 
-          info = H.operation('LAVI · Telhado') do
+          info = H.operation('lavi · Telhado') do
             grp = H.model.active_entities.add_group
             e = grp.entities
             a = world.call(0, 0, 0)
@@ -90,10 +90,10 @@ module LAVIStudio
             bottom = e.add_face(a, b, c, d)
             bottom.reverse! if bottom.normal.z > 0
             e.grep(Sketchup::Face).each { |f| f.reverse! if f != bottom && f.normal.z < -0.01 }
-            mat = H.material("LAVI_Telha_#{p['telha'] || 'ceramica'}", telha[:cor])
+            mat = H.material("lavi_Telha_#{p['telha'] || 'ceramica'}", telha[:cor])
             slopes.compact.each { |f| f.material = mat }
             grp.name = 'Telhado'
-            grp.layer = H.tag('LAVI · Cobertura')
+            grp.layer = H.tag('lavi · Cobertura')
             area = slopes.compact.sum(&:area)
             H.mark(grp, 'roof', 'area_m2' => H.m2(area))
             { area: H.m2(area), proj: H.m2(len * wid), ridge: H.to_m(ridge), h: H.to_cm(h) }

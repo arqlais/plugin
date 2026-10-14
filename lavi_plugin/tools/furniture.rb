@@ -52,7 +52,7 @@ module LAVIStudio
         def apply(p)
           insts = targets
           return H.err('Selecione um ou mais móveis (componentes). Grupos não servem: transforme em componente antes.') if insts.empty?
-          H.operation('LAVI · Ficha de mobiliário') do
+          H.operation('lavi · Ficha de mobiliário') do
             insts.map(&:definition).uniq.each do |d|
               DEF_KEYS.each do |k|
                 v = p[k]

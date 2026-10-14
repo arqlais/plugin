@@ -18,7 +18,7 @@ module LAVIStudio
             )
             H.ok('Clique no piso de cada ambiente. Esc termina.', picking: true)
           when 'update'
-            n = H.operation('LAVI · Atualizar etiquetas') { tags.count { |t| refresh(t) } }
+            n = H.operation('lavi · Atualizar etiquetas') { tags.count { |t| refresh(t) } }
             H.ok("#{n} etiqueta(s) atualizada(s).", stats: table_stats)
           when 'list'
             H.ok('Quadro de áreas.', stats: table_stats, rooms: rooms.map { |r| r.values_at(:nome, :area, :pd, :piso, :perim) })
@@ -49,10 +49,10 @@ module LAVIStudio
           end
           name = 'AMBIENTE' if name.empty?
           @last_name = name
-          H.operation('LAVI · Etiqueta de ambiente') do
+          H.operation('lavi · Etiqueta de ambiente') do
             g = H.model.active_entities.add_group
             g.name = "Etiqueta · #{name}"
-            g.layer = H.tag('LAVI · Ambientes')
+            g.layer = H.tag('lavi · Ambientes')
             H.mark(g, 'room_tag', 'nome' => name, 'pd_cm' => H.num(p['pd'], 0), 'estilo' => p['estilo'] || '3d',
                                   'alt_cm' => H.num(p['altura'], 12), 'piso' => p['piso'] != false && p['piso'] != 'false',
                                   'maiusc' => p['maiusc'] != false && p['maiusc'] != 'false',
@@ -97,7 +97,7 @@ module LAVIStudio
             end
             bb = g.entities.to_a.inject(Geom::BoundingBox.new) { |b, e| b.add(e.bounds) }
             g.entities.transform_entities(Geom::Transformation.translation([center.x - bb.center.x, center.y - bb.center.y, center.z + 0.5.cm]), g.entities.to_a)
-            g.material = H.material('LAVI_Texto', '2F3A45')
+            g.material = H.material('lavi_Texto', '2F3A45')
           end
         end
 

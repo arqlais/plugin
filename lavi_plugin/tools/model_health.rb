@@ -12,7 +12,7 @@ module LAVIStudio
           when 'scan' then scan
           when 'fix'
             done = []
-            H.operation('LAVI · Saúde do modelo') do
+            H.operation('lavi · Saúde do modelo') do
               done << purge if p['purge'] != false
               done << loose if p['loose'] == true || p['loose'] == 'true'
               done << back if p['back'] != false

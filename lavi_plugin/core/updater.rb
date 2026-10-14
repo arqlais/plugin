@@ -99,7 +99,7 @@ module LAVIStudio
             @install_after_check = false
             download(info)
           elsif manual
-            ask = UI.messagebox("LAVI #{info['version']} disponível.\n\n#{Array(info['notes']).join("\n")}\n\nAtualizar agora?", MB_YESNO)
+            ask = UI.messagebox("lavi #{info['version']} disponível.\n\n#{Array(info['notes']).join("\n")}\n\nAtualizar agora?", MB_YESNO)
             download(info) if ask == IDYES
           end
         else
@@ -117,7 +117,7 @@ module LAVIStudio
         return if @popped == info['version']
         return unless defined?(UI::Notification) && defined?(EXTENSION)
         @popped = info['version']
-        @note = UI::Notification.new(EXTENSION, "LAVI #{info['version']} disponível. Clique em Atualizar: instala sozinho, sem reinstalar.")
+        @note = UI::Notification.new(EXTENSION, "lavi #{info['version']} disponível. Clique em Atualizar: instala sozinho, sem reinstalar.")
         @note.on_accept('Atualizar') { install_now }
         @note.on_dismiss('Depois') {}
         @note.show
@@ -158,7 +158,7 @@ module LAVIStudio
           Sketchup.install_from_archive(path)
         end
         notify(state: 'installed', version: info['version'])
-        UI.messagebox("LAVI atualizado para #{info['version']}.\nFeche e abra o SketchUp para usar a versão nova.\n(Não precisa reinstalar nada.)")
+        UI.messagebox("lavi atualizado para #{info['version']}.\nFeche e abra o SketchUp para usar a versão nova.\n(Não precisa reinstalar nada.)")
       rescue StandardError => e
         log("instalação: #{e.class}: #{e.message}")
         notify(state: 'error', msg: "Não consegui instalar: #{e.message}")

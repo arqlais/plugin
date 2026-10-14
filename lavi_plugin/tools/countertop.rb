@@ -20,7 +20,7 @@ module LAVIStudio
           return H.err('Selecione o módulo com tampo (ou o grupo do tampo).') if sel.size != 1
           target = sel[0]
           msg = nil
-          H.operation('LAVI · Recorte no tampo') do
+          H.operation('lavi · Recorte no tampo') do
             slab = target
             if target.is_a?(Sketchup::ComponentInstance) && H.kind_of(target.definition) == 'cabinet'
               slab = detach_top(target)
@@ -85,7 +85,7 @@ module LAVIStudio
             f = g.entities.add_face([cx - w / 2 - m, y0 - m, z], [cx + w / 2 + m, y0 - m, z], [cx + w / 2 + m, y0 + d + m, z], [cx - w / 2 - m, y0 + d + m, z])
             f.reverse! if f.normal.z < 0
             f.pushpull(0.6.cm)
-            g.material = H.material('LAVI_VidroPreto', '151517')
+            g.material = H.material('lavi_VidroPreto', '151517')
             g.name = 'Cooktop'
           else
             g = ents.add_group
@@ -96,7 +96,7 @@ module LAVIStudio
             t = b.map { |x, y, _| [x, y, z - thick] }
             e.add_face(b)
             4.times { |i| e.add_face(b[i], b[(i + 1) % 4], t[(i + 1) % 4], t[i]) }
-            g.material = H.material('LAVI_Inox', 'C9CDD1')
+            g.material = H.material('lavi_Inox', 'C9CDD1')
             g.name = p['tipo'] == 'cuba_dupla' ? 'Cuba dupla' : 'Cuba'
             if p['tipo'] == 'cuba_dupla'
               mid = e.add_face([cx - 0.5.cm, y0, zb], [cx + 0.5.cm, y0, zb], [cx + 0.5.cm, y0 + d, zb], [cx - 0.5.cm, y0 + d, zb])

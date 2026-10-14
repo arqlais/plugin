@@ -14,7 +14,7 @@ module LAVIStudio
           return H.err('Selecione pelo menos 2 grupos ou componentes.') if objs.size < 2
           i = AX[p['eixo']] || 0
           modo = p['modo'] || 'min'
-          H.operation('LAVI · Alinhar') do
+          H.operation('lavi · Alinhar') do
             if modo == 'distribuir'
               distribute(objs, i, p)
             else

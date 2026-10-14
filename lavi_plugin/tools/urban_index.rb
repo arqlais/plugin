@@ -21,15 +21,15 @@ module LAVIStudio
             return H.err('Categoria inválida.') unless CATS[cat]
             sel = H.selection.to_a.select { |e| e.is_a?(Sketchup::Face) || H.instance?(e) }
             return H.err('Selecione faces (ou grupos de pavimento) primeiro.') if sel.empty?
-            H.operation('LAVI · Índices') do
+            H.operation('lavi · Índices') do
               sel.each do |e|
                 e.set_attribute(H::DICT, 'urb_cat', cat)
-                e.material = H.material("LAVI_Indice_#{cat}", CATS[cat][:cor], 0.75) if p['colorir'] != false
+                e.material = H.material("lavi_Indice_#{cat}", CATS[cat][:cor], 0.75) if p['colorir'] != false
               end
             end
             calc(p, "#{sel.size} item(ns) marcado(s) como #{CATS[cat][:nome]}.")
           when 'clear'
-            H.operation('LAVI · Índices') do
+            H.operation('lavi · Índices') do
               H.selection.each { |e| e.delete_attribute(H::DICT, 'urb_cat') if e.respond_to?(:delete_attribute) }
             end
             calc(p, 'Marcação removida da seleção.')

@@ -19,8 +19,8 @@ module LAVIStudio
           desc = H.cm(H.num(p['sanca_desc'], 15))
           area = 0.0
           perim = 0.0
-          H.operation('LAVI · Forro') do
-            mat = H.material('LAVI_Gesso', 'FAFAF8')
+          H.operation('lavi · Forro') do
+            mat = H.material('lavi_Gesso', 'FAFAF8')
             grp = H.model.active_entities.add_group
             e = grp.entities
             faces.each do |face, tr|
@@ -44,7 +44,7 @@ module LAVIStudio
             end
             grp.material = mat
             grp.name = sanca ? 'Forro com sanca' : 'Forro'
-            grp.layer = H.tag('LAVI · Forro')
+            grp.layer = H.tag('lavi · Forro')
             H.mark(grp, 'ceiling', 'area_m2' => H.m2(area))
           end
           a = H.m2(area)

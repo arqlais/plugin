@@ -60,7 +60,7 @@ module LAVIStudio
             Dialog.push('result', tool: 'openings', ok: false, msg: 'Não encontrei o outro lado da parede. A parede precisa ser um volume fechado.')
             return
           end
-          H.operation('LAVI · Vão') do
+          H.operation('lavi · Vão') do
             f = ents.add_face(p1, p2, p3, p4)
             f.reverse! if f.normal.dot(n) < 0
             f.pushpull(-thick)
@@ -105,7 +105,7 @@ module LAVIStudio
             hh = h - gap
             face = rect(e, o, u, ww, Z_AXIS, hh)
             face.pushpull(face.normal.dot(back) > 0 ? leaf : -leaf)
-            grp.material = H.material('LAVI_Porta', 'B98B62')
+            grp.material = H.material('lavi_Porta', 'B98B62')
             grp.name = 'Porta'
             H.mark(grp, 'door', 'larg_cm' => H.to_cm(w), 'alt_cm' => H.to_cm(h))
           else
@@ -121,12 +121,12 @@ module LAVIStudio
             go = inner_o.offset(back, depth / 2.0)
             gf = rect(gl.entities, go, u, w - 2 * frame, Z_AXIS, h - 2 * frame)
             gf.pushpull(0.6.cm)
-            gl.material = H.material('LAVI_Vidro', 'BFD9E6', 0.35)
-            grp.material = H.material('LAVI_Esquadria', '3E4B57')
+            gl.material = H.material('lavi_Vidro', 'BFD9E6', 0.35)
+            grp.material = H.material('lavi_Esquadria', '3E4B57')
             grp.name = 'Janela'
             H.mark(grp, 'window', 'larg_cm' => H.to_cm(w), 'alt_cm' => H.to_cm(h))
           end
-          grp.layer = H.tag('LAVI · Esquadrias')
+          grp.layer = H.tag('lavi · Esquadrias')
         end
 
         def rect(ents, o, u, w, v, h)

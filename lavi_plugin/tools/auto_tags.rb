@@ -8,10 +8,10 @@ module LAVIStudio
         H = Helpers
 
         KIND_TAGS = {
-          'wall' => 'LAVI · Paredes', 'door' => 'LAVI · Esquadrias', 'window' => 'LAVI · Esquadrias',
-          'stairs' => 'LAVI · Escadas', 'roof' => 'LAVI · Cobertura', 'floor_tiling' => 'LAVI · Piso',
-          'wall_tiling' => 'LAVI · Revestimento parede', 'baseboard' => 'LAVI · Rodapé',
-          'ceiling' => 'LAVI · Forro', 'cabinet' => 'LAVI · Marcenaria'
+          'wall' => 'lavi · Paredes', 'door' => 'lavi · Esquadrias', 'window' => 'lavi · Esquadrias',
+          'stairs' => 'lavi · Escadas', 'roof' => 'lavi · Cobertura', 'floor_tiling' => 'lavi · Piso',
+          'wall_tiling' => 'lavi · Revestimento parede', 'baseboard' => 'lavi · Rodapé',
+          'ceiling' => 'lavi · Forro', 'cabinet' => 'lavi · Marcenaria'
         }.freeze
 
         KEYWORDS = [
@@ -30,7 +30,7 @@ module LAVIStudio
           when 'organize'
             over = p['sobrescrever'] == true || p['sobrescrever'] == 'true'
             count = Hash.new(0)
-            H.operation('LAVI · Etiquetas') do
+            H.operation('lavi · Etiquetas') do
               H.model.entities.each do |e|
                 next unless H.instance?(e)
                 next unless over || e.layer.nil? || e.layer == H.model.layers[0]
@@ -47,7 +47,7 @@ module LAVIStudio
           when 'toggle'
             layer = H.model.layers[p['tag'].to_s]
             return H.err('Etiqueta não encontrada.') unless layer
-            H.operation('LAVI · Etiqueta') { layer.visible = !layer.visible? }
+            H.operation('lavi · Etiqueta') { layer.visible = !layer.visible? }
             H.ok("#{layer.name} #{layer.visible? ? 'visível' : 'escondida'}.", tags: list)
           else
             H.err('Ação desconhecida.')
@@ -69,7 +69,7 @@ module LAVIStudio
         end
 
         Registry.register(:auto_tags, name: 'Etiquetas automáticas', tab: :base, package: :base, handler: self,
-                                      desc: 'Organiza móveis, plantas, luminárias e itens do LAVI em etiquetas.',
+                                      desc: 'Organiza móveis, plantas, luminárias e itens do lavi em etiquetas.',
                                       steps: ['Organizar', 'Ligue e desligue cada etiqueta'])
       end
     end

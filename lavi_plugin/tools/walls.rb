@@ -24,7 +24,7 @@ module LAVIStudio
           when 'from_edges'
             chains = chain_edges(H.selection.grep(Sketchup::Edge))
             return H.err('Selecione as linhas da planta (ex.: o eixo das paredes).') if chains.empty?
-            info = H.operation('LAVI · Paredes') { chains.map { |pts, closed| build(pts, closed, p) } }
+            info = H.operation('lavi · Paredes') { chains.map { |pts, closed| build(pts, closed, p) } }
             summary(info)
           else
             H.err('Ação desconhecida.')
@@ -32,7 +32,7 @@ module LAVIStudio
         end
 
         def build_async(pts, closed, p)
-          info = H.operation('LAVI · Paredes') { [build(pts, closed, p)] }
+          info = H.operation('lavi · Paredes') { [build(pts, closed, p)] }
           Dialog.push('result', { tool: 'walls' }.merge(summary(info)))
         rescue StandardError => e
           Dialog.push('result', tool: 'walls', ok: false, msg: e.message)
@@ -73,8 +73,8 @@ module LAVIStudio
           end
           face.reverse! if face.normal.z < 0
           face.pushpull(alt)
-          grp.material = H.material('LAVI_Parede', 'F2F0EC')
-          grp.layer = H.tag('LAVI · Paredes')
+          grp.material = H.material('lavi_Parede', 'F2F0EC')
+          grp.layer = H.tag('lavi · Paredes')
           grp.name = 'Parede'
           H.mark(grp, 'wall', 'esp_cm' => H.to_cm(esp), 'alt_cm' => H.to_cm(alt))
           len = 0.0

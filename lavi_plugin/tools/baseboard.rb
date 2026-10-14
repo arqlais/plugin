@@ -16,8 +16,8 @@ module LAVIStudio
           alt = H.cm(H.num(p['alt'], 7))
           esp = H.cm(H.num(p['esp'], 1.5))
           total = 0.0
-          H.operation('LAVI · Rodapé') do
-            mat = H.material("LAVI_Rodape_#{p['cor'].to_s.delete('#')}", p['cor'] || 'FFFFFF')
+          H.operation('lavi · Rodapé') do
+            mat = H.material("lavi_Rodape_#{p['cor'].to_s.delete('#')}", p['cor'] || 'FFFFFF')
             grp = H.model.active_entities.add_group
             faces.each do |face, tr|
               fr = G.face_frame(face, tr)
@@ -34,7 +34,7 @@ module LAVIStudio
             end
             grp.material = mat
             grp.name = 'Rodapé'
-            grp.layer = H.tag('LAVI · Rodapé')
+            grp.layer = H.tag('lavi · Rodapé')
             H.mark(grp, 'baseboard', 'metros' => H.to_m(total))
           end
           barra = H.num(p['barra'], 2.4)

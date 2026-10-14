@@ -99,7 +99,7 @@ module LAVIStudio
             begin
               tool[:handler].handle(data['action'].to_s, data['params'] || {})
             rescue StandardError => e
-              puts "[LAVI] #{e.class}: #{e.message}\n#{e.backtrace.first(6).join("\n")}"
+              puts "[lavi] #{e.class}: #{e.message}\n#{e.backtrace.first(6).join("\n")}"
               Helpers.err("Algo deu errado: #{e.message}")
             end
           end

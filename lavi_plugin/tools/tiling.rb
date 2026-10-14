@@ -267,7 +267,7 @@ module LAVIStudio
             H.ok('Imagem adicionada.', values: { 'texturas' => (Array(p['texturas']) + [path]).uniq })
           when 'edit'
             g = tiling_group
-            return H.err('Selecione uma paginação feita pelo LAVI para editar.') unless g
+            return H.err('Selecione uma paginação feita pelo lavi para editar.') unless g
             saved = JSON.parse(g.get_attribute(H::DICT, 'params').to_s) rescue nil
             return H.err('Esta paginação é de uma versão antiga e não guarda as opções.') unless saved
             H.ok('Opções carregadas. Mude o que quiser e clique em Gerar paginação.', values: saved, surface: surface_info)
@@ -300,13 +300,13 @@ module LAVIStudio
         def piece_materials(p)
           texs = Array(p['texturas']).select { |f| File.exist?(f.to_s) }
           return texs.map { |f| texture_material(f) } unless texs.empty?
-          mats = [H.material("LAVI_Peca_#{p['cor'].to_s.delete('#')}", p['cor'] || 'E9E3DC')]
-          mats << H.material("LAVI_Peca_#{p['cor2'].to_s.delete('#')}", p['cor2'] || '3E4B57') if p['padrao'] == 'damas'
+          mats = [H.material("lavi_Peca_#{p['cor'].to_s.delete('#')}", p['cor'] || 'E9E3DC')]
+          mats << H.material("lavi_Peca_#{p['cor2'].to_s.delete('#')}", p['cor2'] || '3E4B57') if p['padrao'] == 'damas'
           mats
         end
 
         def texture_material(file)
-          name = "LAVI_#{File.basename(file, '.*')}"
+          name = "lavi_#{File.basename(file, '.*')}"
           mat = H.model.materials[name] || H.model.materials.add(name)
           mat.texture = file unless mat.texture
           mat
@@ -320,11 +320,11 @@ module LAVIStudio
           esp = H.mm([H.num(p['esp'], 9), 0.1].max)
           outs = nil
           total = nil
-          H.operation('LAVI · Paginação') do
+          H.operation('lavi · Paginação') do
             outs, total = run_layouts(t, p)
             mats = piece_materials(p)
             textured = mats.any?(&:texture)
-            rej_mat = H.material("LAVI_Rejunte_#{p['correj'].to_s.delete('#')}", p['correj'] || 'BDB6AE')
+            rej_mat = H.material("lavi_Rejunte_#{p['correj'].to_s.delete('#')}", p['correj'] || 'BDB6AE')
             outs.each do |face, tr, old, fr, outer, res|
               wall = !H.horizontal?(face, tr)
               old.erase! if old && old.valid?
@@ -369,7 +369,7 @@ module LAVIStudio
                 end
               end
               grp.name = wall ? 'Paginação de parede' : 'Paginação de piso'
-              grp.layer = H.tag(wall ? 'LAVI · Revestimento parede' : 'LAVI · Piso')
+              grp.layer = H.tag(wall ? 'lavi · Revestimento parede' : 'lavi · Piso')
               H.mark(grp, wall ? 'wall_tiling' : 'floor_tiling',
                      'area_m2' => H.m2(res[:area]), 'pecas' => res[:full] + res[:cut], 'material' => mats[0].name,
                      'params' => JSON.generate(p.reject { |k, _| k == 'req' }), 'face_pid' => face.persistent_id,

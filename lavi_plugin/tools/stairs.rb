@@ -35,7 +35,7 @@ module LAVIStudio
             Sketchup.active_model.select_tool(
               Pickers::PointPicker.new('Escada: clique o início e depois a direção de subida', max: 2) do |pts, _closed|
                 begin
-                  H.operation('LAVI · Escada') { build(pts[0], pts[1], c, p) }
+                  H.operation('lavi · Escada') { build(pts[0], pts[1], c, p) }
                   Dialog.push('result', tool: 'stairs', ok: true, msg: "Escada com #{c[:n]} degraus criada.", stats: stats)
                 rescue StandardError => e
                   Dialog.push('result', tool: 'stairs', ok: false, msg: e.message)
@@ -68,7 +68,7 @@ module LAVIStudio
               f = ents.add_face([x0, 0, z1 - t], [x0 + pz, 0, z1 - t], [x0 + pz, 0, z1], [x0, 0, z1])
               f.pushpull(f.normal.y < 0 ? -w : w)
             end
-            grp.material = H.material('LAVI_Madeira', 'A0754E')
+            grp.material = H.material('lavi_Madeira', 'A0754E')
           else
             slab = H.cm(H.num(p['laje'], 12))
             pts = [[0, 0]]
@@ -85,7 +85,7 @@ module LAVIStudio
             pts << [xs, 0]
             face = ents.add_face(pts.map { |x, z| Geom::Point3d.new(x, 0, z) })
             face.pushpull(face.normal.y < 0 ? -w : w)
-            grp.material = H.material('LAVI_Concreto', 'C9C6C0')
+            grp.material = H.material('lavi_Concreto', 'C9C6C0')
           end
           if p['corrimao'] != false && p['corrimao'] != 'false'
             hc = 90.cm
@@ -95,12 +95,12 @@ module LAVIStudio
             rail = ents.add_group
             f = rail.entities.add_face([0, y0, e + hc], [len, y0, n * e + hc], [len, y0, n * e + hc + s], [0, y0, e + hc + s])
             f.pushpull(f.normal.y > 0 ? s : -s)
-            rail.material = H.material('LAVI_Metal', '2F3A45')
+            rail.material = H.material('lavi_Metal', '2F3A45')
             rail.name = 'Corrimão'
           end
           grp.transform!(tr)
           grp.name = 'Escada'
-          grp.layer = H.tag('LAVI · Escadas')
+          grp.layer = H.tag('lavi · Escadas')
           H.mark(grp, 'stairs', 'degraus' => n)
         end
 

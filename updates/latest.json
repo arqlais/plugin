@@ -1,6 +1,6 @@
 {
-  "version": "0.8.1",
+  "version": "0.8.2",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "eb17710ed57aeb3a2582df5bee16f028c4e74efb9fca9fc6ef13d8d63a19dd4b",
-  "notes": ["Cores e marca iguais aos sites lais3d e souplane: creme, ardósia e rosé, tudo em Poppins","Ícones com traço fino"]
+  "sha256": "6646bd9e3ebc9cbafb06d5eb160a8d0ed4e4d1172bf57c576ed53cc641ad6f30",
+  "notes": ["Nome lavi em minúsculas","Ícones com traço mais fino; forro, rodapé, recorte de tampo e isolar redesenhados"]
 }
