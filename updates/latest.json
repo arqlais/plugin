@@ -1,6 +1,6 @@
 {
-  "version": "0.6.0",
+  "version": "0.6.1",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "94549b7e6632ff0cbe3b978582f18506d02cbf44a6814d2526cb735eed66fe3d",
-  "notes": ["Novo nome LAVI, símbolo da planta e paleta sem degradê","Barra de ferramentas com um ícone por ferramenta","Painel redesenhado"]
+  "sha256": "c79dc1ecbdec6490e1b1385ea3016b84f751fdd813c4ffd36a97a46cc76071f7",
+  "notes": ["A barra de atualização aparece em todas as telas do painel","Um clique em Atualizar instala; depois é só reiniciar o SketchUp"]
 }

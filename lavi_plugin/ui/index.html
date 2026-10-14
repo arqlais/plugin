@@ -115,7 +115,7 @@ main{flex:1;overflow-y:auto;padding:4px 16px 100px}
 .step .n{font:500 10px var(--mono);color:var(--accent-text)}
 .step b{font-size:12px;font-weight:600;line-height:1.2}
 
-.banner{display:flex;gap:12px;align-items:center;background:var(--mul);color:var(--tidal);border-radius:var(--r);padding:12px 14px;margin-top:14px}
+.banner{display:flex;margin:0 16px 10px!important;gap:12px;align-items:center;background:var(--mul);color:var(--tidal);border-radius:var(--r);padding:12px 14px;margin-top:14px}
 .banner b{display:block;font-weight:600}
 .banner p{margin:0;font-size:12px;opacity:.85}
 .banner button{margin-left:auto;background:var(--tidal);color:var(--mul);border-radius:8px;padding:8px 12px;font-weight:700;font-size:12px;white-space:nowrap}
@@ -276,6 +276,7 @@ textarea.ta{width:100%;min-height:70px;border:1px solid var(--line);border-radiu
   </header>
   <div class="search"><span id="sIcon"></span><input id="q" type="search" placeholder="Buscar ferramenta… (ex.: piso, gaveta, telhado)" autocomplete="off"></div>
   <nav class="tabs" id="tabs" aria-label="Ferramentas"></nav>
+  <div id="updbar"></div>
   <div class="railname" id="railname"></div>
   <main id="main"></main>
   <div class="actions" id="actions" hidden></div>
@@ -898,7 +899,6 @@ const pkgName = id => ((S.state.packages||[]).find(p=>p.id===id)||{}).name || id
 function viewHome(){
   const favs=(S.state.favorites||[]).map(toolById).filter(Boolean);
   let h=`<div class="view"><div class="hello"><h1>O que vamos <mark>projetar</mark> hoje?</h1><p>Escolha um ícone na barra acima ou uma ferramenta da lista.</p></div>`;
-  if(S.update&&S.update.state==='available') h+=`<div class="banner">${ic('sparkle')}<div><b>Versão ${esc(S.update.version)} disponível</b><p>${esc((S.update.notes||[]).slice(0,2).join(' · ')||'Melhorias e correções')}</p></div><button data-upd="check">Atualizar</button></div>`;
   if(favs.length) h+=`<div class="sec"><h2>Favoritos</h2><span class="cota"></span><span class="n">${favs.length}</span></div><div class="grid">${favs.map(toolCard).join('')}</div>`;
   GROUPS.forEach(g=>{ const list=toolsOf(g[0]); if(!list.length) return;
     h+=`<div class="sec" id="g-${g[0]}"><h2>${g[1]}</h2><span class="cota"></span><span class="n">${list.length}</span></div><div class="grid">${list.map(toolCard).join('')}</div>`; });
@@ -977,9 +977,18 @@ function viewLicense(){
 const updMsg = u => ({available:`Versão ${u.version} disponível.`,downloading:`Baixando a versão ${u.version}…`,installed:`Versão ${u.version} instalada. Reinicie o SketchUp.`,latest:`Você está na versão mais nova (${u.version}).`,error:u.msg}[u.state]||'');
 
 /* ---------------- ciclo de renderização ---------------- */
+function renderUpdate(){
+  const u=S.update, el=$('#updbar'); if(!el) return;
+  if(!u||!['available','downloading','installed','error'].includes(u.state)||(u.state==='error'&&!S.updClicked)){ el.innerHTML=''; return; }
+  const busy=u.state==='downloading', done=u.state==='installed';
+  const title= done?`Versão ${esc(u.version)} instalada`: busy?`Baixando a versão ${esc(u.version)}…`: u.state==='error'?'Não deu para atualizar':`Nova versão ${esc(u.version)}`;
+  const sub= done?'Feche e abra o SketchUp para usar.': u.state==='error'?esc(u.msg): esc((u.notes||[]).slice(0,2).join(' · ')||'Melhorias e correções');
+  el.innerHTML=`<div class="banner">${ic(done?'check':'sparkle')}<div><b>${title}</b><p>${sub}</p></div>${done||busy?'':`<button data-upd="install">${u.state==='error'?'Tentar de novo':'Atualizar'}</button>`}</div>`;
+}
 function render(){
   if(!S.state) return;
   $('#ver').textContent = 'plugin · v' + S.state.version;
+  renderUpdate();
   renderTabs();
   const m=$('#main'); let html; const acts=$('#actions');
   if(S.q) html=viewSearch(S.q);
@@ -1062,7 +1071,12 @@ document.addEventListener('click', e=>{
     if(f&&f.min!=null) v=Math.max(f.min,v); if(f&&f.max!=null) v=Math.min(f.max,v); setParam(k,v,true); return; }
   if(d.preset!==undefined){ const o=JSON.parse(d.fk); Object.assign(S.params[S.tool],o); store.set('p:'+S.tool,S.params[S.tool]); refreshTool(); return; }
   if(d.act){ runAct(d.act,false,el.classList.contains('btn')?el:null); return; }
-  if(d.upd){ if(window.__MOCK__){ S.update={state:'latest',version:S.state.version}; render(); } else send('update',d.upd); toast('Procurando atualização…'); return; }
+  if(d.upd){
+    if(d.upd==='install'){ S.updClicked=true; S.update=Object.assign({},S.update,{state:'downloading'}); renderUpdate(); }
+    else toast('Procurando atualização…');
+    if(window.__MOCK__){ const v=(S.update||{}).version||S.state.version; setTimeout(()=>PLN.on('update', d.upd==='install'?{state:'installed',version:v}:{state:'latest',version:S.state.version}), 600); }
+    else send('update',d.upd);
+    return; }
   if(d.tag){ S.params.auto_tags=S.params.auto_tags||{}; call('auto_tags','toggle',{tag:d.tag}).then(r=>{ S.results.auto_tags=r; refreshTool(); }); return; }
   if(d.badd!==undefined){ const r=S.results.budget; r.lines.push({id:'extra:'+Date.now(),grupo:'Serviços',desc:'Novo serviço',qty:1,un:'vb',preco:0}); refreshTool(); return; }
   if(el.id==='btnTheme'){ const dark=document.documentElement.dataset.theme!=='dark'; setTheme(dark?'dark':'light'); send('theme',dark?'dark':'light'); return; }
@@ -1098,7 +1112,7 @@ function setTheme(t){ document.documentElement.dataset.theme=t; $('#btnTheme').i
 /* ---------------- API chamada pelo Ruby ---------------- */
 window.PLN = {
   init(state){
-    S.state=state; setTheme(state.theme||'light');
+    S.state=state; S.update=state.update||null; setTheme(state.theme||'light');
     $('#btnLic').innerHTML=ic('key'); $('#sIcon').innerHTML=ic('search'); $('#logo').innerHTML=ic('lavi');
     if(state.open && toolById(state.open)) go('tool:'+state.open, state.open);
     else if(state.open==='license') go('license');
@@ -1108,7 +1122,7 @@ window.PLN = {
   on(ev, data){
     if(ev==='result'){ const id=data.tool; S.results[id]=data; if(S.tool===id){ refreshTool(); } toast(data.msg); }
     else if(ev==='favorites'){ S.state.favorites=data; }
-    else if(ev==='update'){ S.update=data; if(S.route==='home'||S.route==='license') render(); if(data.state!=='latest') toast(updMsg(data)); }
+    else if(ev==='update'){ S.update=data; renderUpdate(); if(S.route==='license') render(); if(data.state==='installed'||(data.state==='error'&&S.updClicked)) toast(updMsg(data)); }
     else if(ev==='license'){ toast(data.msg); }
     else if(ev==='open'){ if(data.id) go('tool:'+data.id, data.id); }
   }
@@ -1144,7 +1158,7 @@ const MOCK = {
     ['replace','Selecionar e substituir','base','base','Seleciona todas as cópias e troca por outro componente mantendo a posição.',['Selecione um componente','Selecionar iguais','Escolha o novo e troque']],
     ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do LAVI em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
   ],
-  state(){ return { name:'LAVI', version:'0.6.0', dev:false, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
+  state(){ return { name:'LAVI', version:'0.6.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
     packages:[{id:'base',name:'Essencial',free:true,active:true},{id:'arq',name:'Arquitetura',active:true},{id:'rev',name:'Revestimentos',active:true},{id:'pres',name:'Apresentação',active:true},{id:'marc',name:'Marcenaria',active:true},{id:'quant',name:'Quantitativo',active:false}],
     tools:this.tools.map(t=>({id:t[0],name:t[1],tab:t[2],package:t[3],desc:t[4],steps:t[5],status:'ready',locked:t[3]==='quant'})) }; },
   run(tool, action, p){

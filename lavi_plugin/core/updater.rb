@@ -16,6 +16,8 @@ module LAVIStudio
 
       @busy = false
       @last = nil
+      @state = nil
+      @checked_at = nil
 
       module_function
 
@@ -29,6 +31,27 @@ module LAVIStudio
 
       def last
         @last
+      end
+
+      # Último aviso (o painel mostra a barra "Nova versão" mesmo se abrir depois)
+      def state
+        @state
+      end
+
+      # Ao abrir o painel: confere se ainda não conferiu na última hora
+      def check_if_stale
+        return if @checked_at && Time.now - @checked_at < 3600
+        check(false)
+      end
+
+      # Botão "Atualizar" do painel: instala direto (o clique já é a confirmação)
+      def install_now
+        if @last && newer?(@last['version'])
+          download(@last)
+        else
+          @install_after_check = true
+          check(false)
+        end
       end
 
       def newer?(remote, local = VERSION)
@@ -45,6 +68,7 @@ module LAVIStudio
           return
         end
         @busy = true
+        @checked_at = Time.now
         @req = Sketchup::Http::Request.new("#{MANIFEST_URL}?t=#{Time.now.to_i}", Sketchup::Http::GET)
         @req.start do |_r, res|
           @busy = false
@@ -64,11 +88,15 @@ module LAVIStudio
         @last = info
         if newer?(info['version'])
           notify(state: 'available', version: info['version'], notes: info['notes'] || [])
-          if manual
+          if @install_after_check
+            @install_after_check = false
+            download(info)
+          elsif manual
             ask = UI.messagebox("LAVI #{info['version']} disponível.\n\n#{Array(info['notes']).join("\n")}\n\nAtualizar agora?", MB_YESNO)
             download(info) if ask == IDYES
           end
         else
+          @install_after_check = false
           notify(state: 'latest', version: VERSION)
           UI.messagebox("Você já está na versão mais nova (#{VERSION}).") if manual
         end
@@ -101,12 +129,13 @@ module LAVIStudio
           Sketchup.install_from_archive(path)
         end
         notify(state: 'installed', version: info['version'])
-        UI.messagebox("LAVI atualizado para #{info['version']}.\nFeche e abra o SketchUp para usar a versão nova.")
+        UI.messagebox("LAVI atualizado para #{info['version']}.\nFeche e abra o SketchUp para usar a versão nova.\n(Não precisa reinstalar nada.)")
       rescue StandardError => e
         notify(state: 'error', msg: "Não consegui instalar: #{e.message}")
       end
 
       def notify(data)
+        @state = data
         Dialog.push('update', data) if defined?(Dialog)
       end
     end

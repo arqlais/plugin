@@ -50,6 +50,7 @@ module LAVIStudio
         d.add_action_callback('update') do |_c, what|
           case what.to_s
           when 'check' then Updater.check(true)
+          when 'install' then Updater.install_now
           when 'auto_on' then Updater.set_auto(true)
           when 'auto_off' then Updater.set_auto(false)
           end
@@ -68,10 +69,12 @@ module LAVIStudio
           favorites: Helpers.favorites,
           theme: Helpers.pref('theme', 'light'),
           auto_update: Updater.auto?,
+          update: Updater.state,
           units: model_units,
           open: @open_tool
         }
         exec("PLN.init(#{JSON.generate(state)})")
+        Updater.check_if_stale if Updater.auto?
         @open_tool = nil
       end
 

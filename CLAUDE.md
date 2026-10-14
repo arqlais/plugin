@@ -54,7 +54,7 @@ docs/                           prints das telas
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.5.0; nada de geometria testado por ela ainda)
+## Ferramentas — status (v0.6.1; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria) | arq |
@@ -100,7 +100,8 @@ Padrão de atributos, copiado da estrutura de um bloco DC real (biblioteca AFC d
 Próximo nível que ela quer (imagens de referência): catálogo detalhado como as bibliotecas profissionais — portas com batente/guarnição e símbolo de abertura em planta + etiqueta (P1, medidas), tampos (frontão, saia 45°, rebaixo, cuba esculpida), módulos de lixeira, roupeiro, porta escamoteável, puxadores perfilados. Fazer um de cada vez, sempre com teste + render antes de entregar.
 
 ## Atualização automática
-- `Updater` lê `https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json` 20 s depois de abrir o SketchUp e **só avisa** no painel. Desde a v0.5 **nunca instala sozinho** (ela reclamou do SketchUp instável); instala só quando ela clica (baixa o `.rbz`, confere SHA256, `Sketchup.install_from_archive`, pede para reiniciar).
+- `Updater` lê `https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json` 20 s depois de abrir o SketchUp e de novo ao abrir o painel (se faz mais de 1 h). Guarda o aviso (`Updater.state`, vai no `send_state`) e o painel mostra a **barra "Nova versão · Atualizar" em todas as telas** (`#updbar`). Um clique (`update` → `install`) baixa, confere SHA256 e instala; depois só reiniciar o SketchUp, sem reinstalar pelo Gerenciador. Ela pediu isso: não quer ficar reinstalando.
+- Nunca instala sem clique. Desde a v0.5 **nunca instala sozinho** (ela reclamou do SketchUp instável); instala só quando ela clica (baixa o `.rbz`, confere SHA256, `Sketchup.install_from_archive`, pede para reiniciar).
 - Atenção: o LIA Render oficial e o LAVI Render dela (LIA modificado, backup no repo privado `lavi-app`, ramo `backup/lavi-render-v4`) usam a mesma pasta `thebox_render`: instalar um sobrescreve o outro.
 - Para publicar versão nova: subir `VERSION` em `lavi_plugin.rb`, `sh dev/build.sh "nota 1" "nota 2"`, commit e merge no branch padrão.
 - **Precisa de repositório público** (ou mover `updates/` para um host público, ex. o LAVI APP). Se o repo ficar privado, a atualização para de funcionar.

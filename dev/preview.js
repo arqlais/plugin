@@ -29,6 +29,7 @@ const url = 'file://' + path.join(__dirname, '..', 'lavi_plugin', 'ui', 'index.h
   const TABS = { walls: 'arq', openings: 'arq', stairs: 'arq', roofs: 'arq', dwg_walls: 'arq', urban_index: 'arq', tiling: 'rev', wall_tiling: 'rev', baseboard: 'rev', ceiling: 'rev', scenes: 'pres', export_images: 'pres', room_tags: 'pres', furniture: 'quant', measure: 'base', isolate: 'base', cut_list: 'marc', countertop: 'marc', takeoff: 'quant', budget: 'quant', model_health: 'base', align: 'base', replace: 'base', auto_tags: 'base' };
 
   await shot('01-inicio');
+  await page.click('[data-upd="install"]'); await page.waitForTimeout(900); await shot('01b-atualizado');
   await shot('02-inicio-lista', true);
 
   await tool('scenes'); await page.click('[data-act="create"]'); await shot('03-cenas', true);
