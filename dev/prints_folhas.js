@@ -23,15 +23,23 @@ const SHEETS=[
  ['09-resultado-3d-arquitetura','Resultado no modelo','o que as ferramentas desenham (SketchUp simulado)',['01-paredes-portas-janelas','11-dwg-paredes','02-escadas','03-telhados','07-cotas','06-forro-sanca-spots'],2],
  ['11-novidades-telas','Novidades no painel','forro e moldura, rodapé, recorte pelo bloco, limpar DWG, revestimento',['15-ceiling','14-baseboard','17-countertop','11-dwg_clean','13-tiling'],5],
  ['12-novidades-3d','Novidades no modelo','tabica, cortineiro, moldura, rodapés, recorte automático, pedra rústica, aberturas do DWG',['12-forro-tabica-cortineiro','13-moldura-classica','14-rodapes','15-cuba-automatica','16-pedra-rustica','17-dwg-aberturas'],2],
+ ['13-render-telas','Render','arestas, materiais, texturas, luzes e variar objetos',['edges','materials','texmap','lights','randomize'],5],
+ ['14-novidades-telas','Novidades no painel','portas e janelas por distância, escada com guarda-corpo, arredondar e curvar',['openings','stairs','shape'],3],
+ ['15-novidades-3d','Novidades no modelo','vãos por distância, guarda-corpos, arredondar/curvar, luzes, variar',['22-vaos-posicao','18-guarda-corpos','19-arredondar-curvar','20-luzes','21-variar'],2],
  ['10-resultado-3d-revestimento','Resultado no modelo · revestimento','8 padrões, pilar recortado no formato, parede 3D',['04-piso-horizontal','04-piso-tijolo','04-piso-espinha','04-piso-chevron','04-piso-damas','04-piso-organica','05-parede-tijolinho-3d','10-cuba','08-cadeiras-caminho'],3],
 ];
 const N={"walls": "Paredes", "openings": "Portas e janelas", "dwg_walls": "DWG → Paredes", "stairs": "Escada", "roofs": "Telhado", "urban_index": "Índices urbanísticos", "tiling": "Revestimento", "baseboard": "Rodapé", "ceiling": "Forro e sanca", "scenes": "Cenas automáticas", "export_images": "Exportar imagens", "room_tags": "Ambientes e quadro de áreas", "furniture": "Ficha de mobiliário", "measure": "Medir seleção", "isolate": "Isolar seleção", "cut_list": "Lista de peças e plano de corte", "countertop": "Recorte de cuba e cooktop", "takeoff": "Quantitativo", "model_health": "Saúde do modelo", "align": "Alinhar e distribuir", "replace": "Selecionar e substituir", "dwg_clean": "Limpar DWG", "dims": "Cotas automáticas", "array": "Copiar em grade ou caminho", "fix_faces": "Corrigir faces invertidas", "smart_select": "Seleção inteligente", "auto_tags": "Etiquetas automáticas", "paredes-portas-janelas": "Paredes + porta + janela", "dwg-paredes": "DWG → Paredes", "escadas": "Escadas", "telhados": "Telhados", "cotas": "Cotas automáticas", "forro-sanca-spots": "Forro + spots em grade", "piso-horizontal": "Piso horizontal", "piso-tijolo": "Piso tijolinho", "piso-espinha": "Piso espinha", "piso-chevron": "Piso chevron", "piso-damas": "Piso damas", "piso-organica": "Pedra orgânica", "parede-tijolinho-3d": "Parede tijolinho 3D", "cuba": "Cuba dupla no tampo", "cadeiras-caminho": "Cadeiras no caminho"};
+// acha o print pelo nome mesmo se a numeração mudou (ex.: 'walls' acha '07-walls.png')
+// nomes das ferramentas lidos do painel (linhas do MOCK.tools)
+const HTML=fs.readFileSync(path.resolve('lavi_plugin/ui/index.html'),'utf8');
+for(const m of HTML.matchAll(/\n    \['([a-z_]+)','([^']+)'/g)) if(!N[m[1]]) N[m[1]]=m[2];
+const find=f=>{ if(fs.existsSync(path.join(T,f+'.png'))) return f; const base=f.replace(/^\d+-/,''); const hit=fs.readdirSync(T).find(x=>x.replace(/^\d+-/,'')===base+'.png'); return hit?hit.slice(0,-4):f; };
 const label=f=>({'00-inicio':'Início','99-inicio-escuro':'Modo escuro'}[f]||N[f.replace(/^\d+-/,'')]||f);
 (async()=>{const br=await chromium.launch();const pg=await br.newPage({viewport:{width:1200,height:800},deviceScaleFactor:1});
 for(const [name,title,sub,files,cols] of SHEETS){
   const w=cols*520+80+(cols-1)*28;
   await pg.setViewportSize({width:w,height:800});
-  const imgs=files.map(f=>`<figure><img src="data:image/png;base64,${fs.readFileSync(path.join(T,f+'.png')).toString('base64')}"><figcaption>${label(f)}</figcaption></figure>`).join('');
+  const imgs=files.map(find).map(f=>`<figure><img src="data:image/png;base64,${fs.readFileSync(path.join(T,f+'.png')).toString('base64')}"><figcaption>${label(f)}</figcaption></figure>`).join('');
   await pg.setContent(`<style>${css}</style><h1>${title}</h1><p class="s">${sub}</p><div class="g" style="grid-template-columns:repeat(${cols},1fr)">${imgs}</div>`);
   await pg.waitForTimeout(300);
   await pg.screenshot({path:path.join(OUT,name+'.png'),fullPage:true}); console.log(name);

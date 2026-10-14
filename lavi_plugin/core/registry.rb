@@ -16,6 +16,7 @@ module LAVIStudio
       TABS = {
         home:  { name: 'Início' },
         pres:  { name: 'Apresentação' },
+        render: { name: 'Render' },
         arq:   { name: 'Arquitetura' },
         rev:   { name: 'Revestimentos' },
         marc:  { name: 'Marcenaria' },

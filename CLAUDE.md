@@ -58,13 +58,13 @@ dev/prints_telas.js / prints_folhas.js  prints de todas as telas e montagem das 
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.10.0; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
+## Ferramentas — status (v0.11.0; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria; digitar "5" = 5 m, unidade escolhível) | arq |
-| openings | Portas e janelas (clica na parede, abre o vão, põe folha/vidro) | arq |
+| openings | Portas e janelas: **posição pela distância** (v0.11, ela pediu: "não pode só clicar e furar") — `posicao` canto (X cm da ponta esquerda/direita da parede) / ponto (X cm do ponto clicado, para um lado; dá para digitar a distância no VCB) / clique livre; abre o vão, põe folha/vidro | arq |
 | dwg_walls | DWG → Paredes (pares paralelos, vergas e peitoris nos vãos) | arq |
-| stairs | Escada reta Blondel, maciça ou flutuante, corrimão | arq |
+| stairs | Escada reta Blondel, maciça ou flutuante; **guarda-corpo** (v0.11): corrimão, vidro, montantes, cabos de aço ou mureta, lado direito/esquerdo/ambos, altura ajustável | arq |
 | roofs | Telhado 1/2/4 águas, beiral, telhas | arq |
 | urban_index | TO, CA, permeabilidade vs. limites da lei | arq |
 | tiling | **Revestimento** (v0.8, um só para piso e parede; referência dela = plugin REVEST, só a ideia): 8 padrões (horizontal, vertical, diagonal, tijolinho ½/⅓, damas, chevron, espinha, pedra orgânica = Voronoi), junta/junta seca, espessura e peças 3D, rejunte com cor, ângulo + girar pelos 2 pontos no modelo, ponto inicial clicado, centralizar, várias imagens sorteadas por peça (`position_material` com a imagem ocupando a peça, "Variar combinação" = `seed`), estimativa ao vivo (ação `estimate`), Editar paginação (grupo guarda `params`, `face_pid`, `face_tr`). Gerador de padrões igual em Ruby (`Tiling.layout/unit`) e JS (`tilePieces`), mesmo sorteio (`rnd`/`tileRnd`). Teste: soma das peças = área em todos os padrões. Furos (pilares) recortam as peças no formato (convexo ou triangulado). **Acabamento**: plano, 3D reto, relevo (alturas variadas), chanfrado, rústico (pedra natural, topo inclinado); pedras prontas (São Tomé, pedra ferro, Miracema, canjiquinha, seixo, mosaico português) | rev |
@@ -82,6 +82,12 @@ Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA
 | array | Copiar em grade (numa face: luminárias no forro) ou ao longo de linhas (por distância ou quantidade, girando) | base |
 | fix_faces | Corrigir faces invertidas: orienta por arestas (reversed_in?), vira para fora (volume ou maioria), passa pintura do verso | base |
 | smart_select | Seleção inteligente: mesmo material/etiqueta/componente, inverter, linhas soltas, pisos de costas, escondidos | base |
+| shape | Arredondar/chanfrar quinas de peças (tampos, bancos, placas), bordas boleadas em cima/embaixo e **curvar** peça num raio (estilo "shape" do Blender; v0.11) | base |
+| edges | Aba **Render** (v0.11, ideia vinda do LAVI Render dela, código 100% novo): suavizar por ângulo, ocultar/mostrar arestas, linhas do estilo liga/desliga | pres |
+| materials | Render: conta-gotas, trocar material na cena toda (entra nos blocos), limpar materiais de dentro do bloco, prontos (vidros, espelhos, metais) | pres |
+| texmap | Render: projeção de textura caixa/plana/esférica com tamanho real e rotação | pres |
+| lights | Render: marcar luz com temperatura (K), fachos sob spots, mancha de luz na parede, letreiro neon | pres |
+| randomize | Render: variar cópias (girar, escala %, espelhar, misturar materiais, sorteio) | pres |
 | model_health, align, replace, auto_tags, measure, isolate | Essenciais (grátis) | base |
 
 ## Marcenaria dinâmica — PAUSADA (fora do plugin desde a v0.5; código em `extras/marcenaria_dinamica/`)

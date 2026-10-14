@@ -184,7 +184,7 @@ check('openings · porta e janela na parede') do
   msgs = []
   area0 = face.area
   { 'porta' => { 'larg' => 80, 'alt' => 210, 'peit' => 0 }, 'janela' => { 'larg' => 120, 'alt' => 120, 'peit' => 110 } }.each do |tipo, med|
-    ok!(run(:openings, 'place', med.merge('tipo' => tipo)))
+    ok!(run(:openings, 'place', med.merge('tipo' => tipo, 'posicao' => 'clique')))
     c = face.bounds.center.transform(tr)
     c = Geom::Point3d.new(c.x + (tipo == 'porta' ? -80.cm : 80.cm), c.y, 0)
     click_face(face, c, tr)
@@ -725,6 +725,165 @@ check('smart_select · material, etiqueta, componente, inverter, soltas') do
   ok!(run(:smart_select, 'soltas')); out << "soltas #{m.selection.size}"
   expect(m.selection.size == 1, 'linha solta não achada')
   out.join(', ')
+end
+
+# === v0.11: posição dos vãos, guarda-corpo, arredondar/curvar e render
+check('openings · distância da ponta, de um ponto e digitada') do
+  ok!(run(:walls, 'draw'))
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)], closed: true)
+  wall = m.entities.grep(Sketchup::ComponentInstance).first
+  face, tr = all_faces(wall.definition.entities, wall.transformation).select { |f, t| f.normal.transform(t).y < -0.9 }.max_by { |f, _| f.area }
+  holes = lambda do
+    fs = all_faces(wall.definition.entities).select { |f, _| f.normal.y < -0.9 && f.vertices.map { |v| v.position.y }.max < -1.cm }
+    fs.flat_map { |f, _| f.loops.reject(&:outer?) }.map { |l| xs = l.vertices.map { |v| (v.position.x * 2.54).round(1) }; [xs.min, xs.max] }.sort
+  end
+  ok!(run(:openings, 'place', 'tipo' => 'janela', 'larg' => 80, 'alt' => 100, 'peit' => 100, 'posicao' => 'canto', 'lado' => 'esquerda', 'dist' => 60))
+  click_face(face, pt(200, -7.5, 150), tr)
+  r1 = pushed.last
+  expect(r1['ok'], r1['msg'])
+  expect(holes.call.include?([52.5, 132.5]), "janela fora do lugar: #{holes.call.inspect} (esperava 52,5–132,5: 60 cm da ponta esquerda)")
+  ok!(run(:openings, 'place', 'tipo' => 'janela', 'larg' => 80, 'alt' => 100, 'peit' => 100, 'posicao' => 'canto', 'lado' => 'direita', 'dist' => 60))
+  click_face(face, pt(200, -7.5, 150), tr)
+  expect(holes.call.include?([267.5, 347.5]), "da direita: #{holes.call.inspect}")
+  ok!(run(:openings, 'place', 'tipo' => 'porta', 'larg' => 70, 'alt' => 210, 'peit' => 0, 'posicao' => 'ponto', 'lado' => 'direita', 'dist' => 10))
+  m.tool.onUserText('5', m.active_view) # digitou 5 cm no campo de medidas
+  click_face(face, pt(140, -7.5, 100), tr)
+  expect(holes.call.include?([145.0, 215.0]), "de um ponto com distância digitada: #{holes.call.inspect}")
+  "esquerda 60 cm → 52,5–132,5 · direita 60 cm → 267,5–347,5 · ponto + 5 cm digitado → 145–215"
+end
+
+check('stairs · guarda-corpo de vidro, montantes, cabos, mureta, corrimão') do
+  out = []
+  %w[corrimao vidro montantes cabos mureta].each_with_index do |g, i|
+    ok!(run(:stairs, 'place', 'guarda' => g, 'lados' => i.even? ? 'ambos' : 'direito'))
+    click_points([pt(i * 200, 0), pt(i * 200, 100)])
+    esc = m.entities.grep(Sketchup::ComponentInstance).last
+    gcs = esc.definition.entities.grep(Sketchup::ComponentInstance).select { |x| x.name.start_with?('Guarda-corpo') }
+    expect(gcs.size == (i.even? ? 2 : 1), "#{g}: #{gcs.size} guarda-corpo(s)")
+    alt = gcs.map { |x| x.bounds.max.z }.max - esc.definition.entities.grep(Sketchup::Face).map { |f| f.bounds.max.z }.max
+    out << "#{g} #{gcs.size} lado(s)"
+  end
+  vid = m.materials['lavi_Vidro']
+  expect(vid && vid.alpha < 1, 'vidro sem transparência')
+  out.join(', ')
+end
+
+check('shape · cantos arredondados, chanfro, bordas boleadas e curvar') do
+  t = box(0, 0, 0, 120, 60, 3, name: 'Tampo')
+  sel(t)
+  ok!(run(:shape, 'apply', 'modo' => 'cantos', 'raio' => 10, 'seg' => 8))
+  top = t.definition.entities.grep(Sketchup::Face).find { |f| f.normal.z > 0.99 }
+  a1 = (top.area * 6.4516).round
+  expect((a1 - (7200 - 4 * (100 - Math::PI * 25))).abs < 25, "área com cantos arredondados #{a1} cm²")
+  t2 = box(0, 200, 0, 120, 60, 3, name: 'Tampo 2')
+  sel(t2)
+  ok!(run(:shape, 'apply', 'modo' => 'cantos', 'raio' => 10, 'seg' => 1))
+  a2 = (t2.definition.entities.grep(Sketchup::Face).find { |f| f.normal.z > 0.99 }.area * 6.4516).round
+  expect(a2 == 7000, "chanfro: área #{a2} (esperava 7000)")
+  t3 = box(0, 400, 0, 120, 60, 3, name: 'Tampo 3')
+  sel(t3)
+  ok!(run(:shape, 'apply', 'modo' => 'bordas', 'raio' => 1, 'seg' => 6, 'cima' => true))
+  tops = t3.definition.entities.grep(Sketchup::Face).select { |f| f.normal.z > 0.99 }
+  a3 = (tops.max_by(&:area).area * 6.4516).round
+  expect(a3 == 118 * 58, "borda boleada: topo #{a3} (esperava #{118 * 58})")
+  b = box(0, 600, 0, 200, 40, 45, name: 'Banco')
+  sel(b)
+  ok!(run(:shape, 'apply', 'modo' => 'curvar', 'raio_curva' => 300, 'sentido' => 'esquerda', 'seg_curva' => 24))
+  c = pt(0, 640 + 300)
+  ds = b.definition.entities.grep(Sketchup::Face).flat_map(&:vertices).map { |v| (Geom::Point3d.new(v.position.x, v.position.y, 0).distance(c) * 2.54).round(1) }.uniq
+  expect((ds.min - 300).abs < 0.5 && (ds.max - 340).abs < 0.5, "banco curvo com raios #{ds.min}–#{ds.max} (esperava 300–340)")
+  f = floor(pilar: false)
+  sel(f)
+  ok!(run(:shape, 'apply', 'modo' => 'cantos', 'raio' => 30, 'seg' => 8))
+  "cantos r10: #{a1} cm² · chanfro: #{a2} cm² · borda boleada: topo #{a3} cm² · banco curvo: raio 300–340 cm"
+end
+
+check('edges · suavizar curvas, esconder, mostrar e estilo') do
+  g = m.entities.add_group
+  n = 24
+  ring = (0...n).map { |k| a = 2 * Math::PI * k / n; pt(50 * Math.cos(a), 50 * Math.sin(a)) }
+  f = g.entities.add_face(ring)
+  f.reverse! if f.normal.z > 0
+  f.pushpull(-40.cm)
+  sel(g)
+  a = ok!(run(:edges, 'suavizar', 'angulo' => 30))
+  soft = g.definition.entities.grep(Sketchup::Edge).count(&:soft?)
+  expect(soft == n, "suavizou #{soft} (esperava #{n} arestas laterais)")
+  ok!(run(:edges, 'ocultar'))
+  expect(g.definition.entities.grep(Sketchup::Edge).all?(&:hidden?), 'não escondeu')
+  ok!(run(:edges, 'mostrar'))
+  expect(g.definition.entities.grep(Sketchup::Edge).none? { |e| e.hidden? || e.soft? }, 'não mostrou de volta')
+  ok!(run(:edges, 'estilo', 'linhas' => false))
+  expect(m.rendering_options['EdgeDisplayMode'] == 0, 'estilo continuou com linhas')
+  "#{soft} arestas da curva suavizadas; esconder/mostrar/estilo ok"
+end
+
+check('materials · conta-gotas, trocar na cena, limpar bloco, prontos') do
+  ma = m.materials.add('Madeira clara'); mb = m.materials.add('Madeira escura')
+  b1 = box(0, 0, 0, 50, 50, 50, mat: ma); b2 = box(100, 0, 0, 50, 50, 50)
+  b2.definition.entities.grep(Sketchup::Face).first.material = ma
+  l = ok!(run(:materials, 'list'))
+  ok!(run(:materials, 'pick'))
+  click_face(b2.definition.entities.grep(Sketchup::Face).first)
+  expect(pushed.last['values']['de'] == 'Madeira clara', 'conta-gotas não pegou o material')
+  r = ok!(run(:materials, 'swap', 'de' => 'Madeira clara', 'para' => 'Madeira escura'))
+  expect(b1.material == mb && b2.definition.entities.grep(Sketchup::Face).first.material == mb, 'não trocou em todo lugar')
+  sel(b2); ok!(run(:materials, 'clean'))
+  expect(b2.definition.entities.grep(Sketchup::Face).none?(&:material), 'não limpou o bloco')
+  sel(b1); ok!(run(:materials, 'apply', 'preset' => 'vidro_fume'))
+  expect(b1.material.name == 'lavi Vidro fumê' && b1.material.alpha < 1, 'vidro pronto errado')
+  "#{l['mats'].size} materiais listados · #{r['msg']}"
+end
+
+check('texmap · projeção caixa, plana, esférica e girar') do
+  img = File.join(OUT, 'madeira.jpg'); File.write(img, 'jpg')
+  mt = m.materials.add('Madeira'); mt.texture = img
+  b = box(0, 0, 0, 100, 60, 40, mat: mt)
+  sel(b)
+  out = []
+  %w[caixa plana esferica].each do |pj|
+    r = ok!(run(:texmap, 'apply', 'projecao' => pj, 'tam' => 60, 'rot' => 90))
+    out << "#{pj} #{r['stats'][0][1]}"
+  end
+  expect(b.definition.entities.grep(Sketchup::Face).all?(&:uv_data), 'faces sem mapeamento')
+  sel(box(300, 0, 0, 10, 10, 10))
+  e = run(:texmap, 'apply')
+  expect(!e['ok'], 'aceitou bloco sem textura')
+  out.join(', ') + ' faces'
+end
+
+check('lights · marcar luz, conta-gotas, facho, parede e letreiro') do
+  fita = box(0, 0, 250, 300, 2, 2, name: 'Fita LED')
+  sel(fita)
+  ok!(run(:lights, 'mark', 'temp' => '2700'))
+  expect(fita.material.name == 'lavi Luz 2700K', 'não marcou a luz')
+  spot = component('Spot', 10, 10, 6, pt(100, 100, 254))
+  sel(spot)
+  ok!(run(:lights, 'beam', 'abertura' => 36, 'piso' => 0))
+  cone = m.entities.grep(Sketchup::ComponentInstance).find { |x| x.name == 'Facho de luz' }
+  expect(cone && (cone.bounds.min.z * 2.54).abs < 1 && cone.material.alpha < 1, 'facho errado')
+  wall = m.entities.add_face(pt(0, 300, 0), pt(400, 300, 0), pt(400, 300, 280), pt(0, 300, 280))
+  ok!(run(:lights, 'wash'))
+  click_face(wall, pt(200, 300, 240))
+  expect(pushed.last['ok'], pushed.last['msg'])
+  ok!(run(:lights, 'neon', 'texto' => 'Bem-vindo', 'letra' => 15))
+  click_face(wall, pt(200, 300, 160))
+  neon = m.entities.grep(Sketchup::ComponentInstance).find { |x| x.name.start_with?('Letreiro') }
+  expect(neon && neon.bounds.width > 1 && neon.bounds.height < 2.cm + 0.01, 'letreiro não ficou na parede')
+  "luz 2700K, facho até o piso, mancha na parede e letreiro neon"
+end
+
+check('randomize · girar, escala e misturar materiais') do
+  mats = %w[A B C].map { |n| m.materials.add("Verde #{n}") }
+  plantas = (0...6).map { |k| component('Planta', 40, 40, 100, pt(k * 80, 0)).tap { |x| x.material = mats[k % 3] } }
+  before = plantas.map { |x| x.transformation.to_a }
+  sel(plantas)
+  ok!(run(:randomize, 'run', 'girar' => 180, 'escala' => 15, 'misturar' => true, 'seed' => 7))
+  mudou = plantas.each_with_index.count { |x, i| x.transformation.to_a != before[i] }
+  expect(mudou == 6, "só #{mudou} variaram")
+  hs = plantas.map { |x| (x.bounds.depth * 2.54).round(1) }
+  expect(hs.uniq.size > 2 && hs.all? { |h| h.between?(84.9, 115.1) }, "alturas #{hs.inspect}")
+  "alturas #{hs.min}–#{hs.max} cm, todas giradas"
 end
 
 # === Painel e atualização

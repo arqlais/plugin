@@ -1,6 +1,6 @@
 {
-  "version": "0.10.0",
+  "version": "0.11.0",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "1279613a1ff4767220a2d28c696cad835a8c6cb288b69106d768f70527c2571e",
-  "notes": ["Forro: tabica de 3 cm, cortineiro 10/15/20 cm, sanca aberta ou fechada, ou só moldura de teto (5 modelos)","Rodapé: 6 modelos e prontos (MDF, poliestireno, porcelanato, madeira)","Recorte de cuba no formato do bloco, sozinho ao colocar a cuba","Limpar DWG: fecha as aberturas e marca o que ficou aberto","Revestimento: pedras com relevo, chanfro e acabamento rústico"]
+  "sha256": "5ec36fe50454277d929221873e314c5d2e1d452c3ea7d2bd98018660297f8a02",
+  "notes": ["Portas e janelas: posição pela distância da ponta da parede ou de um ponto (pode digitar)","Escada: guarda-corpo de vidro, montantes, cabos, mureta ou corrimão","Arredondar, chanfrar e curvar peças","Nova aba Render: arestas, materiais (conta-gotas, trocar, prontos), texturas, luzes/fachos/neon, variar objetos"]
 }

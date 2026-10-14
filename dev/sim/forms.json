@@ -19,7 +19,10 @@
    "larg": 80,
    "alt": 210,
    "peit": 0,
-   "inserir": true
+   "inserir": true,
+   "posicao": "canto",
+   "dist": 60,
+   "lado": "esquerda"
   },
   "acts": [
    "place"
@@ -54,7 +57,13 @@
    "espelho": 17.5,
    "espdegrau": 4,
    "laje": 12,
-   "corrimao": true
+   "guarda": "corrimao",
+   "lados": "direito",
+   "gc_alt": 105,
+   "gc_corrimao": true,
+   "mont_esp": 12,
+   "cabos_n": 5,
+   "mureta_esp": 12
   },
   "acts": [
    "place"
@@ -414,6 +423,99 @@
    "soltas",
    "costas",
    "escondidos"
+  ]
+ },
+ {
+  "id": "shape",
+  "defaults": {
+   "modo": "cantos",
+   "raio": 5,
+   "seg": 8,
+   "quais": "",
+   "cima": true,
+   "baixo": false,
+   "raio_curva": 300,
+   "sentido": "esquerda",
+   "seg_curva": 24
+  },
+  "acts": [
+   "apply"
+  ]
+ },
+ {
+  "id": "edges",
+  "defaults": {
+   "angulo": 30,
+   "linhas": true
+  },
+  "acts": [
+   "suavizar",
+   "ocultar",
+   "mostrar",
+   "estilo"
+  ]
+ },
+ {
+  "id": "materials",
+  "defaults": {
+   "de": "",
+   "para": "",
+   "preset": "vidro_incolor",
+   "tudo": false
+  },
+  "acts": [
+   "swap",
+   "pick",
+   "list",
+   "apply",
+   "clean"
+  ]
+ },
+ {
+  "id": "texmap",
+  "defaults": {
+   "projecao": "caixa",
+   "tam": 60,
+   "rot": 0
+  },
+  "acts": [
+   "apply",
+   "rot_ccw",
+   "rot_cw"
+  ]
+ },
+ {
+  "id": "lights",
+  "defaults": {
+   "temp": "3000",
+   "abertura": 36,
+   "piso": 0,
+   "intensidade": 20,
+   "larg": 60,
+   "alt": 120,
+   "texto": "lavi",
+   "letra": 15,
+   "prof": 1,
+   "cor": "#FF5FA2"
+  },
+  "acts": [
+   "mark",
+   "pick",
+   "beam",
+   "wash",
+   "neon"
+  ]
+ },
+ {
+  "id": "randomize",
+  "defaults": {
+   "girar": 180,
+   "escala": 10,
+   "espelhar": false,
+   "misturar": false
+  },
+  "acts": [
+   "run"
   ]
  },
  {

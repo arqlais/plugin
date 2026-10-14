@@ -155,14 +155,31 @@ module LAVIStudio
 
       # Clica numa face (pode estar dentro de grupo). Fica ativa até Esc.
       class FacePicker
-        def initialize(hint, &on_pick)
+        attr_reader :typed
+
+        # vcb: rótulo do campo de medidas (ex.: 'Distância') para digitar um número antes de clicar (em cm)
+        def initialize(hint, vcb: nil, &on_pick)
           @hint = hint
+          @vcb = vcb
           @on_pick = on_pick
           @ip = Sketchup::InputPoint.new
+          @typed = nil
         end
 
         def activate
           Sketchup.status_text = "#{@hint} · Esc termina"
+          Sketchup.vcb_label = @vcb if @vcb
+        end
+
+        def enableVCB?
+          !@vcb.nil?
+        end
+
+        # número digitado (cm; aceita também 1,2m / 80mm) vale para os próximos cliques
+        def onUserText(text, _view)
+          t = text.to_s.strip.tr(',', '.')
+          @typed = t =~ /\A\d+(\.\d+)?\z/ ? t.to_f : (text.to_l.to_f * 2.54 rescue nil)
+          Sketchup.status_text = @typed ? "#{@hint} · distância #{@typed.round(1)} cm" : 'Medida inválida.'
         end
 
         def resume(_view)

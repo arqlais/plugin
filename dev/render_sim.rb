@@ -72,6 +72,9 @@ def render(name, title, view: :iso, az: -55, el: 32, w: 860, h: 560)
   faces = data[:faces].map do |loops, n, mat, back|
     facing = n.dot(d) < 0
     col = color_of(facing ? mat : (back || mat))
+    al = (facing ? mat : (back || mat))
+    al = al ? al.alpha.to_f : 1.0
+    col = col.zip([245, 241, 238]).map { |c, b| c * al + b * (1 - al) } if al < 1 # translúcido: clareia
     sh = 0.62 + 0.38 * n.dot(light).abs
     sh *= 0.85 unless facing
     { loops: loops.map { |l| l.map { |q| pr = proj.call(q); tx.call(pr) + [pr[2]] } },
@@ -286,4 +289,62 @@ scene('17-dwg-aberturas') do
   sel(m.entities.grep(Sketchup::Edge))
   run(:dwg_clean, 'clean', 'tol' => 1.5)
   render('17-dwg-aberturas', 'Limpar DWG: fechou o canto aberto e os encontros em T; a abertura de 2 cm ficou marcada', view: :top)
+end
+
+scene('18-guarda-corpos') do
+  { 'vidro' => 'ambos', 'montantes' => 'ambos', 'cabos' => 'ambos', 'mureta' => 'ambos' }.each_with_index do |(g, l), i|
+    run(:stairs, 'place', 'guarda' => g, 'lados' => l, 'tipo' => i.odd? ? 'flutuante' : 'macica')
+    click_points([pt(i * 180, 0), pt(i * 180, 100)])
+  end
+  render('18-guarda-corpos', 'Guarda-corpo: vidro, montantes, cabos e mureta', az: -150, el: 22)
+end
+
+scene('19-arredondar-curvar') do
+  wood = m.materials.add('Madeira').tap { |x| x.color = Sketchup::Color.new(184, 138, 98) }
+  t1 = box(0, 0, 0, 120, 60, 4, name: 'Tampo', mat: wood); sel(t1); run(:shape, 'apply', 'modo' => 'cantos', 'raio' => 15, 'seg' => 10)
+  t2 = box(150, 0, 0, 120, 60, 4, name: 'Tampo', mat: wood); sel(t2); run(:shape, 'apply', 'modo' => 'cantos', 'raio' => 12, 'seg' => 1)
+  t3 = box(300, 0, 0, 120, 60, 6, name: 'Tampo', mat: wood); sel(t3); run(:shape, 'apply', 'modo' => 'bordas', 'raio' => 2.5, 'seg' => 8, 'cima' => true, 'baixo' => true)
+  b = box(0, 120, 0, 300, 45, 45, name: 'Banco', mat: m.materials.add('Concreto').tap { |x| x.color = Sketchup::Color.new(190, 186, 180) })
+  sel(b); run(:shape, 'apply', 'modo' => 'curvar', 'raio_curva' => 250, 'sentido' => 'direita', 'seg_curva' => 32)
+  render('19-arredondar-curvar', 'Cantos arredondados, chanfrados, bordas boleadas e banco curvo', az: -60, el: 40)
+end
+
+scene('20-luzes') do
+  wm = m.materials.add('Parede').tap { |x| x.color = Sketchup::Color.new(236, 232, 226) }
+  wall = m.entities.add_face(pt(0, 300, 0), pt(400, 300, 0), pt(400, 300, 280), pt(0, 300, 280))
+  wall.material = wm
+  floor(pilar: false).material = m.materials.add('Piso').tap { |x| x.color = Sketchup::Color.new(210, 200, 188) }
+  spots = [80, 200, 320].map { |x| component('Spot', 10, 10, 5, pt(x, 220, 255)).tap { |s| s.material = m.materials.add('Spot preto').tap { |q| q.color = Sketchup::Color.new(40, 40, 40) } } }
+  sel(spots); run(:lights, 'beam', 'abertura' => 30, 'intensidade' => 25)
+  run(:lights, 'wash', 'larg' => 70, 'alt' => 150)
+  click_face(wall, pt(80, 300, 250))
+  run(:lights, 'neon', 'texto' => 'lavi', 'letra' => 25, 'cor' => '#FF5FA2')
+  click_face(wall, pt(260, 300, 170))
+  fita = box(0, 297, 275, 400, 2, 2, name: 'Fita')
+  sel(fita); run(:lights, 'mark', 'temp' => '3000')
+  render('20-luzes', 'Fachos de luz nos spots, mancha na parede, letreiro neon e fita LED marcada', az: -100, el: 15)
+end
+
+scene('21-variar') do
+  verdes = %w[4F6B3A 6B8F4E 3D5530].map { |h| m.materials.add("Verde #{h}").tap { |x| x.color = Sketchup::Color.new("##{h}") } }
+  pl = (0...12).map { |k| component('Planta', 30, 30, 90, pt((k % 6) * 60, (k / 6) * 70)).tap { |x| x.material = verdes[0] } }
+  sel(pl)
+  run(:randomize, 'run', 'girar' => 180, 'escala' => 25, 'misturar' => false, 'seed' => 3)
+  pl.each_with_index { |x, i| x.material = verdes[i % 3] }
+  sel(pl); run(:randomize, 'run', 'girar' => 0, 'escala' => 0, 'misturar' => true, 'seed' => 5)
+  render('21-variar', 'Variar objetos: cada cópia girada, com outro tamanho e outro tom', az: -60, el: 30)
+end
+
+scene('22-vaos-posicao') do
+  run(:walls, 'draw')
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)], closed: true)
+  w = m.entities.grep(Sketchup::ComponentInstance).first
+  face, tr = all_faces(w.definition.entities, w.transformation).select { |f, t| f.normal.transform(t).y < -0.9 }.max_by { |f, _| f.area }
+  run(:openings, 'place', 'tipo' => 'janela', 'larg' => 100, 'alt' => 100, 'peit' => 110, 'posicao' => 'canto', 'lado' => 'esquerda', 'dist' => 40)
+  click_face(face, pt(200, -7.5, 150), tr)
+  run(:openings, 'place', 'tipo' => 'porta', 'larg' => 80, 'alt' => 210, 'peit' => 0, 'posicao' => 'canto', 'lado' => 'direita', 'dist' => 15)
+  click_face(face, pt(200, -7.5, 150), tr)
+  e1 = m.entities.add_dimension_linear(pt(-7.5, -7.5, 0), pt(32.5, -7.5, 0), Geom::Vector3d.new(0, -40, 0))
+  e2 = m.entities.add_dimension_linear(pt(312.5, -7.5, 0), pt(407.5, -7.5, 0), Geom::Vector3d.new(0, -40, 0))
+  render('22-vaos-posicao', 'Janela a 40 cm da ponta esquerda, porta a 15 cm da ponta direita', az: -90, el: 8)
 end

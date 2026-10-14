@@ -384,6 +384,12 @@ const IC = {
   array:'M3 20c5 0 7-14 18-16M4.5 18.5h3v3h-3zM10.5 11h3v3h-3zM17 2.5h3v3h-3z',
   fix_faces:'M4 6h10v12H4zM17.5 8a4.5 4.5 0 0 1 0 8M17.5 16l-2.2-.4M17.5 16l.6-2.1',
   smart_select:'M3 3h2.5M8.5 3H11M3 3v2.5M3 8.5V11M11 11l8.5 3.5-3.6 1.4-1.4 3.6z',
+  shape:'M4 20V10a6 6 0 0 1 6-6h10M4 20h16V9M14 4l6 5',
+  edges:'M4 18L18 4M7 20l13-13M4 13l9-9',
+  materials:'M12 3a9 9 0 1 0 0 18c1.7 0 2-1.2 1.4-2.2-.6-1-.1-2.3 1.2-2.3H17a4 4 0 0 0 4-4c0-5-4-9.5-9-9.5zM7.5 11.5h.01M9.5 7.5h.01M14.5 7.5h.01',
+  texmap:'M4 4h16v16H4zM4 10l6-6M4 16L16 4M8 20L20 8M14 20l6-6',
+  lights:'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z',
+  randomize:'M4 7h4l8 10h4M4 17h4l2-2.5M14 9.5L16 7h4M18 5l2 2-2 2M18 15l2 2-2 2',
   auto_tags:'M3 12V4h8l10 10-8 8zM7.5 7.5h.01',
   star:'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z',
   lock:'M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11',
@@ -504,6 +510,15 @@ function moldProfile(m,s){ s=Math.max(s,1);
 function profPic(pts, ceiling){ const k=26/Math.max(...pts.map(q=>Math.max(q[0],q[1])));
   const d=pts.map((q,i)=>(i?'L':'M')+(12+q[0]*k).toFixed(1)+' '+(ceiling?(7+q[1]*k):(33-q[1]*k)).toFixed(1)).join('')+'Z';
   return PIC(`<path d="M12 4v32" stroke-width="1"/><path d="${ceiling?'M8 7h30':'M8 33h30'}" stroke-width="1"/><path d="${d}" fill="currentColor" fill-opacity=".18"/>`); }
+const GC=(inner)=>PIC('<path d="M6 34h8v-6h8v-6h8v-6h8" stroke-width="1"/>'+inner);
+P.gc_nenhum=GC(''); P.gc_corrimao=GC('<path d="M6 22L38 4" stroke-width="2"/>');
+P.gc_vidro=GC('<path d="M6 32V20L38 2v12z" fill="currentColor" fill-opacity=".15"/><path d="M6 20L38 2" stroke-width="2"/>');
+P.gc_montantes=GC('<path d="M6 20L38 2" stroke-width="2"/><path d="M9 32V18.5M15 28V15M21 26V11.5M27 22V8M33 18V5" stroke-width="1"/>');
+P.gc_cabos=GC('<path d="M6 20L38 2" stroke-width="2"/><path d="M6 24l32-18M6 28l32-18M6 32l32-18" stroke-width=".8"/><path d="M6 34V20M38 16V2" stroke-width="1.5"/>');
+P.gc_mureta=GC('<path d="M6 34V20L38 2v14z" fill="currentColor" fill-opacity=".3"/>');
+P.sh_cantos=PIC('<path d="M8 32V14a6 6 0 0 1 6-6h24v24z" fill="currentColor" fill-opacity=".15"/>');
+P.sh_bordas=PIC('<path d="M5 28V18a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v10z" fill="currentColor" fill-opacity=".15"/>');
+P.sh_curvar=PIC('<path d="M6 30A26 26 0 0 1 40 30M10 34A22 22 0 0 1 36 34" /><path d="M6 30l4 4M40 30l-4 4"/>');
 const ROD=[['reto','Reto'],['chanfrado','Chanfrado'],['boleado','Boleado'],['frisado','Frisado'],['classico','Clássico'],['filete','Filete']];
 ROD.forEach(m=>{ P['rod_'+m[0]]=profPic(rodProfile(m[0],10,2.2),false); });
 const MOLD=[['reta','Cantoneira'],['chanfro','Chanfro'],['cove','Côncava'],['degrau','Degraus'],['classica','Clássica']];
@@ -552,8 +567,13 @@ const FORMS = {
         {k:'alt',type:'num',label:'Altura',unit:'cm',def:210},
         {k:'peit',type:'num',label:'Peitoril',unit:'cm',def:0},
         {k:'inserir',type:'tg',label:'Colocar porta / vidro pronto',def:true}
-      ]}],
-    acts:[['place','Clicar na parede','pin',1]], prev: p => prevOpening(p) },
+      ]},
+      {t:'Posição na parede', f:[
+        {k:'posicao',type:'seg',label:'Onde fica',def:'canto',full:1,opts:[['canto','Da ponta da parede'],['ponto','De um ponto'],['clique','Centro no clique']]},
+        {k:'dist',type:'num',label:'Distância até o vão',unit:'cm',def:60,chips:[10,15,30,60,100],when:p=>p.posicao!=='clique'},
+        {k:'lado',type:'seg',label:'A partir da',def:'esquerda',full:1,opts:[['esquerda','Esquerda'],['direita','Direita']],when:p=>p.posicao!=='clique'}]}],
+    acts:[['place','Clicar na parede','pin',1]], prev: p => prevOpening(p),
+    hint:'Da ponta da parede: clique em qualquer lugar da parede e o vão fica na distância certa da ponta (esquerda ou direita, olhando a parede de frente). De um ponto: clique num batente, canto ou eixo. Também dá para digitar a distância no campo de medidas do SketchUp antes de clicar.' },
   dwg_walls:{ secs:[
       {t:'Leitura da planta', f:[
         {k:'espmin',type:'num',label:'Parede mais fina',unit:'cm',def:8},
@@ -577,9 +597,17 @@ const FORMS = {
         {k:'larg',type:'num',label:'Largura',unit:'cm',def:90,chips:[80,90,100,120]},
         {k:'espelho',type:'num',label:'Espelho desejado',unit:'cm',def:17.5,step:.5},
         {k:'espdegrau',type:'num',label:'Espessura do degrau',unit:'cm',def:4,when:p=>p.tipo==='flutuante'},
-        {k:'laje',type:'num',label:'Espessura da laje',unit:'cm',def:12,when:p=>p.tipo!=='flutuante'},
-        {k:'corrimao',type:'tg',label:'Corrimão',def:true}]}],
-    acts:[['place','Clicar início e direção','pin',1]], prev: p => prevStairs(p) },
+        {k:'laje',type:'num',label:'Espessura da laje',unit:'cm',def:12,when:p=>p.tipo!=='flutuante'}]},
+      {t:'Guarda-corpo', f:[
+        {k:'guarda',type:'cards',full:1,def:'corrimao',opts:[['nenhum','Nenhum','gc_nenhum'],['corrimao','Corrimão','gc_corrimao'],['vidro','Vidro','gc_vidro'],['montantes','Montantes','gc_montantes'],['cabos','Cabos','gc_cabos'],['mureta','Mureta','gc_mureta']]},
+        {k:'lados',type:'seg',label:'Lado',def:'direito',full:1,opts:[['direito','Direito'],['esquerdo','Esquerdo'],['ambos','Os dois']],when:p=>p.guarda!=='nenhum'},
+        {k:'gc_alt',type:'num',label:'Altura',unit:'cm',def:105,chips:[90,100,105,110],when:p=>p.guarda!=='nenhum'},
+        {k:'gc_corrimao',type:'tg',label:'Corrimão em cima do vidro',def:true,full:1,when:p=>p.guarda==='vidro'},
+        {k:'mont_esp',type:'num',label:'Espaço entre montantes',unit:'cm',def:12,chips:[10,12,15],when:p=>p.guarda==='montantes'},
+        {k:'cabos_n',type:'num',label:'Quantidade de cabos',unit:'',def:5,when:p=>p.guarda==='cabos'},
+        {k:'mureta_esp',type:'num',label:'Espessura da mureta',unit:'cm',def:12,when:p=>p.guarda==='mureta'}]}],
+    acts:[['place','Clicar início e direção','pin',1]], prev: p => prevStairs(p),
+    hint:'Lado direito/esquerdo de quem sobe. Pela norma o vão entre montantes não passa de 11 cm.' },
   roofs:{ secs:[
       {t:'Telhado', f:[
         {k:'tipo',type:'cards',full:1,def:'2aguas',opts:[['1agua','1 água','1agua'],['2aguas','2 águas','2aguas'],['4aguas','4 águas','4aguas']]},
@@ -842,6 +870,79 @@ const FORMS = {
       {t:'A partir da seleção', f:[{type:'acts',full:1,acts:[['material','Mesmo material','grid'],['etiqueta','Mesma etiqueta','auto_tags'],['componente','Mesmo componente','replace']]}]},
       {t:'No modelo', f:[{type:'acts',full:1,acts:[['soltas','Linhas soltas','dims'],['costas','Pisos de costas','fix_faces'],['escondidos','Escondidos','eye']]}]}],
     acts:[['inverter','Inverter seleção','refresh',1]] },
+  shape:{ secs:[
+      {t:'O que fazer', f:[
+        {k:'modo',type:'cards',full:1,def:'cantos',opts:[['cantos','Cantos','sh_cantos'],['bordas','Bordas','sh_bordas'],['curvar','Curvar','sh_curvar']]}]},
+      {t:'Medidas', when:p=>p.modo!=='curvar', f:[
+        {k:'raio',type:'num',label:'Raio',unit:'cm',def:5,chips:[1,2,5,10,30],step:.5},
+        {k:'seg',type:'num',label:'Segmentos (1 = chanfro)',unit:'',def:8,chips:[1,4,8,16]},
+        {k:'quais',type:'seg',label:'Quais cantos',def:'',full:1,opts:[['','Todos'],['convexos','Só os de fora'],['retos','Só os de 90°']],when:p=>p.modo!=='bordas'},
+        {k:'cima',type:'tg',label:'Borda de cima',def:true,full:1,when:p=>p.modo==='bordas'},
+        {k:'baixo',type:'tg',label:'Borda de baixo',def:false,full:1,when:p=>p.modo==='bordas'}]},
+      {t:'Curva', when:p=>p.modo==='curvar', f:[
+        {k:'raio_curva',type:'num',label:'Raio (borda de dentro)',unit:'cm',def:300,chips:[100,200,300,500]},
+        {k:'sentido',type:'seg',label:'Curvar para a',def:'esquerda',full:1,opts:[['esquerda','Esquerda'],['direita','Direita']]},
+        {k:'seg_curva',type:'num',label:'Segmentos',unit:'',def:24,chips:[12,24,48]}]}],
+    acts:[['apply','Aplicar','shape',1]], prev:p=>prevShape(p),
+    hint:'Cantos e bordas: tampos, mesas, nichos, bancadas (peças com o mesmo desenho embaixo e em cima) ou uma face deitada. Curvar: peça comprida no eixo vermelho (X), como banco, mureta ou balcão.' },
+  edges:{ secs:[
+      {t:'Na seleção', f:[
+        {k:'angulo',type:'range',label:'Suavizar até',unit:'graus',def:30,min:5,max:90,step:1,full:1},
+        {type:'acts',full:1,acts:[['suavizar','Suavizar curvas','edges'],['ocultar','Esconder todas','eye'],['mostrar','Mostrar de volta','refresh']]}]},
+      {t:'No estilo da cena', f:[
+        {k:'linhas',type:'tg',label:'Mostrar linhas e perfis',def:true,full:1,live:'estilo'}]}],
+    acts:[['suavizar','Suavizar curvas','edges',1]],
+    hint:'Sem nada selecionado, vale para o modelo todo (entra em grupos e componentes). Blocos com muitas linhas ficam mais limpos no render e a IA lê melhor.' },
+  materials:{ secs:[
+      {t:'Trocar material na cena toda', f:[
+        {k:'de',type:'select',label:'Trocar este',def:'',full:1,dyn:'mats'},
+        {type:'acts',full:1,acts:[['pick','Conta-gotas','materials'],['list','Atualizar lista','refresh']]},
+        {k:'para',type:'select',label:'Por este',def:'',full:1,dyn:'mats'},
+        {type:'acts',full:1,acts:[['swap','Trocar em toda a cena','replace']]}]},
+      {t:'Materiais prontos', f:[
+        {k:'preset',type:'select',label:'Material',def:'vidro_incolor',full:1,opts:[['vidro_incolor','Vidro incolor'],['vidro_fume','Vidro fumê'],['vidro_verde','Vidro verde'],['vidro_jateado','Vidro jateado'],['espelho','Espelho'],['espelho_bronze','Espelho bronze'],['inox','Inox escovado'],['cromado','Cromado'],['latao','Latão dourado'],['cobre','Cobre'],['bronze','Bronze'],['aluminio','Alumínio'],['preto_fosco','Preto fosco'],['branco_fosco','Branco fosco']]},
+        {type:'acts',full:1,acts:[['apply','Aplicar na seleção','check']]}]},
+      {t:'Limpar bloco', f:[
+        {k:'tudo',type:'tg',label:'Tirar também a cor do próprio bloco',def:false,full:1},
+        {type:'acts',full:1,acts:[['clean','Limpar materiais do bloco','x']]}]}],
+    acts:[['swap','Trocar em toda a cena','replace',1]], onopen:'list' },
+  texmap:{ secs:[
+      {t:'Projeção', f:[
+        {k:'projecao',type:'seg',label:'Tipo',def:'caixa',full:1,opts:[['caixa','Caixa (triplanar)'],['plana','De cima'],['esferica','Esférica']]},
+        {k:'tam',type:'num',label:'Tamanho da textura',unit:'cm',def:60,chips:[20,60,100,200]},
+        {k:'rot',type:'num',label:'Rotação',unit:'°',def:0,chips:[0,45,90],step:15},
+        {type:'acts',full:1,acts:[['rot_ccw','Girar 90° anti-horário','rotate'],['rot_cw','Girar 90° horário','refresh']]}]}],
+    acts:[['apply','Aplicar','texmap',1]],
+    hint:'Selecione o bloco já pintado com um material de imagem. Caixa: cada lado pega a textura reta, sem esticar (bom para madeira, pedra, tecido).' },
+  lights:{ secs:[
+      {t:'Marcar fontes de luz', f:[
+        {k:'temp',type:'seg',label:'Temperatura',def:'3000',full:1,opts:[['2700','2700K'],['3000','3000K'],['4000','4000K'],['5000','5000K'],['6500','6500K']]},
+        {type:'acts',full:1,acts:[['mark','Marcar seleção','lights'],['pick','Conta-gotas','materials']]}]},
+      {t:'Facho de luz (spots)', f:[
+        {k:'abertura',type:'num',label:'Abertura do facho',unit:'°',def:36,chips:[24,36,60]},
+        {k:'piso',type:'num',label:'Até a altura',unit:'cm',def:0},
+        {k:'intensidade',type:'range',label:'Intensidade',unit:'%',def:20,min:5,max:60,step:1,full:1},
+        {type:'acts',full:1,acts:[['beam','Criar fachos nos spots','lights']]}]},
+      {t:'Mancha de luz na parede', opt:1, f:[
+        {k:'larg',type:'num',label:'Largura',unit:'cm',def:60},
+        {k:'alt',type:'num',label:'Altura',unit:'cm',def:120},
+        {type:'acts',full:1,acts:[['wash','Clicar na parede','pin']]}]},
+      {t:'Letreiro neon', opt:1, f:[
+        {k:'texto',type:'text',label:'Texto',def:'lavi',full:1},
+        {k:'letra',type:'num',label:'Altura da letra',unit:'cm',def:15},
+        {k:'prof',type:'num',label:'Profundidade',unit:'cm',def:1,step:.5},
+        {k:'cor',type:'color',label:'Cor do neon',def:'#FF5FA2'},
+        {type:'acts',full:1,acts:[['neon','Clicar na parede','pin']]}]}],
+    acts:[['mark','Marcar como luz','lights',1]],
+    hint:'Os materiais de luz se chamam "lavi Luz 3000K" etc. Fica fácil achar no motor de render (D5, Enscape, V-Ray) ou na IA.' },
+  randomize:{ secs:[
+      {t:'Variação', f:[
+        {k:'girar',type:'range',label:'Girar até',unit:'graus',def:180,min:0,max:180,step:5,full:1},
+        {k:'escala',type:'range',label:'Tamanho ±',unit:'%',def:10,min:0,max:40,step:1,full:1},
+        {k:'espelhar',type:'tg',label:'Espelhar algumas',def:false,full:1},
+        {k:'misturar',type:'tg',label:'Misturar os materiais entre elas',def:false,full:1}]}],
+    acts:[['run','Variar','randomize',1]],
+    hint:'Selecione as cópias (plantas, pedras, cadeiras, livros). Cada clique sorteia de novo; Ctrl+Z volta.' },
   auto_tags:{ secs:[
       {t:'Organizar', f:[{k:'sobrescrever',type:'tg',label:'Refazer as já etiquetadas',def:false,full:1}]}],
     acts:[['organize','Organizar modelo','sparkle',1],['list','Ver etiquetas','eye']], render:r=>renderTags(r) }
@@ -1011,6 +1112,20 @@ function prevRoof(p){
    <path d="M${W/2-run+20} ${H-26}V${H-14}M${W/2+run-20} ${H-26}V${H-14}" stroke="var(--ink2)" stroke-width="2"/>
    <text x="${W/2}" y="14" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="var(--ink2)">${br(i,0)}% · ${br(ang,1)}°</text>${warn}</svg>`;
 }
+function prevShape(p){
+  const m=p.modo||'cantos', r=num(p.raio,5), sg=Math.max(1,num(p.seg,8)|0);
+  if(m==='curvar'){ const R=Math.max(10,num(p.raio_curva,300)), L=200, a=L/R, s=120/Math.max(R*Math.sin(Math.min(a,Math.PI/2)),60);
+    const pts=Array.from({length:25},(_,i)=>{const t=a*i/24; return [40+R*Math.sin(t)*s*.9, 110-(R-R*Math.cos(t))*s*.9*(p.sentido==='direita'?-1:1)];});
+    return `<span class="tagline">CURVAR · RAIO ${br(R,0)} cm</span><svg viewBox="0 0 300 150" width="300" height="150"><path d="M40 110h180" stroke="var(--line2)" stroke-dasharray="4 3"/><path d="M${pts.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join('L')}" fill="none" stroke="#3E4B57" stroke-width="10" stroke-linejoin="round" opacity=".85"/></svg>`; }
+  if(m==='bordas'){ const k=Math.min(r,10)*3, y0=50, y1=100;
+    const top=p.cima!==false, bot=p.baixo===true;
+    const arc=(cx,cy,a0,a1)=>Array.from({length:sg+1},(_,i)=>{const t=(a0+(a1-a0)*i/sg)*Math.PI/180; return (cx+k*Math.cos(t)).toFixed(1)+' '+(cy+k*Math.sin(t)).toFixed(1);}).join('L');
+    const d=`M60 ${bot?y1-k:y1}${top?`V${y0+k}L${arc(60+k,y0+k,180,270)}`:`V${y0}`}H${240-(top?k:0)}${top?`L${arc(240-k,y0+k,270,360)}`:''}V${bot?y1-k:y1}${bot?`L${arc(240-k,y1-k,0,90)}`:''}H${bot?60+k:60}${bot?`L${arc(60+k,y1-k,90,180)}`:''}Z`;
+    return `<span class="tagline">CORTE DA PEÇA · RAIO ${br(r,1)} cm</span><svg viewBox="0 0 300 150" width="300" height="150"><path d="${d}" fill="#D6B3AB" stroke="#3E4B57"/></svg>`; }
+  const k=Math.min(r*4,45); const arc=(cx,cy,a0,a1)=>Array.from({length:sg+1},(_,i)=>{const t=(a0+(a1-a0)*i/sg)*Math.PI/180; return (cx+k*Math.cos(t)).toFixed(1)+' '+(cy+k*Math.sin(t)).toFixed(1);}).join('L');
+  const d=`M${60+k} 25H${240-k}L${arc(240-k,25+k,270,360)}V${125-k}L${arc(240-k,125-k,0,90)}H${60+k}L${arc(60+k,125-k,90,180)}V${25+k}L${arc(60+k,25+k,180,270)}Z`;
+  return `<span class="tagline">PLANTA DA PEÇA · RAIO ${br(r,1)} cm · ${sg<=1?'CHANFRO':sg+' SEGMENTOS'}</span><svg viewBox="0 0 300 150" width="300" height="150"><path d="${d}" fill="#D6B3AB" stroke="#3E4B57"/></svg>`;
+}
 function prevRod(p){
   const pts=rodProfile(p.modelo||'reto',num(p.alt,7),num(p.esp,1.5)), h=num(p.alt,7), k=Math.min(110/Math.max(h,1),9);
   const d=pts.map((q,i)=>(i?'L':'M')+(70+q[0]*k).toFixed(1)+' '+(135-q[1]*k).toFixed(1)).join('')+'Z';
@@ -1122,7 +1237,7 @@ function renderTags(r){
 function toolsOf(tab){ return (S.state.tools||[]).filter(t=>t.tab===tab); }
 function toolById(id){ return (S.state.tools||[]).find(t=>t.id===id); }
 
-const GROUPS=[['pres','Apresentação'],['arq','Arquitetura'],['rev','Revestimentos'],['marc','Marcenaria'],['quant','Quantitativo'],['base','Essenciais']];
+const GROUPS=[['pres','Apresentação'],['render','Render'],['arq','Arquitetura'],['rev','Revestimentos'],['marc','Marcenaria'],['quant','Quantitativo'],['base','Essenciais']];
 function renderTabs(){}
 
 function toolCard(t){
@@ -1257,6 +1372,7 @@ function go(route, tool){
   if(tool && !S.params[tool]) S.params[tool]=Object.assign(defaults(tool), store.get('p:'+tool,{}));
   render(); $('#main').scrollTop=0;
   if(tool==='replace' && !S.dyn.defs) runAct('list', true);
+  if(tool && FORMS[tool] && FORMS[tool].onopen) runAct(FORMS[tool].onopen, true);
   if(tool && FORMS[tool] && FORMS[tool].est) scheduleEst(true);
 }
 function setParam(k, v, full){
@@ -1272,6 +1388,7 @@ function findField(id,k){ let r=null; (FORMS[id]?FORMS[id].secs:[]).forEach(s=>s
 async function runAct(action, silent, btn){
   const id=S.tool; let p=Object.assign({}, S.params[id]);
   let a=action;
+  if(action==='rot_ccw'||action==='rot_cw'){ const r=(num(S.params[id].rot,0)+(action==='rot_cw'?-90:90)+360)%360; S.params[id].rot=r; store.set('p:'+id,S.params[id]); return runAct('apply',silent,btn); }
   if(action==='center'){ setParam('inicio','centro',true); toast('Paginação centralizada na face.'); return; }
   if(action==='vary'){ setParam('seed',num(S.params[id].seed,0)+1,true); return; }
   if(action.startsWith('assign:')){ p.cat=action.slice(7); a='assign'; }
@@ -1283,6 +1400,7 @@ async function runAct(action, silent, btn){
   if(FORMS[id]&&FORMS[id].est&&(res.values||a==='build')) scheduleEst();
   if(silent===false&&!res.stats&&res.ok&&(a==='add_image'||a==='edit')){ toast(res.msg); refreshTool(); return; }
   if(res.settings && Object.keys(res.settings).length){ Object.assign(S.params[id], res.settings); store.set('p:'+id,S.params[id]); }
+  if(res.mats){ S.dyn.mats=[['','— sem material —']].concat(res.mats.map(m=>[m[0],m[1]])); if(silent&&res.ok&&S.tool===id) refreshTool(); }
   if(res.defs){ S.dyn.defs=res.defs.map(d=>[d[0],`${d[0]} (${d[1]})`]); if(!S.params.replace.def&&res.defs[0]) S.params.replace.def=res.defs[0][0]; }
   if(res.picking){ toast(res.msg); if(res.stats){ S.results[id]=res; } refreshTool(); return; }
   if(!(silent&&res.ok)) { S.results[id]=res; refreshTool(); const r=$('#result'); if(r&&r.firstChild) r.scrollIntoView({behavior:'smooth',block:'nearest'}); }
@@ -1365,6 +1483,7 @@ window.PLN = {
     if(ev==='result'){ const id=data.tool;
       if(data.values&&S.params[id]){ Object.assign(S.params[id],data.values); store.set('p:'+id,S.params[id]); }
       if(data.surface) S.dyn.surface=data.surface;
+      if(data.mats) S.dyn.mats=[['','— sem material —']].concat(data.mats.map(m=>[m[0],m[1]]));
       if(data.stats) S.results[id]=data;
       if(S.tool===id){ refreshTool(); if(FORMS[id]&&FORMS[id].est) scheduleEst(true); } toast(data.msg); }
     else if(ev==='favorites'){ S.state.favorites=data; }
@@ -1382,7 +1501,7 @@ const MOCK = {
     ['walls','Paredes','arq','arq','Desenhe clicando os cantos ou gere a partir das linhas da planta.',['Escolha espessura e altura','Clique os cantos no modelo','Enter para terminar']],
     ['openings','Portas e janelas','arq','arq','Clique na parede para abrir o vão e já colocar a porta ou a janela.',['Escolha o tipo e as medidas','Clique na parede','Esc para terminar']],
     ['dwg_walls','DWG → Paredes','arq','arq','Transforma a planta importada do AutoCAD em paredes 3D com vergas e peitoris.',['Importe o DWG e selecione as linhas','Clique em Analisar','Clique em Levantar paredes']],
-    ['stairs','Escada','arq','arq','Calcula degraus pela fórmula de Blondel e desenha maciça ou flutuante.',['Informe o pé-direito','Confira o conforto','Clique início e direção']],
+    ['stairs','Escada','arq','arq','Blondel, maciça ou flutuante, com guarda-corpo de vidro, montantes, cabos, mureta ou só corrimão.',['Informe o pé-direito','Escolha o guarda-corpo','Clique início e direção']],
     ['roofs','Telhado','arq','arq','1, 2 ou 4 águas com beiral, inclinação e contagem de telhas.',['Selecione o contorno da cobertura','Escolha águas e inclinação','Gerar']],
     ['urban_index','Índices urbanísticos','arq','arq','TO, CA e permeabilidade conferidos com a lei do seu terreno.',['Selecione faces','Marque terreno, projeção, construída, permeável','Compare com a lei']],
     ['tiling','Revestimento','rev','rev','Paginação de piso e parede: 8 padrões, junta, texturas variadas e estimativa ao vivo.',['Selecione a face','Escolha padrão, peça e posição','Gerar paginação']],
@@ -1405,9 +1524,15 @@ const MOCK = {
     ['array','Copiar em grade ou caminho','base','base','Espalha cópias numa face (luminárias no forro) ou ao longo de linhas (cadeiras, postes).',['Selecione o objeto e a face ou as linhas','Escolha o espaçamento','Copiar']],
     ['fix_faces','Corrigir faces invertidas','base','base','Vira para fora as faces de costas (azuis) e passa a pintura do verso para a frente.',['Selecione (ou nada = modelo todo)','Corrigir','Pronto para render']],
     ['smart_select','Seleção inteligente','base','base','Seleciona tudo do mesmo material, etiqueta ou componente, inverte e acha sujeira.',['Selecione uma referência','Escolha o critério','Pronto']],
+    ['shape','Arredondar, chanfrar e curvar','base','base','Cantos arredondados ou chanfrados, bordas boleadas e peças curvas em arco.',['Selecione o grupo ou a face','Escolha raio e acabamento','Aplicar']],
+    ['edges','Arestas e linhas','render','pres','Suaviza curvas, esconde as linhas de blocos com muitas arestas e tira as linhas do estilo.',['Selecione os blocos (ou nada = tudo)','Suavizar ou esconder','Pronto para render']],
+    ['materials','Materiais','render','pres','Conta-gotas, trocar material na cena toda, limpar bloco e materiais prontos (vidros, espelho, metais).',['Pegue o material com o conta-gotas','Escolha o novo','Trocar na cena toda']],
+    ['texmap','Ajustar texturas','render','pres','Projeção em caixa, plana ou esférica com tamanho real e rotação; gira a textura 90°.',['Selecione o bloco com textura','Escolha projeção e tamanho','Aplicar']],
+    ['lights','Luzes e letreiro','render','pres','Marca o que acende (com temperatura), cria fachos de luz, mancha na parede e letreiro neon.',['Selecione ou clique','Escolha temperatura e forma','Pronto para render']],
+    ['randomize','Variar objetos','render','pres','Gira, muda o tamanho e mistura materiais das cópias (plantas, cadeiras) para a cena ficar natural.',['Selecione as cópias','Escolha quanto variar','Variar']],
     ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do lavi em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
   ],
-  state(){ return { name:'lavi', version:'0.10.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
+  state(){ return { name:'lavi', version:'0.11.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
     packages:[{id:'base',name:'Essencial',free:true,active:true},{id:'arq',name:'Arquitetura',active:true},{id:'rev',name:'Revestimentos',active:true},{id:'pres',name:'Apresentação',active:true},{id:'marc',name:'Marcenaria',active:true},{id:'quant',name:'Quantitativo',active:false}],
     tools:this.tools.map(t=>({id:t[0],name:t[1],tab:t[2],package:t[3],desc:t[4],steps:t[5],status:'ready',locked:t[3]==='quant'})) }; },
   run(tool, action, p){
@@ -1431,6 +1556,7 @@ const MOCK = {
     if(tool==='model_health') return {ok:true,msg:'2 ponto(s) de atenção.',score:76,stats:[['Faces','48.210',null],['Arestas','96.533',null],['Componentes sem uso','37',false],['Materiais sem uso','12',false],['Linhas soltas','0',true],['Faces pintadas só no verso','0',true],['Profundidade de grupos','4',true],['Tamanho do arquivo','38,2 MB',true]]};
     if(tool==='urban_index') return {ok:true,msg:'Índices atualizados.',stats:[['Terreno','300,00 m²'],['Projeção','168,00 m²'],['Área construída','312,50 m²'],['Área permeável','48,00 m²'],['Taxa de ocupação','56,0 %',true],['Coef. de aproveitamento','1,04',true],['Taxa de permeabilidade','16,0 %',true]]};
     if(tool==='auto_tags') return {ok:true,msg:'42 objetos organizados em 6 etiquetas.',tags:[['Mobiliário',true,18],['Vegetação',true,9],['Iluminação',true,7],['lavi · Paredes',true,1],['lavi · Marcenaria',false,9],['Pessoas',true,3]]};
+    if(tool==='materials'&&(action==='list'||action==='apply')) return {ok:true,msg:action==='list'?'':'Aplicado.',mats:[['Madeira freijó','Madeira freijó','#B88A62'],['Porcelanato 90x90','Porcelanato 90x90','#E9E3DC'],['Cor_#3E4B57','Azul ardósia','#3E4B57'],['lavi Vidro incolor','lavi Vidro incolor','#CFE3E8']]};
     if(tool==='replace'&&action==='list') return {ok:true,msg:'3 componentes.',defs:[['Cadeira Eames',6],['Cadeira Wishbone',0],['Pendente cobre',3]]};
     if(action==='place'||action==='draw'||action==='insert') return {ok:true,picking:true,msg:'Clique no modelo (prévia: fora do SketchUp).'};
     return {ok:true,msg:'Feito (prévia fora do SketchUp).'};

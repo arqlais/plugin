@@ -16,12 +16,22 @@ module LAVIStudio
 
         def handle(action, p)
           return H.err('Ação desconhecida.') unless action == 'place'
-          Sketchup.active_model.select_tool(
-            Pickers::FacePicker.new('Vãos: clique na face da parede onde fica o centro do vão') do |face, tr, pt, _path|
-              place(face, tr, pt, p)
-            end
-          )
-          H.ok('Clique na parede, no ponto que será o centro do vão. Pode clicar várias vezes. Esc termina.', picking: true)
+          modo = p['posicao'].to_s
+          hint = { 'canto' => 'Vãos: clique na parede (a distância conta da ponta da parede)',
+                   'ponto' => 'Vãos: clique no ponto de referência (batente, canto, eixo)' }[modo] ||
+                 'Vãos: clique na face da parede onde fica o centro do vão'
+          picker = Pickers::FacePicker.new(hint, vcb: modo == 'clique' || modo.empty? ? nil : 'Distância (cm)') do |face, tr, pt, _path|
+            q = p.dup
+            q['dist'] = picker.typed if picker.typed
+            place(face, tr, pt, q)
+          end
+          Sketchup.active_model.select_tool(picker)
+          msg = case modo
+                when 'canto' then "Clique na parede: o vão fica a #{H.br(H.num(p['dist'], 60), 0)} cm da ponta #{p['lado'] == 'direita' ? 'direita' : 'esquerda'}. Pode digitar outra distância antes de clicar."
+                when 'ponto' then "Clique no ponto de referência: o vão começa a #{H.br(H.num(p['dist'], 60), 0)} cm dele, para a #{p['lado'] == 'direita' ? 'direita' : 'esquerda'}. Pode digitar outra distância antes de clicar."
+                else 'Clique na parede, no ponto que será o centro do vão. Pode clicar várias vezes. Esc termina.'
+                end
+          H.ok(msg, picking: true)
         end
 
         def place(face, tr, world_pt, p)
@@ -46,6 +56,26 @@ module LAVIStudio
           end
           c = face.plane
           pt = pt.project_to_plane(c)
+          # posição ao longo da parede: centro no clique, a X cm da ponta da parede, ou a X cm do ponto clicado
+          modo = p['posicao'].to_s
+          ref = ''
+          if %w[canto ponto].include?(modo)
+            dist = H.cm(H.num(p['dist'], 60))
+            # olhando a parede de frente, u cresce para a direita.
+            # Da ponta: "direita" conta da ponta direita para dentro (-u). De um ponto: "direita" = vão à direita (+u).
+            dir = modo == 'canto' ? (p['lado'] == 'direita' ? -1 : 1) : (p['lado'] == 'direita' ? 1 : -1)
+            us = face.outer_loop.vertices.map { |v| (v.position - ORIGIN).dot(u) }
+            pu = (pt - ORIGIN).dot(u)
+            start = modo == 'canto' ? (dir > 0 ? us.min : us.max) : pu
+            target = start + dir * (dist + w / 2.0)
+            pt = pt.offset(u, target - pu)
+            if (target - w / 2.0) < us.min - 0.01 || (target + w / 2.0) > us.max + 0.01
+              Dialog.push('result', tool: 'openings', ok: false, msg: 'O vão passou da ponta da parede. Diminua a distância.')
+              return
+            end
+            lado = p['lado'] == 'direita' ? 'direita' : 'esquerda'
+            ref = modo == 'canto' ? " a #{H.br(H.to_cm(dist), 0)} cm da ponta #{lado}" : " a #{H.br(H.to_cm(dist), 0)} cm do ponto, para a #{lado}"
+          end
           bottom = Geom::Point3d.new(pt.x, pt.y, base_z + sill)
           half = u.clone
           half.length = w / 2.0
@@ -67,7 +97,7 @@ module LAVIStudio
             filler(ents, p['tipo'], p1, u, n, w, h, thick) if p['inserir'] != false && p['inserir'] != 'false'
           end
           Dialog.push('result', tool: 'openings', ok: true,
-                                msg: "Vão de #{H.br(H.to_cm(w), 0)} × #{H.br(H.to_cm(h), 0)} cm aberto (parede de #{H.br(H.to_cm(thick), 1)} cm).")
+                                msg: "Vão de #{H.br(H.to_cm(w), 0)} × #{H.br(H.to_cm(h), 0)} cm aberto#{ref} (parede de #{H.br(H.to_cm(thick), 1)} cm).")
         rescue StandardError => e
           Dialog.push('result', tool: 'openings', ok: false, msg: e.message)
         end
