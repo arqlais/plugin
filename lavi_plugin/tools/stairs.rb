@@ -245,6 +245,7 @@ module LAVIStudio
         # Cada caminho: pontos [x, y, z da linha de apoio, z do piso embaixo do ponto].
         # Também usado pela ferramenta Guarda-corpo (em linhas selecionadas).
         def guards(ents, p, sides, opts = {})
+          made = []
           sides.each do |sd|
             tipo = sd[:tipo]
             pts = sd[:pts]
@@ -252,6 +253,7 @@ module LAVIStudio
             h = H.cm(H.num(p['gc_alt'], tipo == 'corrimao' ? 90 : 105))
             drop = opts[:drop] || -8.cm
             g = ents.add_group
+            made << g
             g.name = opts[:name] || "Guarda-corpo #{sd[:lado] == :esq ? 'esquerdo' : 'direito'}"
             ge = g.entities
             segs = straight(pts).each_cons(2).reject { |a, b| Math.hypot(b[0] - a[0], b[1] - a[1]) < 1e-3 }
@@ -279,6 +281,7 @@ module LAVIStudio
             end
             g.material = H.material('lavi_Metal', '2F3A45') unless tipo == 'mureta'
           end
+          made
         end
 
         # junta trechos alinhados (mesma direção e inclinação): um vidro/corrimão por lance, menos faces

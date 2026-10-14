@@ -364,6 +364,7 @@ const IC = {
   roofs:'M2 12l10-8 10 8M5 10v10h14V10M10 20v-5h4v5',
   tiling:'M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18',
   baseboard:'M5 3v18h16M5 17h14v4M9 8h6',
+  railing:'M3 20h18M3 8h18M5 8v12M9 8v12M13 8v12M17 8v12M21 8v12',
   ripado:'M4 3v18M8 3v18M12 3v18M16 3v18M20 3v18',
   ceiling:'M3 4h18M5 4v3h14V4M12 7v3M8.5 14a3.5 3.5 0 0 1 7 0zM12 16.5v1',
   pres:'M3 4h18v12H3zM8 20h8M12 16v4',
@@ -696,6 +697,19 @@ const FORMS = {
         {k:'perda',type:'num',label:'Perda',unit:'%',def:10}]}],
     acts:[['build','Gerar rodapé','play',1]], prev:p=>prevRod(p),
     hint:'Selecione o piso. Para pular as portas, segure Shift e clique também nas linhas das portas.' },
+  railing:{ secs:[
+      {t:'Modelo', f:[
+        {k:'guarda',type:'cards',full:1,def:'vidro',opts:[['vidro','Vidro','gc_vidro'],['montantes','Montantes','gc_montantes'],['cabos','Cabos','gc_cabos'],['mureta','Mureta','gc_mureta'],['corrimao','Corrimão','gc_corrimao']]},
+        {k:'gc_alt',type:'num',label:'Altura',unit:'cm',def:110,chips:[90,100,105,110,120]},
+        {k:'gc_corrimao',type:'tg',label:'Corrimão em cima do vidro',def:true,full:1,when:p=>p.guarda==='vidro'},
+        {k:'mont_esp',type:'num',label:'Espaço entre montantes',unit:'cm',def:11,chips:[10,11,12],when:p=>p.guarda==='montantes'},
+        {k:'cabos_n',type:'num',label:'Quantidade de cabos',unit:'',def:6,when:p=>p.guarda==='cabos'},
+        {k:'mureta_esp',type:'num',label:'Espessura da mureta',unit:'cm',def:12,when:p=>p.guarda==='mureta'}]},
+      {t:'Posição', opt:1, f:[
+        {k:'recuo',type:'num',label:'Recuar da borda',unit:'cm',def:0,chips:[0,3,5,10],step:.5},
+        {k:'lado',type:'seg',label:'Recuar para a',def:'esquerda',full:1,opts:[['esquerda','Esquerda da linha'],['direita','Direita da linha']],when:p=>num(p.recuo,0)>0}]}],
+    acts:[['build','Criar nas linhas selecionadas','railing',1],['draw','Clicar os pontos','pin']],
+    hint:'Selecione as arestas da borda (varanda, mezanino, laje) ou clique os pontos. Para sacadas e mezaninos a norma pede no mínimo 1,10 m e vão de até 11 cm entre montantes.' },
   ripado:{ secs:[
       {t:'Ripas', f:[
         {k:'sentido',type:'cards',full:1,def:'vertical',opts:[['vertical','Em pé','rip_v'],['horizontal','Deitadas','rip_h']]},
@@ -1570,6 +1584,7 @@ const MOCK = {
     ['roofs','Telhado','arq','arq','1, 2 ou 4 águas com beiral, inclinação e contagem de telhas.',['Selecione o contorno da cobertura','Escolha águas e inclinação','Gerar']],
     ['tiling','Revestimento','rev','rev','Paginação de piso e parede: 8 padrões, junta, texturas variadas e estimativa ao vivo.',['Selecione a face','Escolha padrão, peça e posição','Gerar paginação']],
     ['baseboard','Rodapé','rev','rev','Modelos reto, chanfrado, boleado, frisado e clássico; pula portas e calcula as barras.',['Selecione o piso','Shift + clique nas linhas das portas','Gerar rodapé']],
+    ['railing','Guarda-corpo','arq','arq','Vidro, montantes, cabos, mureta ou corrimão na varanda, mezanino ou borda de laje.',['Selecione as linhas da borda (ou clique)','Escolha o modelo e a altura','Criar']],
     ['ripado','Ripado','rev','rev','Ripas na parede, forro, porta ou painel, com fundo, recuo e conta de barras.',['Selecione ou clique na face','Escolha ripa, espaço e sentido','Criar ripado']],
     ['ceiling','Forro e moldura','rev','rev','Forro rebaixado com tabica e cortineiro, sanca aberta ou fechada, ou só moldura de teto.',['Selecione o piso (e a linha da janela)','Escolha o tipo e as medidas','Gerar']],
     ['scenes','Cenas automáticas','pres','pres','Plantas por nível, cobertura, cortes AA/BB, 4 fachadas e perspectiva num clique.',['Informe os níveis','Marque o que quer','Criar cenas']],

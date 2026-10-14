@@ -63,6 +63,11 @@
  {
   "id": "stairs",
   "defaults": {
+   "forma": "reta",
+   "giro": "esquerda",
+   "vao_u": 10,
+   "coluna": 10,
+   "volta": 360,
    "tipo": "macica",
    "alt": 280,
    "larg": 90,
@@ -138,6 +143,23 @@
   },
   "acts": [
    "build"
+  ]
+ },
+ {
+  "id": "railing",
+  "defaults": {
+   "guarda": "vidro",
+   "gc_alt": 110,
+   "gc_corrimao": true,
+   "mont_esp": 11,
+   "cabos_n": 6,
+   "mureta_esp": 12,
+   "recuo": 0,
+   "lado": "esquerda"
+  },
+  "acts": [
+   "build",
+   "draw"
   ]
  },
  {

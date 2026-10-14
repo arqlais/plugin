@@ -793,6 +793,26 @@ check('stairs · em L, em U e caracol, com guarda-corpo') do
   out.join(' · ')
 end
 
+check('railing · varanda em L pelas linhas e por cliques') do
+  fresh
+  es = [m.entities.add_line(pt(0, 0, 300), pt(400, 0, 300)), m.entities.add_line(pt(400, 0, 300), pt(400, 200, 300))]
+  sel(es)
+  r = ok!(run(:railing, 'build', 'guarda' => 'vidro', 'gc_alt' => 110))
+  g = m.entities.grep(Sketchup::Group).last
+  bb = g.bounds
+  expect(((bb.max.z - 300.cm) * 2.54).round == 110, "altura #{((bb.max.z - 300.cm) * 2.54).round} (esperava 110)")
+  panels = g.entities.grep(Sketchup::Group).size
+  expect(panels == 2, "#{panels} vidros (esperava 2, um por trecho)")
+  comp = r['stats'][0][1]
+  expect(comp == '6,00 m', "comprimento #{comp}")
+  ok!(run(:railing, 'draw', 'guarda' => 'montantes', 'mont_esp' => 11))
+  click_points([pt(0, 500, 0), pt(220, 500, 0)])
+  g2 = m.entities.grep(Sketchup::Group).last
+  nm = g2.entities.grep(Sketchup::Face).size / 6
+  expect(nm >= 20, "só #{nm} peças nos montantes")
+  "vidro em L: #{comp}, 2 vidros, 110 cm · montantes clicados: #{nm} peças"
+end
+
 check('ripado · parede com porta, em pé e deitado, fundo, barras') do
   fresh
   f = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))
