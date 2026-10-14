@@ -22,7 +22,7 @@ Plugin para SketchUp (Ruby + painel HTML) que a Laís está criando para **vende
 ## Estrutura
 ```
 lavi_plugin.rb                 carregador (vai para a pasta Plugins); VERSION aqui
-lavi_plugin/main.rb            requires, menu Extensões › Planê Plugin, barra de ferramentas, checagem de atualização
+lavi_plugin/main.rb            requires, menu Extensões › LAVI, barra de ferramentas, checagem de atualização
 lavi_plugin/core/registry.rb   catálogo de ferramentas, PACOTES e ABAS
 lavi_plugin/core/license.rb    licenças por pacote (DEV_MODE, SECRET)
 lavi_plugin/core/helpers.rb    unidades, operação com desfazer, materiais, etiquetas, CSV pt-BR
@@ -103,7 +103,7 @@ Próximo nível que ela quer (imagens de referência): catálogo detalhado como 
 - `Updater` lê `https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json` 20 s depois de abrir o SketchUp e **só avisa** no painel. Desde a v0.5 **nunca instala sozinho** (ela reclamou do SketchUp instável); instala só quando ela clica (baixa o `.rbz`, confere SHA256, `Sketchup.install_from_archive`, pede para reiniciar).
 - Atenção: o LIA Render oficial e o LAVI Render dela (LIA modificado, backup no repo privado `lavi-app`, ramo `backup/lavi-render-v4`) usam a mesma pasta `thebox_render`: instalar um sobrescreve o outro.
 - Para publicar versão nova: subir `VERSION` em `lavi_plugin.rb`, `sh dev/build.sh "nota 1" "nota 2"`, commit e merge no branch padrão.
-- **Precisa de repositório público** (ou mover `updates/` para um host público, ex. o LAVI APP / site da Planê). Se o repo ficar privado, a atualização para de funcionar.
+- **Precisa de repositório público** (ou mover `updates/` para um host público, ex. o LAVI APP). Se o repo ficar privado, a atualização para de funcionar.
 
 ## Regras
 - **Código 100% original.** Projetos antigos dela tinham plugins de terceiros modificados para remover licença: nada disso entra aqui.
