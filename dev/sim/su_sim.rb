@@ -1416,6 +1416,7 @@ module Sketchup
       @camera = @model.active_view.camera.dup
       @section_on = @model.active_entities.active_section_plane
       @rendering = @model.rendering_options.to_h.dup
+      @shadow = ShadowInfo.new(@model.shadow_info.to_h.dup)
       @layers_state = @model.layers.map { |l| [l.name, l.visible?] }.to_h
     end
 
@@ -1423,6 +1424,7 @@ module Sketchup
     def layers; @model.layers.select { |l| @layers_state[l.name] == false }; end
     def set_visibility(l, v) @layers_state[l.name] = v; self end
     def rendering_options; @rendering; end
+    def shadow_info; @shadow; end
     def style; nil; end
     def hidden_entities; []; end
     def include_in_animation?; true; end

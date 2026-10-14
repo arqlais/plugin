@@ -183,6 +183,26 @@
   ]
  },
  {
+  "id": "sun",
+  "defaults": {
+   "cidade": "santo_andre",
+   "lat": -23.66,
+   "lon": -46.54,
+   "fuso": -3,
+   "norte": 0,
+   "d_06-21": true,
+   "d_12-21": true,
+   "d_03-21": false,
+   "data": "",
+   "horas": "9, 12, 15"
+  },
+  "acts": [
+   "scenes",
+   "now",
+   "off"
+  ]
+ },
+ {
   "id": "ripado",
   "defaults": {
    "sentido": "vertical",

@@ -366,6 +366,7 @@ const IC = {
   baseboard:'M5 3v18h16M5 17h14v4M9 8h6',
   railing:'M3 20h18M3 8h18M5 8v12M9 8v12M13 8v12M17 8v12M21 8v12',
   scatter:'M3 20h18M6 16v-3M5 14l1-1 1 1M12 17v-5M10.5 13.5L12 12l1.5 1.5M18 15v-3M17 13l1-1 1 1M8 8h.01M16 6h.01M13 4h.01',
+  sun:'M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4M8 12a4 4 0 0 1 8 0 4 4 0 0 1-8 0',
   ripado:'M4 3v18M8 3v18M12 3v18M16 3v18M20 3v18',
   ceiling:'M3 4h18M5 4v3h14V4M12 7v3M8.5 14a3.5 3.5 0 0 1 7 0zM12 16.5v1',
   pres:'M3 4h18v12H3zM8 20h8M12 16v4',
@@ -727,6 +728,21 @@ const FORMS = {
         {k:'seed',type:'num',label:'Sorteio',unit:'',def:1}]}],
     acts:[['run','Espalhar','scatter',1],['vary','Outro sorteio','refresh'],['clear','Apagar espalhados','x']], allActs:['run','clear','list'], onopen:'list',
     hint:'Selecione a face (piso, jardim) ou o grupo do terreno. Tudo vai para a etiqueta "lavi · Espalhar": desligue a etiqueta enquanto modela para o SketchUp não ficar pesado. Use objetos leves (proxy, plantas 2D ou com poucas faces).' },
+  sun:{ secs:[
+      {t:'Lugar', f:[
+        {k:'cidade',type:'select',label:'Cidade',def:'santo_andre',full:1,opts:[['santo_andre', 'Santo André'], ['sao_paulo', 'São Paulo'], ['campinas', 'Campinas'], ['rio', 'Rio de Janeiro'], ['bh', 'Belo Horizonte'], ['vitoria', 'Vitória'], ['curitiba', 'Curitiba'], ['floripa', 'Florianópolis'], ['poa', 'Porto Alegre'], ['brasilia', 'Brasília'], ['goiania', 'Goiânia'], ['cuiaba', 'Cuiabá'], ['campo_grande', 'Campo Grande'], ['salvador', 'Salvador'], ['recife', 'Recife'], ['natal', 'Natal'], ['fortaleza', 'Fortaleza'], ['belem', 'Belém'], ['manaus', 'Manaus'], ['outra', 'Outra (latitude e longitude)']]},
+        {k:'lat',type:'num',label:'Latitude',unit:'°',def:-23.66,step:.01,when:p=>p.cidade==='outra'},
+        {k:'lon',type:'num',label:'Longitude',unit:'°',def:-46.54,step:.01,when:p=>p.cidade==='outra'},
+        {k:'fuso',type:'num',label:'Fuso horário',unit:'h',def:-3,when:p=>p.cidade==='outra'},
+        {k:'norte',type:'num',label:'Norte (giro)',unit:'graus',def:0,chips:[0,45,90,180,270]}]},
+      {t:'Quando', f:[
+        {k:'d_06-21',type:'tg',label:'21/06 · inverno (sol mais baixo)',def:true,full:1},
+        {k:'d_12-21',type:'tg',label:'21/12 · verão (sol mais alto)',def:true,full:1},
+        {k:'d_03-21',type:'tg',label:'21/03 · equinócio',def:false,full:1},
+        {k:'data',type:'text',label:'Outro dia (dd/mm)',def:''},
+        {k:'horas',type:'text',label:'Horários',def:'9, 12, 15'}]}],
+    acts:[['scenes','Criar cenas','sun',1],['now','Ver agora','eye'],['off','Desligar sombras','x']], prev:p=>prevSun(p),
+    hint:'O Norte do SketchUp fica no eixo verde; se o terreno é girado, ajuste o Norte. Não cria nenhum objeto: só liga as sombras certas e grava em cada cena (leve).' },
   ripado:{ secs:[
       {t:'Ripas', f:[
         {k:'sentido',type:'cards',full:1,def:'vertical',opts:[['vertical','Em pé','rip_v'],['horizontal','Deitadas','rip_h']]},
@@ -1193,6 +1209,16 @@ function prevRoof(p){
    <path d="M${W/2-run+20} ${H-26}V${H-14}M${W/2+run-20} ${H-26}V${H-14}" stroke="var(--ink2)" stroke-width="2"/>
    <text x="${W/2}" y="14" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="var(--ink2)">${br(i,0)}% · ${br(ang,1)}°</text>${warn}</svg>`;
 }
+function prevSun(p){
+  const L={santo_andre:-23.66,sao_paulo:-23.55,campinas:-22.91,rio:-22.91,bh:-19.92,vitoria:-20.32,curitiba:-25.43,floripa:-27.6,poa:-30.04,brasilia:-15.79,goiania:-16.69,cuiaba:-15.6,campo_grande:-20.47,salvador:-12.97,recife:-8.05,natal:-5.8,fortaleza:-3.73,belem:-1.46,manaus:-3.12};
+  const lat=p.cidade==='outra'?num(p.lat,-23.66):(L[p.cidade||'santo_andre']??-23.66);
+  const alt=d=>90-Math.abs(lat-d), rows=[['21/06',-23.44],['21/03',0],['21/12',23.44]].filter(([k])=>p['d_'+k.split('/').reverse().join('-')]!==false&&(k!=='21/03'||p['d_03-21']));
+  const W=300,H=130, cx=150, cy=118, R=100;
+  let g=`<path d="M${cx-R} ${cy}A${R} ${R} 0 0 1 ${cx+R} ${cy}" fill="none" stroke="var(--line2)"/><path d="M${cx-R-8} ${cy}H${cx+R+8}" stroke="var(--ink2)"/>`;
+  rows.forEach(([k,d],i)=>{ const a=Math.max(0,Math.min(90,alt(d)))*Math.PI/180; const x=cx+R*Math.cos(Math.PI-a)*(i%2?1:-1)*-1, y=cy-R*Math.sin(a);
+    g+=`<path d="M${cx} ${cy}L${cx-R*Math.cos(a)} ${y}" stroke="#A88A80" stroke-dasharray="3 3"/><circle cx="${cx-R*Math.cos(a)}" cy="${y}" r="6" fill="#D6B3AB" stroke="#3E4B57"/><text x="${cx-R*Math.cos(a)+10}" y="${y+4}" font-size="10" font-family="JetBrains Mono" fill="var(--ink2)">${k} · ${br(alt(d),0)}°</text>`; });
+  return `<span class="tagline">ALTURA DO SOL AO MEIO-DIA · LAT ${br(lat,1)}°</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${g}</svg>`;
+}
 function prevRipado(p){
   const W=300,H=260, k=.5, larg=Math.max(.5,num(p.larg,4)), vao=Math.max(0,num(p.vao,2)), rec=num(p.recuo,0), v=p.sentido!=='horizontal';
   const A=(v?W:H)-2*rec, pitch=larg+vao, n=A>=larg?Math.floor((A-larg)/pitch)+1:0, st=p.alinhar==='inicio'?rec:rec+(A-(n-1)*pitch-larg)/2;
@@ -1617,6 +1643,7 @@ const MOCK = {
     ['baseboard','Rodapé','rev','rev','Modelos reto, chanfrado, boleado, frisado e clássico; pula portas e calcula as barras.',['Selecione o piso','Shift + clique nas linhas das portas','Gerar rodapé']],
     ['railing','Guarda-corpo','arq','arq','Vidro, montantes, cabos, mureta ou corrimão na varanda, mezanino ou borda de laje.',['Selecione as linhas da borda (ou clique)','Escolha o modelo e a altura','Criar']],
     ['scatter','Espalhar objetos','render','pres','Grama, pedrisco, plantas e pedras espalhados numa face, girados e com tamanhos variados.',['Selecione a face (e os objetos)','Escolha quantidade e variação','Espalhar']],
+    ['sun','Estudo de sol','pres','pres','Cidade, dia e horário: liga as sombras certas e cria as cenas do estudo de insolação.',['Escolha a cidade','Marque dias e horários','Criar cenas']],
     ['ripado','Ripado','rev','rev','Ripas na parede, forro, porta ou painel, com fundo, recuo e conta de barras.',['Selecione ou clique na face','Escolha ripa, espaço e sentido','Criar ripado']],
     ['ceiling','Forro e moldura','rev','rev','Forro rebaixado com tabica e cortineiro, sanca aberta ou fechada, ou só moldura de teto.',['Selecione o piso (e a linha da janela)','Escolha o tipo e as medidas','Gerar']],
     ['scenes','Cenas automáticas','pres','pres','Plantas por nível, cobertura, cortes AA/BB, 4 fachadas e perspectiva num clique.',['Informe os níveis','Marque o que quer','Criar cenas']],

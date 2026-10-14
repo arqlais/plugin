@@ -867,6 +867,23 @@ check('model_health · o que pesa, trocar por caixa e voltar') do
   "mais pesada: #{hv['heavy'][0][0]} (#{hv['heavy'][0][3]}%) · #{r['stats'][0][1]} cópias viraram caixa de 6 faces, mesmo tamanho · limpar não apagou o original · voltou"
 end
 
+check('sun · cidade, dias e horários viram cenas de sombra') do
+  fresh
+  r = ok!(run(:sun, 'scenes', 'cidade' => 'santo_andre', 'd_06-21' => true, 'd_12-21' => true, 'd_03-21' => false, 'data' => '15/08', 'horas' => '9, 12, 15h30'))
+  pgs = m.pages.to_a.select { |pg| pg.name.start_with?('Sol') }
+  expect(pgs.size == 9, "#{pgs.size} cenas (esperava 3 dias × 3 horários)")
+  t = pgs.map { |pg| pg.shadow_info['ShadowTime'] }.uniq
+  expect(t.size == 9, 'cenas com o mesmo horário')
+  si = m.shadow_info
+  expect((si['Latitude'] + 23.663).abs < 0.01 && si['DisplayShadows'], 'local/sombra')
+  expect(pgs.map(&:name).include?('Sol · 21/06 · 09h') && pgs.map(&:name).include?('Sol · 15/08 · 15h30'), "nomes #{pgs.map(&:name).first(3)}")
+  ok!(run(:sun, 'scenes', 'horas' => '9, 12, 15h30', 'data' => '15/08'))
+  expect(m.pages.to_a.count { |pg| pg.name.start_with?('Sol') } == 9, 'repetiu cenas ao criar de novo')
+  ok!(run(:sun, 'now'))
+  ok!(run(:sun, 'off'))
+  "#{pgs.size} cenas (#{pgs.first.name} … #{pgs.last.name}), cada uma com seu horário · criar de novo substitui"
+end
+
 check('ripado · parede com porta, em pé e deitado, fundo, barras') do
   fresh
   f = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))

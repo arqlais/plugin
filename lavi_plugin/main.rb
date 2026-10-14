@@ -13,7 +13,7 @@ module LAVIStudio
     ROOT = File.dirname(__FILE__.dup.force_encoding('UTF-8')).freeze
     LOAD_ERRORS = []
     TOOLBAR = [
-      %i[scenes export_images room_tags],
+      %i[scenes export_images room_tags sun],
       %i[edges materials texmap lights scatter],
       %i[walls openings dwg_walls stairs railing roofs dims],
       %i[tiling ripado baseboard ceiling],
@@ -53,7 +53,7 @@ module LAVIStudio
       walls openings dwg_walls stairs railing roofs
       tiling baseboard ceiling ripado
       cut_list countertop
-      scenes export_images room_tags
+      scenes export_images room_tags sun
       takeoff furniture
       model_health align replace auto_tags measure isolate
       dwg_clean dims array fix_faces smart_select
