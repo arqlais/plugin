@@ -511,6 +511,10 @@ function profPic(pts, ceiling){ const k=26/Math.max(...pts.map(q=>Math.max(q[0],
   const d=pts.map((q,i)=>(i?'L':'M')+(12+q[0]*k).toFixed(1)+' '+(ceiling?(7+q[1]*k):(33-q[1]*k)).toFixed(1)).join('')+'Z';
   return PIC(`<path d="M12 4v32" stroke-width="1"/><path d="${ceiling?'M8 7h30':'M8 33h30'}" stroke-width="1"/><path d="${d}" fill="currentColor" fill-opacity=".18"/>`); }
 const GC=(inner)=>PIC('<path d="M6 34h8v-6h8v-6h8v-6h8" stroke-width="1"/>'+inner);
+P.esc_reta=PIC('<path d="M14 6h20v36H14zM14 12h20M14 18h20M14 24h20M14 30h20M14 36h20"/>');
+P.esc_L=PIC('<path d="M8 42V18h22v24zM8 36h22M8 30h22M8 24h22M30 18V6h12v36H30M36 6v12"/><path d="M30 6h12"/>');
+P.esc_U=PIC('<path d="M6 42V8h36v34H28V18h-8v24zM6 36h14M6 30h14M6 24h14M28 36h14M28 30h14M28 24h14"/>');
+P.esc_caracol=PIC('<circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="3"/><path d="M24 7v14M41 24H27M24 41V27M12 12l10 10M36 12L26 22"/>');
 P.gc_nenhum=GC(''); P.gc_corrimao=GC('<path d="M6 22L38 4" stroke-width="2"/>');
 P.gc_vidro=GC('<path d="M6 32V20L38 2v12z" fill="currentColor" fill-opacity=".15"/><path d="M6 20L38 2" stroke-width="2"/>');
 P.gc_montantes=GC('<path d="M6 20L38 2" stroke-width="2"/><path d="M9 32V18.5M15 28V15M21 26V11.5M27 22V8M33 18V5" stroke-width="1"/>');
@@ -610,23 +614,29 @@ const FORMS = {
     acts:p=>p.etapa==='paredes'?[['build','Levantar paredes','play',1],['analyze','Analisar','eye']]:[['clean','Limpar planta','dwg_clean',1]], allActs:['clean','gaps','build','analyze'],
     hint:'1 · Logo depois de importar (Arquivo › Importar): achata, tira textos e cotas, liga as pontas soltas e mostra onde ficou aberto. 2 · Selecione as linhas e levante as paredes; janelas são reconhecidas pela camada ou bloco com "JAN" no nome.' },
   stairs:{ secs:[
+      {t:'Formato', f:[
+        {k:'forma',type:'cards',full:1,def:'reta',opts:[['reta','Reta','esc_reta'],['L','Em L','esc_L'],['U','Em U','esc_U'],['caracol','Caracol','esc_caracol']]},
+        {k:'giro',type:'seg',label:'Vira para a',def:'esquerda',full:1,opts:[['esquerda','Esquerda'],['direita','Direita']],when:p=>(p.forma||'reta')!=='reta'},
+        {k:'vao_u',type:'num',label:'Vão entre os lances',unit:'cm',def:10,chips:[0,10,20],when:p=>p.forma==='U'},
+        {k:'coluna',type:'num',label:'Raio da coluna',unit:'cm',def:10,chips:[5,10,15],when:p=>p.forma==='caracol'},
+        {k:'volta',type:'num',label:'Giro total',unit:'graus',def:360,chips:[270,360,450],when:p=>p.forma==='caracol'}]},
       {t:'Escada', f:[
-        {k:'tipo',type:'cards',full:1,def:'macica',opts:[['macica','Maciça','macica'],['flutuante','Flutuante','flutuante']]},
+        {k:'tipo',type:'cards',full:1,def:'macica',opts:[['macica','Maciça','macica'],['flutuante','Flutuante','flutuante']],when:p=>p.forma!=='caracol'},
         {k:'alt',type:'num',label:'Altura a vencer',unit:'cm',def:280,chips:[260,280,300]},
         {k:'larg',type:'num',label:'Largura',unit:'cm',def:90,chips:[80,90,100,120]},
         {k:'espelho',type:'num',label:'Espelho desejado',unit:'cm',def:17.5,step:.5},
-        {k:'espdegrau',type:'num',label:'Espessura do degrau',unit:'cm',def:4,when:p=>p.tipo==='flutuante'},
-        {k:'laje',type:'num',label:'Espessura da laje',unit:'cm',def:12,when:p=>p.tipo!=='flutuante'}]},
+        {k:'espdegrau',type:'num',label:'Espessura do degrau',unit:'cm',def:4,when:p=>p.tipo==='flutuante'||p.forma==='caracol'},
+        {k:'laje',type:'num',label:'Espessura da laje',unit:'cm',def:12,when:p=>p.tipo!=='flutuante'&&p.forma!=='caracol'}]},
       {t:'Guarda-corpo', f:[
         {k:'guarda',type:'cards',full:1,def:'corrimao',opts:[['nenhum','Nenhum','gc_nenhum'],['corrimao','Corrimão','gc_corrimao'],['vidro','Vidro','gc_vidro'],['montantes','Montantes','gc_montantes'],['cabos','Cabos','gc_cabos'],['mureta','Mureta','gc_mureta']]},
-        {k:'lados',type:'seg',label:'Lado',def:'direito',full:1,opts:[['direito','Direito'],['esquerdo','Esquerdo'],['ambos','Os dois']],when:p=>p.guarda!=='nenhum'},
+        {k:'lados',type:'seg',label:'Lado',def:'direito',full:1,opts:[['direito','Direito'],['esquerdo','Esquerdo'],['ambos','Os dois']],when:p=>p.guarda!=='nenhum'&&p.forma!=='caracol'},
         {k:'gc_alt',type:'num',label:'Altura',unit:'cm',def:105,chips:[90,100,105,110],when:p=>p.guarda!=='nenhum'},
         {k:'gc_corrimao',type:'tg',label:'Corrimão em cima do vidro',def:true,full:1,when:p=>p.guarda==='vidro'},
         {k:'mont_esp',type:'num',label:'Espaço entre montantes',unit:'cm',def:12,chips:[10,12,15],when:p=>p.guarda==='montantes'},
         {k:'cabos_n',type:'num',label:'Quantidade de cabos',unit:'',def:5,when:p=>p.guarda==='cabos'},
         {k:'mureta_esp',type:'num',label:'Espessura da mureta',unit:'cm',def:12,when:p=>p.guarda==='mureta'}]}],
     acts:[['place','Clicar início e direção','pin',1]], prev: p => prevStairs(p),
-    hint:'Lado direito/esquerdo de quem sobe. Pela norma o vão entre montantes não passa de 11 cm.' },
+    hint:'Clique o primeiro degrau e a direção de subida (na caracol, o centro e a direção do primeiro degrau). Em L e U o patamar fica no meio da altura. Lado direito/esquerdo de quem sobe; pela norma o vão entre montantes não passa de 11 cm.' },
   roofs:{ secs:[
       {t:'Telhado', f:[
         {k:'tipo',type:'cards',full:1,def:'2aguas',opts:[['1agua','1 água','1agua'],['2aguas','2 águas','2aguas'],['4aguas','4 águas','4aguas']]},
@@ -1082,7 +1092,26 @@ function scheduleEst(now){ clearTimeout(estTimer); estTimer=setTimeout(async()=>
 
 function stairCalc(p){ const alt=num(p.alt,280), alvo=num(p.espelho,17.5); const n=Math.max(Math.round(alt/alvo),2), e=alt/n;
   const piso=Math.min(32,Math.max(25,64-2*e)); return {n,e,piso,bl:2*e+piso,comp:(n-1)*piso,ang:Math.atan2(e,piso)*180/Math.PI}; }
+function prevStairsPlan(p,c){
+  const f=p.forma, w=num(p.larg,90), esq=p.giro!=='direita', W=300,H=170;
+  let g='', tag='';
+  if(f==='caracol'){ const rc=Math.max(3,num(p.coluna,10)), R=rc+w, s=70/R, cx=150, cy=85, vt=Math.max(90,Math.min(720,num(p.volta,360)))*Math.PI/180, da=vt/(c.n-1), sg=esq?-1:1;
+    for(let i=0;i<c.n-1;i++){ const a0=i*da, a1=(i+1)*da; g+=`<path d="M${cx+rc*s*Math.cos(a0)} ${cy+sg*rc*s*Math.sin(a0)}L${cx+R*s*Math.cos(a0)} ${cy+sg*R*s*Math.sin(a0)}" stroke="var(--ink2)" stroke-width=".8"/>`; }
+    g=`<circle cx="${cx}" cy="${cy}" r="${R*s}" fill="var(--card)" stroke="#3E4B57"/>`+g+`<circle cx="${cx}" cy="${cy}" r="${rc*s}" fill="#3E4B57"/>`;
+    const rw=rc+w*.6; tag=`CARACOL · ⌀ ${br(2*R/100)} m · PISO NA LINHA DE PASSO ${br(da*rw,1)} cm`;
+    return `<span class="tagline">${tag}</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${g}</svg>`; }
+  const k=Math.ceil(c.n/2), l1=(k-1)*c.piso, l2=(c.n-k-1)*c.piso, gap=f==='U'?Math.max(0,num(p.vao_u,10)):0;
+  const totX=l1+w, totY=f==='L'?w+l2:2*w+gap, s=Math.min(260/Math.max(totX,1),140/Math.max(totY,1));
+  const X=x=>20+x*s, Y=y=>esq?155-y*s:15+y*s;
+  const rect=(x0,y0,x1,y1,fill)=>`<rect x="${Math.min(X(x0),X(x1))}" y="${Math.min(Y(y0),Y(y1))}" width="${Math.abs(X(x1)-X(x0))}" height="${Math.abs(Y(y1)-Y(y0))}" fill="${fill}" stroke="#3E4B57"/>`;
+  g+=rect(0,0,l1,w,'var(--card)'); for(let i=1;i<k-1;i++) g+=`<path d="M${X(i*c.piso)} ${Y(0)}V${Y(w)}" stroke="var(--ink2)" stroke-width=".8"/>`;
+  if(f==='L'){ g+=rect(l1,0,l1+w,w,'#D6B3AB')+rect(l1,w,l1+w,w+l2,'var(--card)'); for(let i=1;i<c.n-k-1;i++) g+=`<path d="M${X(l1)} ${Y(w+i*c.piso)}H${X(l1+w)}" stroke="var(--ink2)" stroke-width=".8"/>`; }
+  else { g+=rect(l1,0,l1+w,2*w+gap,'#D6B3AB')+rect(l1-l2,w+gap,l1,2*w+gap,'var(--card)'); for(let i=1;i<c.n-k-1;i++) g+=`<path d="M${X(l1-i*c.piso)} ${Y(w+gap)}V${Y(2*w+gap)}" stroke="var(--ink2)" stroke-width=".8"/>`; }
+  g+=`<path d="M${X(5)} ${Y(w/2)}H${X(l1-5)}" stroke="#A88A80" stroke-width="1.4" marker-end="url(#ar)"/><defs><marker id="ar" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L6 3L0 6z" fill="#A88A80"/></marker></defs>`;
+  return `<span class="tagline">PLANTA EM ${f} · ${br(totX/100)} × ${br(totY/100)} m · PATAMAR NO ${k}º DEGRAU</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${g}</svg>`;
+}
 function prevStairs(p){
+  if(p.forma&&p.forma!=='reta') return prevStairsPlan(p,stairCalc(p));
   const c=stairCalc(p), W=300,H=170, s=Math.min((W-50)/Math.max(c.comp,1),(H-40)/num(p.alt,280));
   let d=`M10 ${H-14}`; for(let i=0;i<c.n-1;i++){ d+=`v${-c.e*s}h${c.piso*s}`; } d+=`v${-c.e*s}h30`;
   const fl=p.tipo==='flutuante';

@@ -686,7 +686,6 @@ module Sketchup
           f = ents.add_face(a, b, b + off, a + off)
           next unless f
           out = (b - a).cross(n)
-          out.reverse! if d < 0 # extrusão para trás: o sólido fica do outro lado
           f.reverse! if f.normal.dot(out) < 0
           f.material = material
         end

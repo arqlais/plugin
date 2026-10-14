@@ -353,6 +353,16 @@ scene('24-ripado') do
   render('24-ripado', 'Ripado em pé com o vão da porta livre · ripado deitado com fundo e recuo', az: -110, el: 18)
 end
 
+scene('25-escadas-l-u-caracol') do
+  run(:stairs, 'place', 'forma' => 'L', 'giro' => 'esquerda', 'guarda' => 'vidro', 'lados' => 'direito', 'tipo' => 'macica')
+  click_points([pt(0, 0), pt(100, 0)])
+  run(:stairs, 'place', 'forma' => 'U', 'giro' => 'esquerda', 'guarda' => 'montantes', 'lados' => 'ambos', 'tipo' => 'flutuante', 'vao_u' => 20)
+  click_points([pt(400, 0), pt(500, 0)])
+  run(:stairs, 'place', 'forma' => 'caracol', 'guarda' => 'corrimao', 'larg' => 80, 'volta' => 360)
+  click_points([pt(900, 100), pt(1000, 100)])
+  render('25-escadas-l-u-caracol', 'Escada em L com vidro · em U flutuante com montantes · caracol com corrimão', az: -50, el: 32)
+end
+
 scene('20-luzes') do
   wm = m.materials.add('Parede').tap { |x| x.color = Sketchup::Color.new(236, 232, 226) }
   wall = m.entities.add_face(pt(0, 300, 0), pt(400, 300, 0), pt(400, 300, 280), pt(0, 300, 280))

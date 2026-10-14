@@ -744,12 +744,53 @@ check('stairs · guarda-corpo de vidro, montantes, cabos, mureta, corrimão') do
     esc = m.entities.grep(Sketchup::ComponentInstance).last
     gcs = esc.definition.entities.grep(Sketchup::ComponentInstance).select { |x| x.name.start_with?('Guarda-corpo') }
     expect(gcs.size == (i.even? ? 2 : 1), "#{g}: #{gcs.size} guarda-corpo(s)")
-    alt = gcs.map { |x| x.bounds.max.z }.max - esc.definition.entities.grep(Sketchup::Face).map { |f| f.bounds.max.z }.max
     out << "#{g} #{gcs.size} lado(s)"
   end
   vid = m.materials['lavi_Vidro']
   expect(vid && vid.alpha < 1, 'vidro sem transparência')
   out.join(', ')
+end
+
+check('stairs · em L, em U e caracol, com guarda-corpo') do
+  fresh
+  out = []
+  [['L', 'esquerda'], ['L', 'direita'], ['U', 'esquerda'], ['caracol', 'esquerda']].each_with_index do |(forma, giro), i|
+    ok!(run(:stairs, 'place', 'forma' => forma, 'giro' => giro, 'alt' => 280, 'larg' => 90, 'guarda' => 'vidro', 'lados' => 'ambos', 'tipo' => i.odd? ? 'flutuante' : 'macica'))
+    click_points([pt(i * 600, 0), pt(i * 600 + 100, 0)])
+    esc = m.entities.grep(Sketchup::ComponentInstance).last
+    bb = esc.bounds
+    w = ((bb.max.x - bb.min.x) * 2.54).round
+    d = ((bb.max.y - bb.min.y) * 2.54).round
+    top = (bb.max.z * 2.54).round
+    tops = []
+    stack = [[esc.definition.entities, esc.transformation]]
+    until stack.empty?
+      ents, tr = stack.pop
+      ents.each do |e|
+        if e.is_a?(Sketchup::Face) && e.normal.transform(tr).z > 0.99 && !(e.parent.respond_to?(:name) && e.parent.name.to_s =~ /vidro/i)
+          tops << (e.bounds.max.transform(tr).z * 2.54).round(1)
+        elsif e.respond_to?(:definition) && !e.name.to_s.start_with?('Guarda')
+          stack << [e.definition.entities, tr * e.transformation]
+        end
+      end
+    end
+    tops = tops.uniq.sort
+    gcs = esc.definition.entities.grep(Sketchup::ComponentInstance).count { |x| x.name.start_with?('Guarda-corpo') }
+    case forma
+    when 'L'
+      expect(w > 150 && d > 150, "L #{giro}: planta #{w} × #{d} cm (devia virar)")
+      expect(giro == 'esquerda' ? bb.max.y > 100.cm : bb.min.y < -100.cm, "L #{giro}: virou para o lado errado")
+    when 'U'
+      expect(d >= 190, "U: largura total #{d} cm (2 lances + vão)")
+    when 'caracol'
+      expect((w - 200).abs < 5 && (d - 200).abs < 5, "caracol: diâmetro #{w} × #{d} (esperava 200)")
+    end
+    expect(tops.include?(262.5), "#{forma}: último degrau em #{tops.last(2).inspect}")
+    expect(top >= 280, "#{forma}: altura total #{top}")
+    expect(gcs >= 1, "#{forma}: sem guarda-corpo")
+    out << "#{forma} #{giro} #{w}×#{d} cm, #{tops.size} níveis, #{gcs} guarda-corpo(s)"
+  end
+  out.join(' · ')
 end
 
 check('ripado · parede com porta, em pé e deitado, fundo, barras') do
