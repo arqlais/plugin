@@ -12,7 +12,7 @@ module LAVIStudio
         def handle(action, p)
           case action
           when 'pilar_click'
-            pick('Pilares: clique onde vai cada pilar (Enter termina)') { |pts| pilares(pts, p) }
+            pick('Pilares: clique onde vai cada pilar (Enter termina)', 1) { |pts| pilares(pts, p) }
           when 'pilar_faces'
             faces = H.selection.grep(Sketchup::Face)
             return H.err('Selecione as faces dos pilares (os quadradinhos ou círculos da planta).') if faces.empty?
@@ -27,9 +27,9 @@ module LAVIStudio
           end
         end
 
-        def pick(hint)
+        def pick(hint, min = 2)
           Sketchup.active_model.select_tool(
-            Pickers::PointPicker.new(hint) do |pts, closed|
+            Pickers::PointPicker.new(hint, min: min) do |pts, closed|
               Sketchup.active_model.select_tool(nil)
               res = begin
                 yield pts, closed

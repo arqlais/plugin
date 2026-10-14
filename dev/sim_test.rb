@@ -933,6 +933,9 @@ check('structure · pilares clicados, da planta e vigas nas linhas') do
   bb = ps[1].bounds
   dims = [bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z].map { |v| (v * 2.54).round }
   expect(dims == [20, 40, 280], "pilar #{dims.inspect}")
+  ok!(run(:structure, 'pilar_click', 'forma' => 'redondo', 'diam' => 30))
+  click_points([pt(200, 150)])
+  expect(pushed.last && pushed.last['ok'] && pushed.last['msg'].start_with?('1 pilar'), 'pilar com um clique só')
   q = m.entities.add_face(pt(600, 0), pt(620, 0), pt(620, 20), pt(600, 20))
   c = m.entities.add_face(*(0...16).map { |k| a = 2 * Math::PI * k / 16; pt(700 + 15 * Math.cos(a), 15 * Math.sin(a)) })
   sel(q, c)

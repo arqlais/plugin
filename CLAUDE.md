@@ -58,37 +58,42 @@ dev/prints_telas.js / prints_folhas.js  prints de todas as telas e montagem das 
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.11.1; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
+## Ferramentas — status (v0.12.0; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria; digitar "5" = 5 m, unidade escolhível) | arq |
-| openings | Portas e janelas: **posição pela distância** (v0.11, ela pediu: "não pode só clicar e furar") — `posicao` canto (X cm da ponta esquerda/direita da parede) / ponto (X cm do ponto clicado, para um lado; dá para digitar a distância no VCB) / clique livre; abre o vão, põe folha/vidro | arq |
-| dwg_walls | DWG → Paredes (pares paralelos, vergas e peitoris nos vãos) | arq |
-| stairs | Escada reta Blondel, maciça ou flutuante; **guarda-corpo** (v0.11): corrimão, vidro, montantes, cabos de aço ou mureta, lado direito/esquerdo/ambos, altura ajustável | arq |
+| openings | Portas e janelas (v0.12: **porta completa** = batente na espessura, guarnição dos 2 lados, folha no lado para onde abre, **abertura desenhada no piso** (etiqueta "lavi · Abertura em planta") e **etiqueta P1/J1** com medidas via `add_text`, contador no modelo `n_porta`/`n_janela`): **posição pela distância** (v0.11, ela pediu: "não pode só clicar e furar") — `posicao` canto (X cm da ponta esquerda/direita da parede) / ponto (X cm do ponto clicado, para um lado; dá para digitar a distância no VCB) / clique livre; abre o vão, põe folha/vidro | arq |
+| dwg_walls | **DWG: limpar e levantar paredes** (v0.12 juntou com `dwg_clean`: campo `etapa` limpar/paredes; ações `clean`/`gaps` delegadas para `DwgClean`, `z_achatar` vira `z`) — pares paralelos, vergas e peitoris | arq |
+| stairs | Escada **reta, em L, em U (vão entre lances) ou caracol** (v0.12; patamar no meio da altura, `giro` esquerda/direita, caracol com coluna e `volta` em graus); Blondel, maciça ou flutuante; guarda-corpo por caminho (`Stairs.guards(ents, p, sides, opts)` com pontos [x,y,z_apoio,z_piso], contorna o patamar, junta trechos alinhados); **guarda-corpo** (v0.11): corrimão, vidro, montantes, cabos de aço ou mureta, lado direito/esquerdo/ambos, altura ajustável | arq |
+| railing | **Guarda-corpo** solto (v0.12): nas arestas selecionadas (`Railing.chains`) ou clicando; mesmos modelos da escada; recuo da borda | arq |
+| structure | **Pilares e vigas** (v0.12): pilar clicando (1 ponto basta, `PointPicker min:`) ou das faces da planta, retangular/redondo, componente reaproveitado; viga nas linhas (Sweep, meia-esquadria); volume de concreto | arq |
 | roofs | Telhado 1/2/4 águas, beiral, telhas | arq |
-| urban_index | TO, CA, permeabilidade vs. limites da lei | arq |
 | tiling | **Revestimento** (v0.8, um só para piso e parede; referência dela = plugin REVEST, só a ideia): 8 padrões (horizontal, vertical, diagonal, tijolinho ½/⅓, damas, chevron, espinha, pedra orgânica = Voronoi), junta/junta seca, espessura e peças 3D, rejunte com cor, ângulo + girar pelos 2 pontos no modelo, ponto inicial clicado, centralizar, várias imagens sorteadas por peça (`position_material` com a imagem ocupando a peça, "Variar combinação" = `seed`), estimativa ao vivo (ação `estimate`), Editar paginação (grupo guarda `params`, `face_pid`, `face_tr`). Gerador de padrões igual em Ruby (`Tiling.layout/unit`) e JS (`tilePieces`), mesmo sorteio (`rnd`/`tileRnd`). Teste: soma das peças = área em todos os padrões. Furos (pilares) recortam as peças no formato (convexo ou triangulado). **Acabamento**: plano, 3D reto, relevo (alturas variadas), chanfrado, rústico (pedra natural, topo inclinado); pedras prontas (São Tomé, pedra ferro, Miracema, canjiquinha, seixo, mosaico português) | rev |
+| ripado | **Ripado** (v0.12) em qualquer face: em pé/deitado, largura/espaço/saliência, recuo, centralizar, fundo, vãos livres, conta de barras; cada comprimento = 1 componente (leve), máx. 4000 ripas | rev |
 | baseboard | Rodapé com modelos (reto, chanfrado, boleado, frisado, clássico, filete) + prontos (MDF 7/10/15, poliestireno, porcelanato, madeira); perfil puxado por `core/sweep.rb` (meia-esquadria); pula portas e pilares | rev |
 | ceiling | Forro: rebaixado com **tabica 3 cm** (padrão dela, junta de dilatação), **cortineiro 10/15/20 cm** (linha da janela selecionada com Shift), sanca fechada/aberta, ou **só moldura** de teto (cantoneira, chanfro, côncava, degraus, clássica) sem rebaixo. Tudo ajustável | rev |
-| cut_list | Lista de peças + plano de corte + fita + ferragens + CSV | marc |
+| cut_list | Lista de peças + plano de corte (v0.12: `Nesting.pack` testa prateleiras + guilhotina/MaxRects em várias ordens e fica com menos chapas; `metodo` esquadrejadeira/CNC) + peças numeradas + **etiquetas A4** (3×8 ou 2×7) com o plano em HTML + fita + ferragens + CSV | marc |
 | countertop | Recorte **no formato do bloco** colocado (corte horizontal do componente na altura do tampo), **automático ao colocar** (EntitiesObserver; nomes cuba/pia/lavatório/cooktop/tanque/fogão ou marcado "Este bloco sempre recorta"; pref `auto_recorte`), folga; ainda tem o modo por medida | marc |
-| takeoff | Quantitativo por material (piso/parede/teto) + itens + CSV | quant |
+| takeoff | **Quantitativo e mobiliário** (v0.12 juntou com `furniture`: campo `parte`; ações apply/read/report/sheet e `moveis_csv` delegadas para `Furniture`) | quant |
+| sun | **Estudo de sol** (v0.12): cidades do Brasil (lat/long/fuso) ou outra, Norte, 21/06, 21/12, 21/03 e outro dia, horários "9, 12, 15h30"; só `shadow_info` + cenas (sem geometria) | pres |
 | scenes | Cenas automáticas: plantas por nível (corte 1,20), cobertura, cortes AA/BB, 4 fachadas, perspectiva | pres |
 | export_images | Exportar cenas em PNG/JPG (formatos feed/story/A4…), moldura + grade de terços na tela (Overlay, SU 2023+), atalhos de câmera (altura, abertura, 2 pontos, vista) | pres |
 | room_tags | Etiqueta de ambiente (texto 3D no piso ou rótulo) + quadro de áreas CSV; guarda persistent_id da face | pres |
-| furniture | Ficha de mobiliário (dict `plane_item`), relatório por ambiente, CSV, caderno HTML com miniaturas | quant |
-| dwg_clean | Limpar DWG: achata, tira anotações, apaga linhas minúsculas, explode blocos, **fecha geometria** (liga pontas soltas até X cm, divide linha nos encontros em T), fecha faces, **marca e seleciona o que ficou aberto** (pontos-guia na etiqueta "lavi · Aberturas"); botão só mostrar aberturas | arq |
+| (furniture) | Ficha de mobiliário (dict `plane_item`), relatório, CSV, caderno HTML — sem botão próprio desde a v0.12, mora no Quantitativo | quant |
+| (dwg_clean) | Etapa 1 do DWG (sem botão próprio desde a v0.12): achata, tira anotações, apaga linhas minúsculas, explode blocos, **fecha geometria** (liga pontas soltas até X cm, divide linha nos encontros em T), fecha faces, **marca e seleciona o que ficou aberto** (pontos-guia na etiqueta "lavi · Aberturas"); botão só mostrar aberturas | arq |
 | dims | Cotas automáticas: contorno juntado dos trechos (arestas usadas por 1 face só), externas/internas/totais, etiqueta "lavi · Cotas", apagar | arq |
 | array | Copiar em grade (numa face: luminárias no forro) ou ao longo de linhas (por distância ou quantidade, girando) | base |
 | fix_faces | Corrigir faces invertidas: orienta por arestas (reversed_in?), vira para fora (volume ou maioria), passa pintura do verso | base |
-| smart_select | Seleção inteligente: mesmo material/etiqueta/componente, inverter, linhas soltas, pisos de costas, escondidos | base |
+| smart_select | Seleção inteligente: mesmo material/etiqueta/componente, inverter, linhas soltas, pisos de costas, escondidos + **trocar componente** (v0.12 juntou com `replace`, delegado) | base |
 | shape | **Todas as arestas** (v0.11.1, referência dela = Round Corner: cubo de quinas redondas ou chanfradas; extrusão em qualquer eixo, quinas viram esfera, arestas curvas suaves; peças com furo recusadas) + quinas de peças (tampos, bancos, placas), bordas boleadas em cima/embaixo e **curvar** peça num raio (v0.11) | base |
 | edges | Aba **Render** (v0.11, ideia vinda do LAVI Render dela, código 100% novo): suavizar por ângulo, ocultar/mostrar arestas, linhas do estilo liga/desliga | pres |
 | materials | Render: conta-gotas, trocar material na cena toda (entra nos blocos), limpar materiais de dentro do bloco, prontos (vidros, espelhos, metais) | pres |
 | texmap | Render: projeção de textura caixa/plana/esférica com tamanho real e rotação | pres |
 | lights | Render: marcar luz com temperatura (K), fachos sob spots, mancha de luz na parede, letreiro neon | pres |
+| scatter | **Espalhar objetos** (v0.12, aba Render): na face/grupo do terreno, por m² ou total, distância mínima (grade), girar, variar tamanho, seguir inclinação, vários objetos sorteados; instâncias num grupo na etiqueta "lavi · Espalhar"; máx. 5000 | pres |
 | randomize | Render: variar cópias (girar, escala %, espelhar, misturar materiais, sorteio) | pres |
-| model_health, align, replace, auto_tags, measure, isolate | Essenciais (grátis) | base |
+| model_health | Saúde do modelo + **peso** (v0.12): ranking faces × cópias (`heavy`, clicar seleciona), **trocar por caixa** (proxy com o original escondido dentro, não some ao limpar) e voltar os originais | base |
+| align, auto_tags, measure, isolate | Essenciais (grátis) | base |
 
 ## Marcenaria dinâmica — PAUSADA (fora do plugin desde a v0.5; código em `extras/marcenaria_dinamica/`)
 Ela pediu para tirar e fazer depois, à parte. Tudo abaixo continua valendo para quando voltar.
@@ -122,6 +127,7 @@ Próximo nível que ela quer (imagens de referência): catálogo detalhado como 
 - **Precisa de repositório público** (ou mover `updates/` para um host público, ex. o LAVI APP). Se o repo ficar privado, a atualização para de funcionar.
 
 ## Regras
+- v0.12 (ela pediu "tudo bem otimizado sem travamentos"): geometria repetida = componente reaproveitado; limites de segurança (ripas, espalhar); `Helpers.operation` com tela parada e `Helpers.busy?` (observadores ignoram o que o lavi cria); preferências em cache. Ela tirou Índices urbanísticos e manteve o letreiro neon; não quis cortina/persiana.
 - Ela pediu: **nada de funcionalidade desnecessária**, só o que é útil no SketchUp em si (por isso o Orçamento saiu na v0.7). Perguntar antes de inventar ferramenta nova.
 - Referências de terceiros (HeyPrint, LIA etc.) servem só de ideia de interface: nunca copiar código.
 - **Código 100% original.** Projetos antigos dela tinham plugins de terceiros modificados para remover licença: nada disso entra aqui.

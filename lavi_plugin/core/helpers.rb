@@ -58,9 +58,11 @@ module LAVIStudio
       end
 
       # ---- operação com um único Ctrl+Z ---------------------------------------
+      # tudo numa operação só (um Ctrl+Z desfaz) e com a tela parada enquanto desenha (mais rápido)
       def operation(name)
         m = model
         m.start_operation(name, true)
+        @busy = true
         begin
           result = yield
           m.commit_operation
@@ -68,16 +70,30 @@ module LAVIStudio
         rescue StandardError => e
           m.abort_operation
           raise e
+        ensure
+          @busy = false
         end
+      end
+
+      # o lavi está desenhando (observadores ignoram o que ele mesmo cria)
+      def busy?
+        @busy == true
       end
 
       # ---- preferências --------------------------------------------------------
       def pref(key, default = nil)
+        @prefs ||= {}
+        return @prefs[key] if @prefs.key?(key)
+        @prefs[key] = pref_read(key, default)
+      end
+
+      def pref_read(key, default)
         v = Sketchup.read_default(PREF, key.to_s)
         v.nil? ? default : v
       end
 
       def set_pref(key, value)
+        (@prefs ||= {})[key] = value
         Sketchup.write_default(PREF, key.to_s, value)
       end
 

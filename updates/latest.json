@@ -1,6 +1,6 @@
 {
-  "version": "0.11.1",
+  "version": "0.12.0",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "ef37f9894845d1409d1312076f62497ee201d53c6937addb4bf25547ce694d23",
-  "notes": ["Arredondar ou chanfrar todas as arestas da peça de uma vez (cubo, puff, tampo, prateleira, peça em L)"]
+  "sha256": "05e40b75565b45a5eed049d0bd1cfd36540dc5521d78f260661a2aa79e291adc",
+  "notes": ["Juntamos ferramentas (DWG, seleção e trocar componente, quantitativo e mobiliário) e tiramos índices urbanísticos","Novo: ripado, guarda-corpo em qualquer lugar, pilares e vigas, espalhar objetos, estudo de sol","Escada em L, em U e caracol","Porta completa: batente, guarnição, abertura na planta e etiqueta P1","Plano de corte que gasta menos chapa + etiquetas para imprimir","Modelo leve: ver o que pesa e trocar por caixa enquanto modela"]
 }

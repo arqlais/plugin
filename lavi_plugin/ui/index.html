@@ -724,7 +724,7 @@ const FORMS = {
       {t:'Posição', opt:1, f:[
         {k:'recuo',type:'num',label:'Recuar da borda',unit:'cm',def:0,chips:[0,3,5,10],step:.5},
         {k:'lado',type:'seg',label:'Recuar para a',def:'esquerda',full:1,opts:[['esquerda','Esquerda da linha'],['direita','Direita da linha']],when:p=>num(p.recuo,0)>0}]}],
-    acts:[['build','Criar nas linhas selecionadas','railing',1],['draw','Clicar os pontos','pin']],
+    acts:[['build','Criar nas linhas','railing',1],['draw','Clicar os pontos','pin']],
     hint:'Selecione as arestas da borda (varanda, mezanino, laje) ou clique os pontos. Para sacadas e mezaninos a norma pede no mínimo 1,10 m e vão de até 11 cm entre montantes.' },
   scatter:{ secs:[
       {t:'Objeto', f:[
@@ -740,7 +740,7 @@ const FORMS = {
         {k:'escala',type:'range',label:'Variar o tamanho',unit:'%',def:20,min:0,max:60,step:5,full:1},
         {k:'normal',type:'tg',label:'Seguir a inclinação do terreno',def:false,full:1},
         {k:'seed',type:'num',label:'Sorteio',unit:'',def:1}]}],
-    acts:[['run','Espalhar','scatter',1],['vary','Outro sorteio','refresh'],['clear','Apagar espalhados','x']], allActs:['run','clear','list'], onopen:'list',
+    acts:[['run','Espalhar','scatter',1],['vary','Sortear','refresh'],['clear','Apagar','x']], allActs:['run','clear','list'], onopen:'list',
     hint:'Selecione a face (piso, jardim) ou o grupo do terreno. Tudo vai para a etiqueta "lavi · Espalhar": desligue a etiqueta enquanto modela para o SketchUp não ficar pesado. Use objetos leves (proxy, plantas 2D ou com poucas faces).' },
   sun:{ secs:[
       {t:'Lugar', f:[
@@ -755,7 +755,7 @@ const FORMS = {
         {k:'d_03-21',type:'tg',label:'21/03 · equinócio',def:false,full:1},
         {k:'data',type:'text',label:'Outro dia (dd/mm)',def:''},
         {k:'horas',type:'text',label:'Horários',def:'9, 12, 15'}]}],
-    acts:[['scenes','Criar cenas','sun',1],['now','Ver agora','eye'],['off','Desligar sombras','x']], prev:p=>prevSun(p),
+    acts:[['scenes','Criar cenas','sun',1],['now','Ver','eye'],['off','Desligar','x']], prev:p=>prevSun(p),
     hint:'O Norte do SketchUp fica no eixo verde; se o terreno é girado, ajuste o Norte. Não cria nenhum objeto: só liga as sombras certas e grava em cada cena (leve).' },
   structure:{ secs:[
       {t:'Criar', f:[
@@ -771,7 +771,7 @@ const FORMS = {
         {k:'vb',type:'num',label:'Largura (b)',unit:'cm',def:15,chips:[12,15,20]},
         {k:'vh',type:'num',label:'Altura (h)',unit:'cm',def:40,chips:[30,40,50,60]},
         {k:'topo',type:'num',label:'Topo da viga acima da linha',unit:'cm',def:280,chips:[260,280,300]}]}],
-    acts:p=>p.modo==='viga'?[['viga_lines','Nas linhas selecionadas','structure',1],['viga_click','Clicar o caminho','pin']]:[['pilar_click','Clicar onde vão','pin',1],['pilar_faces','Das faces selecionadas','structure']],
+    acts:p=>p.modo==='viga'?[['viga_lines','Nas linhas','structure',1],['viga_click','Clicar o caminho','pin']]:[['pilar_click','Clicar onde vão','pin',1],['pilar_faces','Das faces','structure']],
     allActs:['pilar_click','pilar_faces','viga_lines','viga_click'],
     hint:'Pilares iguais viram cópias do mesmo componente (leve). Da planta do DWG: selecione os quadradinhos/círculos dos pilares (faces) e levante todos de uma vez. Vigas: selecione o eixo e a viga fica pendurada abaixo do topo.' },
   ripado:{ secs:[
@@ -830,7 +830,7 @@ const FORMS = {
         {k:'etiqueta',type:'seg',label:'Folha',def:'3x8',full:1,opts:[['3x8','A4 · 3 × 8 (70 × 37)'],['2x7','A4 · 2 × 7 (99 × 38)']]},
         {k:'projeto',type:'text',label:'Projeto / cliente',def:''},
         {k:'plano',type:'tg',label:'Imprimir o plano de corte junto',def:true,full:1}]}],
-    acts:[['list','Gerar lista e plano de corte','play',1],['labels','Etiquetas','file'],['csv','Excel','file']],
+    acts:[['list','Gerar plano','play',1],['labels','Etiquetas','file'],['csv','Excel','file']],
     hint:'Selecione os móveis (ou nada, para ler o modelo todo). Peças escondidas pelas opções do bloco não entram.',
     render:r=>renderCut(r) },
   countertop:{ secs:[
@@ -1245,7 +1245,7 @@ function prevDoorPlan(p){
   if(g) gfx+=[yW-1.2,yW+t*s].map(y=>`<rect x="${x0-g*s}" y="${y}" width="${g*s}" height="1.2" fill="#3E4B57"/><rect x="${x0+lw*s}" y="${y}" width="${g*s}" height="1.2" fill="#3E4B57"/>`).join('');
   gfx+=`<path d="M${hx} ${yFace}V${yFace+dir*L}" stroke="#3E4B57" stroke-width="2"/><path d="M${hx} ${yFace+dir*L}A${L} ${L} 0 0 ${(dir>0)===esq?0:1} ${hx+sx*L} ${yFace}" fill="none" stroke="#A88A80" stroke-dasharray="3 2"/>`;
   gfx+=`<text x="${W/2}" y="${dentro?yW-8:yW+t*s+16}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#A88A80">P1 · ${br(lw,0)} × ${br(num(p.alt,210),0)}</text>`;
-  return `<span class="tagline">PLANTA · ABRE PARA ${dentro?'O LADO DO CLIQUE':'O OUTRO LADO'}</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${gfx}</svg>`;
+  return `<div style="font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted);margin-top:10px">PLANTA · ABRE PARA ${dentro?'O LADO DO CLIQUE':'O OUTRO LADO'}</div><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${gfx}</svg>`;
 }
 function prevRoof(p){
   const i=num(p.incl,30), min={ceramica:30,concreto:30,fibrocimento:10,metalica:5}[p.telha]||0;
@@ -1717,7 +1717,7 @@ const MOCK = {
     ['randomize','Variar objetos','render','pres','Gira, muda o tamanho e mistura materiais das cópias (plantas, cadeiras) para a cena ficar natural.',['Selecione as cópias','Escolha quanto variar','Variar']],
     ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do lavi em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
   ],
-  state(){ return { name:'lavi', version:'0.11.1', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
+  state(){ return { name:'lavi', version:'0.12.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
     packages:[{id:'base',name:'Essencial',free:true,active:true},{id:'arq',name:'Arquitetura',active:true},{id:'rev',name:'Revestimentos',active:true},{id:'pres',name:'Apresentação',active:true},{id:'marc',name:'Marcenaria',active:true},{id:'quant',name:'Quantitativo',active:false}],
     tools:this.tools.map(t=>({id:t[0],name:t[1],tab:t[2],package:t[3],desc:t[4],steps:t[5],status:'ready',locked:t[3]==='quant'})) }; },
   run(tool, action, p){

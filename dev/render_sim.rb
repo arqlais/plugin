@@ -349,7 +349,7 @@ scene('23-arredondar-arestas') do
   render('23-arredondar-arestas', 'Todas as arestas: arredondado, chanfrado, original · puff e prateleira', az: -55, el: 28)
 end
 
-scene('24-ripado') do
+scene('24-ripado-3d') do
   f = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))
   f.reverse! if f.normal.y > 0
   h = m.entities.add_face(pt(110, 0, 0.0001), pt(190, 0, 0.0001), pt(190, 0, 210), pt(110, 0, 210))
@@ -358,7 +358,7 @@ scene('24-ripado') do
   f2 = m.entities.add_face(pt(360, 0, 0), pt(560, 0, 0), pt(560, 0, 260), pt(360, 0, 260))
   f2.reverse! if f2.normal.y > 0
   sel(f2); run(:ripado, 'build', 'larg' => 7, 'vao' => 1.5, 'prof' => 2, 'sentido' => 'horizontal', 'fundo' => true, 'cor_ripa' => '#C9A27C', 'cor_fundo' => '#3E4B57', 'recuo' => 10)
-  render('24-ripado', 'Ripado em pé com o vão da porta livre · ripado deitado com fundo e recuo', az: -110, el: 18)
+  render('24-ripado-3d', 'Ripado em pé com o vão da porta livre · ripado deitado com fundo e recuo', az: -110, el: 18)
 end
 
 scene('25-escadas-l-u-caracol') do
@@ -389,6 +389,28 @@ scene('26-espalhar') do
   run(:scatter, 'run', 'modo' => 'm2', 'dens' => 3, 'dist' => 25, 'escala' => 40, 'seed' => 7)
   m.entities.erase_entities([a1, a2])
   render('26-espalhar', 'Espalhar: arbustos e pedras sorteados num jardim de 24 m² (3 por m², 25 cm de distância)', az: -40, el: 35)
+end
+
+scene('29-guarda-corpo-varanda') do
+  laje = m.entities.add_face(pt(0, 0, 300), pt(500, 0, 300), pt(500, 180, 300), pt(0, 180, 300))
+  laje.reverse! if laje.normal.z < 0
+  laje.pushpull(-15.cm) rescue nil
+  es = [m.entities.add_line(pt(0, 0, 300), pt(500, 0, 300)), m.entities.add_line(pt(500, 0, 300), pt(500, 180, 300))]
+  sel(es); run(:railing, 'build', 'guarda' => 'vidro', 'gc_alt' => 110, 'recuo' => 5, 'lado' => 'esquerda')
+  es2 = [m.entities.add_line(pt(0, 400, 0), pt(300, 400, 0)), m.entities.add_line(pt(300, 400, 0), pt(300, 550, 0))]
+  sel(es2); run(:railing, 'build', 'guarda' => 'montantes', 'gc_alt' => 100, 'mont_esp' => 11)
+  render('29-guarda-corpo-varanda', 'Guarda-corpo: vidro na varanda (recuo 5 cm) e montantes num mezanino', az: -55, el: 25)
+end
+
+scene('30-pilares-vigas') do
+  run(:structure, 'pilar_click', 'forma' => 'retangular', 'larg' => 20, 'prof' => 40, 'alt' => 280)
+  click_points([pt(0, 0), pt(500, 0), pt(500, 400), pt(0, 400)])
+  run(:structure, 'pilar_click', 'forma' => 'redondo', 'diam' => 30, 'alt' => 280)
+  click_points([pt(250, 200)])
+  es = [[0, 0, 500, 0], [500, 0, 500, 400], [500, 400, 0, 400], [0, 400, 0, 0], [0, 200, 500, 200]].map { |a, b, c, d| m.entities.add_line(pt(a, b), pt(c, d)) }
+  sel(es); run(:structure, 'viga_lines', 'vb' => 15, 'vh' => 40, 'topo' => 280)
+  m.entities.erase_entities(es)
+  render('30-pilares-vigas', 'Pilares (retangulares e redondo) e vigas de 15 × 40 nas linhas', az: -50, el: 28)
 end
 
 scene('20-luzes') do

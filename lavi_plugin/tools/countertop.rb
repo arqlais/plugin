@@ -210,7 +210,9 @@ module LAVIStudio
         # Observa o modelo: cuba colocada em cima de tampo → recorte automático
         class AutoCutObserver < (defined?(Sketchup::EntitiesObserver) ? Sketchup::EntitiesObserver : Object)
           def onElementAdded(_ents, e)
-            return unless Countertop.auto? && e.is_a?(Sketchup::ComponentInstance) && Countertop.sink?(e)
+            # ignora o que o próprio lavi cria (espalhar, pilares…) e só olha componentes: não pesa
+            return if Helpers.busy? || !e.is_a?(Sketchup::ComponentInstance)
+            return unless Countertop.auto? && Countertop.sink?(e)
             UI.start_timer(0.3, false) { Countertop.auto_cut(e) if e.valid? }
           rescue StandardError => err
             puts "[lavi] observador do recorte: #{err.message}"

@@ -8,8 +8,10 @@ module LAVIStudio
       # Digitar um número no campo de medidas posiciona o próximo ponto naquela distância.
       class PointPicker
         # unit: como ler um número digitado sem unidade ('m', 'cm', 'mm' ou nil = unidade do modelo)
-        def initialize(hint, single: false, max: nil, unit: nil, &on_done)
+        # min: quantos pontos precisa para terminar (padrão 2; pilares aceitam 1)
+        def initialize(hint, single: false, max: nil, unit: nil, min: nil, &on_done)
           @hint = hint
+          @min = min || (single ? 1 : 2)
           @unit = unit
           @single = single
           @max = single ? 1 : max
@@ -132,7 +134,7 @@ module LAVIStudio
           pts.pop while pts.size > 1 && pts[-1] == pts[-2]
           @pts = []
           Sketchup.active_model.select_tool(nil)
-          @on_done.call(pts, closed) if pts.size >= (@single ? 1 : 2)
+          @on_done.call(pts, closed) if pts.size >= @min
         end
 
         def draw(view)
