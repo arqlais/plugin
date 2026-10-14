@@ -116,7 +116,7 @@ Próximo nível que ela quer (imagens de referência): catálogo detalhado como 
 - Toda alteração geométrica dentro de `Helpers.operation` (um Ctrl+Z desfaz tudo).
 - Namespace Ruby é `LAVIStudio::Plugin` (o nome `Plane` sozinho era genérico demais). `main.rb` carrega cada arquivo com `safe_require` e mostra os erros num messagebox + `%TEMP%/lavi_plugin_erros.txt`.
 - Ela usa **SketchUp 2026 (Ruby 3.2)** no Windows. Compatível com SketchUp 2019+ (Ruby 2.5): evitar `&.`, `tally`, `filter_map`, sintaxe de Ruby 3.
-- Antes de entregar: `ruby dev/test_core.rb`, `node dev/preview.js docs`, `sh dev/build.sh`, `ruby -I dev/stub dev/load_test.rb`. Entregar o `.rbz` + prints e explicar em linguagem simples o que testar.
+- Antes de entregar: `ruby dev/test_core.rb`, `node dev/forms_dump.js > dev/sim/forms.json && ruby dev/sim_test.rb` (todas as ferramentas num SketchUp simulado: `dev/sim/su_sim.rb` tem geometria de verdade — faces, furos, empurrar/puxar, grupos, transformações, cenas, câmera; `sim_test.rb` monta o modelo, seleciona, roda cada ação com os valores do painel, simula os cliques e confere medidas), `node dev/preview.js docs`, `sh dev/build.sh`, `ruby -I dev/stub dev/load_test.rb`. Se um teste do simulador falhar, ver primeiro se é limitação do simulador (corrigir lá) ou erro real do plugin. Entregar o `.rbz` + prints e explicar em linguagem simples o que testar.
 
 ## Próximos passos combinados
 1. Ela testa a v0.4 (principalmente bloco dinâmico, paredes, vãos e paginação) e manda prints → corrigir.

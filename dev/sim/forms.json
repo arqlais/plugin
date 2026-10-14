@@ -1,0 +1,336 @@
+[
+ {
+  "id": "walls",
+  "defaults": {
+   "esp": 15,
+   "alt": 280,
+   "alinh": "centro",
+   "unid": "m"
+  },
+  "acts": [
+   "draw",
+   "from_edges"
+  ]
+ },
+ {
+  "id": "openings",
+  "defaults": {
+   "tipo": "porta",
+   "larg": 80,
+   "alt": 210,
+   "peit": 0,
+   "inserir": true
+  },
+  "acts": [
+   "place"
+  ]
+ },
+ {
+  "id": "dwg_walls",
+  "defaults": {
+   "espmin": 8,
+   "espmax": 30,
+   "minlen": 10,
+   "z": 0,
+   "alt": 280,
+   "altporta": 210,
+   "altjanela": 210,
+   "peit": 110,
+   "vaomin": 50,
+   "vaomax": 400,
+   "vergas": true
+  },
+  "acts": [
+   "build",
+   "analyze"
+  ]
+ },
+ {
+  "id": "stairs",
+  "defaults": {
+   "tipo": "macica",
+   "alt": 280,
+   "larg": 90,
+   "espelho": 17.5,
+   "espdegrau": 4,
+   "laje": 12,
+   "corrimao": true
+  },
+  "acts": [
+   "place"
+  ]
+ },
+ {
+  "id": "roofs",
+  "defaults": {
+   "tipo": "2aguas",
+   "telha": "ceramica",
+   "incl": 30,
+   "beiral": 50,
+   "elev": 0
+  },
+  "acts": [
+   "build"
+  ]
+ },
+ {
+  "id": "urban_index",
+  "defaults": {
+   "to_max": 70,
+   "ca_max": 2,
+   "tp_min": 15,
+   "colorir": true
+  },
+  "acts": [
+   "calc",
+   "csv",
+   "clear",
+   "assign:terreno",
+   "assign:projecao",
+   "assign:construida",
+   "assign:permeavel"
+  ]
+ },
+ {
+  "id": "tiling",
+  "defaults": {
+   "padrao": "horizontal",
+   "amarr": "meia",
+   "pc": 60,
+   "pl": 60,
+   "rej": 2,
+   "esp": 9,
+   "seca": false,
+   "mostrar_rej": true,
+   "correj": "#BDB6AE",
+   "relevo": false,
+   "ang": 0,
+   "inicio": "canto",
+   "cor": "#E9E3DC",
+   "cor2": "#3E4B57",
+   "perda": 10,
+   "caixa": 1.44
+  },
+  "acts": [
+   "build",
+   "edit",
+   "rotate",
+   "origin",
+   "center",
+   "estimate",
+   "surface"
+  ]
+ },
+ {
+  "id": "baseboard",
+  "defaults": {
+   "alt": 7,
+   "esp": 1.5,
+   "cor": "#FFFFFF",
+   "barra": 2.4,
+   "perda": 10,
+   "preco": 0
+  },
+  "acts": [
+   "build"
+  ]
+ },
+ {
+  "id": "ceiling",
+  "defaults": {
+   "alt": 260,
+   "esp": 1.25,
+   "sanca": false,
+   "sanca_larg": 40,
+   "sanca_desc": 15
+  },
+  "acts": [
+   "build"
+  ]
+ },
+ {
+  "id": "cut_list",
+  "defaults": {
+   "chapa_c": 2750,
+   "chapa_l": 1840,
+   "serra": 4,
+   "refilo": 10,
+   "veio": false,
+   "genericos": true
+  },
+  "acts": [
+   "list",
+   "csv"
+  ]
+ },
+ {
+  "id": "countertop",
+  "defaults": {
+   "tipo": "cuba",
+   "larg": 50,
+   "prof": 40,
+   "recuo": 8,
+   "pos": "centro",
+   "desloc": 30,
+   "inserir": true
+  },
+  "acts": [
+   "cut"
+  ]
+ },
+ {
+  "id": "scenes",
+  "defaults": {
+   "niveis": "Térreo=0",
+   "corte": 120,
+   "plantas": true,
+   "cobertura": true,
+   "cortes": true,
+   "fachadas": true,
+   "perspectiva": true
+  },
+  "acts": [
+   "create"
+  ]
+ },
+ {
+  "id": "export_images",
+  "defaults": {
+   "proporcao": "tela",
+   "largura": 1920,
+   "formato": "png",
+   "escopo": "todas",
+   "guia": false,
+   "antialias": true,
+   "transparente": false,
+   "abrir": true,
+   "cam_vista": "",
+   "cam_alt": 160,
+   "cam_fov": 35,
+   "cam_2p": true,
+   "cam_cena": false
+  },
+  "acts": [
+   "export",
+   "guide",
+   "camera"
+  ]
+ },
+ {
+  "id": "room_tags",
+  "defaults": {
+   "estilo": "3d",
+   "altura": 12,
+   "pd": 270,
+   "piso": true,
+   "maiusc": true,
+   "perguntar": true,
+   "nome": "SALA"
+  },
+  "acts": [
+   "place",
+   "update",
+   "list",
+   "csv"
+  ]
+ },
+ {
+  "id": "furniture",
+  "defaults": {
+   "nome": "",
+   "ambiente": "",
+   "marca": "",
+   "cor": "",
+   "codigo": "",
+   "preco": "",
+   "link": "",
+   "obs": "",
+   "projeto": "",
+   "cliente": "",
+   "so_fichados": true
+  },
+  "acts": [
+   "apply",
+   "read",
+   "report",
+   "csv",
+   "sheet"
+  ]
+ },
+ {
+  "id": "takeoff",
+  "defaults": {
+   "escopo": "modelo",
+   "marcenaria": false
+  },
+  "acts": [
+   "run",
+   "csv"
+  ]
+ },
+ {
+  "id": "model_health",
+  "defaults": {
+   "purge": true,
+   "back": true,
+   "loose": false,
+   "tiny": false
+  },
+  "acts": [
+   "scan",
+   "fix"
+  ]
+ },
+ {
+  "id": "align",
+  "defaults": {
+   "eixo": "x",
+   "modo": "min",
+   "espaco": ""
+  },
+  "acts": [
+   "run"
+  ]
+ },
+ {
+  "id": "replace",
+  "defaults": {
+   "def": ""
+  },
+  "acts": [
+   "replace",
+   "select_same",
+   "list"
+  ]
+ },
+ {
+  "id": "measure",
+  "defaults": {
+   "dentro": true
+  },
+  "acts": [
+   "run"
+  ]
+ },
+ {
+  "id": "isolate",
+  "defaults": {
+   "zoom": true
+  },
+  "acts": [
+   "isolate",
+   "restore",
+   "xray"
+  ]
+ },
+ {
+  "id": "auto_tags",
+  "defaults": {
+   "sobrescrever": false
+  },
+  "acts": [
+   "organize",
+   "list"
+  ]
+ }
+]

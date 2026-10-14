@@ -1,0 +1,550 @@
+# Testa TODAS as ferramentas num SketchUp simulado (dev/sim/su_sim.rb):
+# monta um modelo de teste, seleciona como a pessoa faria, roda cada ação do painel
+# com os valores padrão do formulário (dev/sim/forms.json), simula os cliques no modelo
+# e confere o que foi criado. Falha se alguma ação der erro.
+# Uso: ruby dev/sim_test.rb [ferramenta]   (antes: node dev/forms_dump.js > dev/sim/forms.json)
+
+require 'json'
+require 'tmpdir'
+$LOAD_PATH.unshift(File.join(__dir__, 'stub')) # sketchup.rb e extensions.rb vazios
+require_relative 'sim/su_sim'
+
+ROOT_DIR = File.expand_path('..', __dir__)
+PLUGINS = ROOT_DIR
+OUT = Dir.mktmpdir('lavi_sim')
+require File.join(ROOT_DIR, 'lavi_plugin.rb')
+P = LAVIStudio::Plugin
+abort("ERROS AO CARREGAR:\n#{P::LOAD_ERRORS.join("\n")}") unless P::LOAD_ERRORS.empty?
+FORMS = JSON.parse(File.read(File.join(__dir__, 'sim', 'forms.json'))).map { |f| [f['id'], f] }.to_h
+ONLY = ARGV[0]
+
+# ---------------------------------------------------------------- utilidades
+def m; Sketchup.active_model; end
+def pt(x, y, z = 0) Geom::Point3d.new(x.cm, y.cm, z.cm) end
+def sel(*e) m.selection.clear; m.selection.add(e.flatten) end
+
+def fresh
+  Sketchup.reset_model!
+  UI.answers = { select_directory: OUT, savepanel: ->(*a) { File.join(OUT, a[2].to_s.empty? ? 'saida' : a[2].to_s) } }
+  UI.log = []
+  P::Dialog.show unless P::Dialog.instance_variable_get(:@dlg)
+  $js.clear
+end
+
+# piso retangular (cm) com um pilar no meio (furo)
+def floor(w = 400, d = 300, z = 0, pilar: true, ents: m.entities)
+  f = ents.add_face(pt(0, 0, z), pt(w, 0, z), pt(w, d, z), pt(0, d, z))
+  f.reverse! if f.normal.z < 0
+  if pilar
+    h = ents.add_face(pt(180, 130, z), pt(210, 130, z), pt(210, 160, z), pt(180, 160, z))
+    h.erase!
+  end
+  f
+end
+
+# caixa (grupo) em cm
+def box(x, y, z, w, d, h, name: '', ents: m.entities, mat: nil)
+  g = ents.add_group
+  f = g.entities.add_face(pt(x, y, z), pt(x + w, y, z), pt(x + w, y + d, z), pt(x, y + d, z))
+  f.reverse! if f.normal.z > 0
+  f.pushpull(-h.cm)
+  g.name = name
+  g.material = mat if mat
+  g
+end
+
+def component(name, w, d, h, at)
+  dfn = m.definitions[name] || m.definitions.add(name)
+  if dfn.entities.empty?
+    f = dfn.entities.add_face(pt(0, 0), pt(w, 0), pt(w, d), pt(0, d))
+    f.reverse! if f.normal.z > 0
+    f.pushpull(-h.cm)
+  end
+  m.entities.add_instance(dfn, Geom::Transformation.new(at))
+end
+
+def all_faces(ents = m.entities, tr = IDENTITY, out = [])
+  ents.each do |e|
+    out << [e, tr] if e.is_a?(Sketchup::Face)
+    all_faces(e.definition.entities, tr * e.transformation, out) if e.is_a?(Sketchup::ComponentInstance)
+  end
+  out
+end
+
+def groups_named(rx) m.entities.grep(Sketchup::ComponentInstance).select { |g| g.name.to_s =~ rx } end
+def kinds; m.entities.grep(Sketchup::ComponentInstance).map { |g| g.get_attribute('plane', 'kind') }.compact; end
+
+# chamada igual à do painel (passa pelo Dialog.run e pela licença)
+def run(tool, action, extra = {})
+  p = (FORMS[tool.to_s] ? FORMS[tool.to_s]['defaults'] : {}).merge(extra)
+  if action.start_with?('assign:')
+    p['cat'] = action.split(':', 2)[1]
+    action = 'assign'
+  end
+  $js.clear
+  P::Dialog.run(JSON.generate(req: 1, tool: tool, action: action, params: p))
+  line = $js.reverse.find { |j| j.start_with?('PLN.onResult(') }
+  raise 'sem resposta' unless line
+  JSON.parse(line[/\APLN\.onResult\((.*)\)\z/m, 1])[1]
+end
+
+# o que a ferramenta mandou depois (cliques no modelo)
+def pushed
+  $js.select { |j| j.start_with?('PLN.on("result"') }.map { |j| JSON.parse(j[/, (.*)\)\z/m, 1]) }
+end
+
+# simula os cliques numa ferramenta de clique ativa
+def click_points(points, closed: false)
+  t = m.tool
+  raise "nenhuma ferramenta de clique ativa (#{t.class})" unless t.is_a?(P::Pickers::PointPicker)
+  t.instance_variable_set(:@pts, points)
+  t.finish(closed)
+end
+
+def click_face(face, at = nil, tr = IDENTITY)
+  t = m.tool
+  raise "nenhuma ferramenta de face ativa (#{t.class})" unless t.is_a?(P::Pickers::FacePicker)
+  at ||= face.bounds.center
+  t.instance_variable_get(:@on_pick).call(face, tr, at, [face])
+end
+
+def typed(text)
+  t = m.tool
+  t.onUserText(text, m.active_view)
+end
+
+# ---------------------------------------------------------------- casos
+$results = []
+def check(name)
+  return if ONLY && !name.start_with?(ONLY)
+  fresh
+  t0 = Time.now
+  info = yield
+  open = m.open_ops
+  raise "operação ficou aberta (#{open}) — o Ctrl+Z não fecharia" if open != 0
+  $results << [name, :ok, info.to_s, Time.now - t0]
+rescue StandardError, ScriptError => e
+  where = e.backtrace.find { |l| l.include?('lavi_plugin') } || e.backtrace.first
+  $results << [name, :falhou, "#{e.class}: #{e.message}  @ #{where.sub(ROOT_DIR + '/', '')}", Time.now - t0]
+end
+
+def ok!(r, what = '')
+  raise "#{what} → #{r['msg']}" unless r['ok']
+  r
+end
+
+def expect(cond, msg) raise msg unless cond end
+
+# === Paredes
+check('walls · desenhar clicando (retângulo fechado)') do
+  ok!(run(:walls, 'draw'))
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)], closed: true)
+  r = pushed.last or raise 'não mandou resultado'
+  expect(r['ok'], r['msg'])
+  g = m.entities.grep(Sketchup::ComponentInstance)
+  expect(g.any?, 'nenhum grupo de parede criado')
+  "#{g.size} grupo(s), #{all_faces.size} faces · #{r['msg']}"
+end
+
+check('walls · medida digitada (5 = 5 m)') do
+  ok!(run(:walls, 'draw', 'unid' => 'm'))
+  t = m.tool
+  t.add_point(pt(0, 0))
+  t.instance_variable_get(:@ip).instance_variable_set(:@position, pt(100, 0))
+  typed('5')
+  typed('3,5')
+  pts = t.instance_variable_get(:@pts)
+  expect(pts.size == 3, "esperava 3 pontos, veio #{pts.size}")
+  d1 = (pts[1].distance(pts[0]) * 2.54).round(1)
+  d2 = (pts[2].distance(pts[1]) * 2.54).round(1)
+  expect(d1 == 500.0 && d2 == 350.0, "medidas #{d1} e #{d2} cm")
+  typed('80mm')
+  d3 = (t.instance_variable_get(:@pts)[3].distance(pts[2]) * 2.54).round(1)
+  expect(d3 == 8.0, "80mm virou #{d3} cm")
+  t.finish(false)
+  "5 → #{d1} cm, 3,5 → #{d2} cm, 80mm → #{d3} cm"
+end
+
+check('walls · a partir de linhas selecionadas') do
+  es = m.entities.add_edges(pt(0, 0), pt(500, 0), pt(500, 400), pt(0, 400), pt(0, 0))
+  sel(es)
+  r = ok!(run(:walls, 'from_edges'))
+  r['msg']
+end
+
+# === Portas e janelas
+check('openings · porta e janela na parede') do
+  ok!(run(:walls, 'draw'))
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)], closed: true)
+  wall = m.entities.grep(Sketchup::ComponentInstance).first
+  faces = all_faces(wall.definition.entities, wall.transformation).select { |f, tr| f.normal.transform(tr).y.abs > 0.9 }
+  face, tr = faces.max_by { |f, tr| f.area }
+  expect(face, 'não achei face da parede')
+  msgs = []
+  area0 = face.area
+  { 'porta' => { 'larg' => 80, 'alt' => 210, 'peit' => 0 }, 'janela' => { 'larg' => 120, 'alt' => 120, 'peit' => 110 } }.each do |tipo, med|
+    ok!(run(:openings, 'place', med.merge('tipo' => tipo)))
+    c = face.bounds.center.transform(tr)
+    c = Geom::Point3d.new(c.x + (tipo == 'porta' ? -80.cm : 80.cm), c.y, 0)
+    click_face(face, c, tr)
+    r = pushed.last or raise 'sem resultado'
+    expect(r['ok'], "#{tipo}: #{r['msg']}")
+    msgs << "#{tipo}: #{r['msg']}"
+  end
+  furos = all_faces(wall.definition.entities).count { |f, _| f.loops.size > 1 }
+  vaos = wall.definition.entities.grep(Sketchup::ComponentInstance).count { |g| %w[Porta Janela].include?(g.name) }
+  expect(vaos == 2, "esperava porta e janela, veio #{vaos}")
+  expect(msgs.all? { |x| x.include?('parede de 15,0 cm') }, 'espessura da parede errada')
+  msgs << "#{furos} face(s) com furo, #{vaos} folha(s)/vidro(s)"
+  msgs.join(' | ')
+end
+
+# === DWG → paredes
+check('dwg_walls · analisar e levantar') do
+  # ambiente 400×300 com paredes de 15 cm (linhas de dentro e de fora) e uma porta de 80 cm
+  out = [pt(-15, -15), pt(415, -15), pt(415, 315), pt(-15, 315)]
+  inn = [pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)]
+  es = []
+  4.times { |i| es << m.entities.add_line(out[i], out[(i + 1) % 4]) }
+  es << m.entities.add_line(inn[0], pt(160, 0)) << m.entities.add_line(pt(240, 0), inn[1])
+  es << m.entities.add_line(inn[1], inn[2]) << m.entities.add_line(inn[2], inn[3]) << m.entities.add_line(inn[3], inn[0])
+  sel(es)
+  a = ok!(run(:dwg_walls, 'analyze'), 'analisar')
+  b = ok!(run(:dwg_walls, 'build'), 'levantar')
+  expect(m.entities.grep(Sketchup::ComponentInstance).any?, 'nada criado')
+  "#{a['stats'].map { |s| s[0] + ' ' + s[1] }.join(', ')} · #{b['msg']}"
+end
+
+# === Escada
+check('stairs · calcular e colocar (maciça e flutuante)') do
+  c = ok!(run(:stairs, 'calc'))
+  %w[macica flutuante].each do |tipo|
+    ok!(run(:stairs, 'place', 'tipo' => tipo))
+    click_points([pt(0, 0), pt(0, 100)])
+  end
+  esc = m.entities.grep(Sketchup::ComponentInstance)
+  expect(esc.size == 2, 'escadas não criadas')
+  topo = all_faces(esc[0].definition.entities, esc[0].transformation).select { |f, tr| f.normal.transform(tr).z > 0.99 }
+  zs = topo.map { |f, tr| (f.bounds.max.transform(tr).z * 2.54).round(1) }.uniq.sort
+  expect(zs.include?(262.5) || zs.include?(280.0), "degraus nas alturas #{zs.last(3).inspect}")
+  expect(zs.size >= 15, "só #{zs.size} níveis de degrau")
+  "#{c['stats'][0, 3].map { |s| s.join(' ') }.join(', ')} · #{m.entities.grep(Sketchup::ComponentInstance).size} escada(s)"
+end
+
+# === Telhado
+check('roofs · 1, 2 e 4 águas') do
+  out = []
+  %w[1agua 2aguas 4aguas].each_with_index do |tipo, i|
+    f = m.entities.add_face(pt(i * 1000, 0, 280), pt(i * 1000 + 800, 0, 280), pt(i * 1000 + 800, 600, 280), pt(i * 1000, 600, 280))
+    sel(f)
+    r = ok!(run(:roofs, 'build', 'tipo' => tipo, 'aguas' => tipo), tipo)
+    g = m.entities.grep(Sketchup::ComponentInstance).last
+    incl = all_faces(g.definition.entities, g.transformation).count { |f, tr| n = f.normal.transform(tr).normalize; n.z.abs > 0.05 && n.z.abs < 0.98 }
+    expect(incl >= (tipo == '4aguas' ? 4 : tipo == '2aguas' ? 2 : 1), "#{tipo}: só #{incl} água(s) inclinada(s)")
+    out << "#{tipo}: #{incl} face(s) inclinada(s)"
+  end
+  out.join(' | ')
+end
+
+# === Índices urbanísticos
+check('urban_index · marcar e calcular') do
+  t = m.entities.add_face(pt(0, 0), pt(1000, 0), pt(1000, 2500), pt(0, 2500))
+  pr = m.entities.add_face(pt(200, 300, 1), pt(800, 300, 1), pt(800, 1500, 1), pt(200, 1500, 1))
+  pe = m.entities.add_face(pt(0, 2000, 1), pt(1000, 2000, 1), pt(1000, 2500, 1), pt(0, 2500, 1))
+  sel(t); ok!(run(:urban_index, 'assign:terreno'))
+  sel(pr); ok!(run(:urban_index, 'assign:projecao'))
+  pav = m.entities.add_face(pt(200, 300, 300), pt(800, 300, 300), pt(800, 1500, 300), pt(200, 1500, 300))
+  sel(pav); ok!(run(:urban_index, 'assign:construida'))
+  sel(pe); ok!(run(:urban_index, 'assign:permeavel'))
+  r = ok!(run(:urban_index, 'calc'))
+  ok!(run(:urban_index, 'csv'))
+  ok!(run(:urban_index, 'clear'))
+  r['stats'].map { |s| "#{s[0]} #{s[1]}" }.join(', ')
+end
+
+# === Revestimento
+check('tiling · todos os padrões no piso com pilar') do
+  f = floor
+  sel(f)
+  s = ok!(run(:tiling, 'surface'))
+  expect(s['surface']['faces'] == 1, 'superfície não reconhecida')
+  out = []
+  %w[horizontal vertical diagonal tijolo damas chevron espinha organica].each do |pat|
+    e = ok!(run(:tiling, 'estimate', 'padrao' => pat, 'pc' => 60, 'pl' => 20), "estimar #{pat}")
+    expect(e['est'] && e['est'].size >= 4, "#{pat}: sem estimativa")
+    out << "#{pat} #{e['est'][3][1]}"
+  end
+  sel(f)
+  b = ok!(run(:tiling, 'build', 'padrao' => 'espinha', 'pc' => 60, 'pl' => 15), 'gerar')
+  g = groups_named(/Paginação/)
+  expect(g.size == 1, 'grupo da paginação não criado')
+  pieces = g[0].definition.entities.grep(Sketchup::Face).size
+  base = g[0].definition.entities.grep(Sketchup::ComponentInstance).first
+  holes = base ? base.definition.entities.grep(Sketchup::Face).map { |x| x.loops.size - 1 }.max : 0
+  expect(holes.to_i >= 1, 'o rejunte não ficou com o furo do pilar')
+  "#{out.join(', ')} · gerou #{pieces} peças, rejunte com furo do pilar"
+end
+
+check('tiling · editar paginação existente') do
+  f = floor
+  sel(f)
+  ok!(run(:tiling, 'build', 'padrao' => 'horizontal'))
+  g = groups_named(/Paginação/)[0]
+  sel(g)
+  e = ok!(run(:tiling, 'edit'))
+  expect(e['values']['padrao'] == 'horizontal', 'não carregou as opções')
+  sel(g)
+  ok!(run(:tiling, 'build', 'padrao' => 'chevron', 'pc' => 60, 'pl' => 15))
+  gs = groups_named(/Paginação/)
+  expect(gs.size == 1, "ficaram #{gs.size} paginações (devia substituir)")
+  expect(JSON.parse(gs[0].get_attribute('plane', 'params'))['padrao'] == 'chevron', 'não atualizou')
+  'trocou horizontal → chevron no mesmo lugar'
+end
+
+check('tiling · parede, peças 3D, texturas, junta seca') do
+  wall = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))
+  sel(wall)
+  imgs = (1..3).map { |i| File.join(OUT, "madeira#{i}.jpg").tap { |f| File.write(f, 'jpg') } }
+  UI.answers[:openpanel] = imgs[0]
+  a = ok!(run(:tiling, 'add_image'))
+  expect(a['values']['texturas'] == [imgs[0].tr('\\', '/')], 'imagem não entrou')
+  r = ok!(run(:tiling, 'build', 'padrao' => 'tijolo', 'pc' => 30, 'pl' => 7.5, 'relevo' => true, 'texturas' => imgs))
+  g = groups_named(/Paginação de parede/)[0] or raise 'paginação de parede não criada'
+  fs = g.definition.entities.grep(Sketchup::Face)
+  textured = fs.count { |x| x.material && x.material.texture }
+  mapped = fs.count(&:uv_data)
+  expect(textured > 0 && mapped > 0, 'as imagens não foram aplicadas nas peças')
+  usados = fs.map(&:material).compact.map(&:name).uniq.size
+  expect(usados >= 3, "sorteio usou só #{usados} imagem(ns)")
+  wall2 = m.entities.add_face(pt(0, 500, 0), pt(300, 500, 0), pt(300, 500, 260), pt(0, 500, 260))
+  sel(wall2)
+  ok!(run(:tiling, 'build', 'seca' => true, 'mostrar_rej' => false))
+  "#{fs.size} faces (peças 3D), #{usados} imagens sorteadas · junta seca ok"
+end
+
+check('tiling · ponto inicial, giro e escolher face clicando') do
+  f = floor(pilar: false)
+  ok!(run(:tiling, 'pick'))
+  click_face(f)
+  r = pushed.last
+  expect(r && r['surface'] && r['surface']['faces'] == 1, 'face clicada não ficou escolhida')
+  ok!(run(:tiling, 'origin'))
+  click_points([pt(30, 30)])
+  v = pushed.last['values']
+  expect(v['inicio'] == 'ponto', 'ponto inicial não voltou')
+  ok!(run(:tiling, 'rotate'))
+  click_points([pt(0, 0), pt(100, 100)])
+  ang = pushed.last['values']['ang']
+  expect((ang - 45).abs < 0.5, "giro deu #{ang}°")
+  sel(f)
+  ok!(run(:tiling, 'build', v.merge('ang' => ang)))
+  "ponto (#{(v['ox'] * 2.54).round}, #{(v['oy'] * 2.54).round}) cm, giro #{ang}°"
+end
+
+# === Rodapé, forro
+check('baseboard · rodapé no piso') do
+  f = floor
+  sel(f)
+  r = ok!(run(:baseboard, 'build'))
+  r['stats'].map { |s| s.join(' ') }.join(', ')
+end
+
+check('ceiling · forro com e sem sanca') do
+  f = floor(pilar: false)
+  sel(f)
+  a = ok!(run(:ceiling, 'build'))
+  sel(f)
+  fz = m.entities.grep(Sketchup::ComponentInstance).first.bounds
+  expect(((fz.min.z * 2.54) - 260).abs < 2, "forro em #{(fz.min.z * 2.54).round} cm (esperava 260)")
+  b = ok!(run(:ceiling, 'build', 'sanca' => true))
+  "#{a['msg']} | com sanca: #{b['msg']}"
+end
+
+# === Marcenaria
+check('cut_list · lista, plano de corte e CSV') do
+  ent = box(0, 0, 0, 80, 55, 1.8, name: 'Base')
+  box(0, 0, 70, 80, 55, 1.8, name: 'Tampo')
+  box(0, 0, 1.8, 1.8, 55, 68.2, name: 'Lateral')
+  box(78.2, 0, 1.8, 1.8, 55, 68.2, name: 'Lateral')
+  r = ok!(run(:cut_list, 'list'))
+  c = ok!(run(:cut_list, 'csv'))
+  "#{r['stats'].map { |s| s.join(' ') }.join(', ')} · #{c['msg']}"
+end
+
+check('countertop · recorte de cuba no tampo') do
+  tampo = box(0, 0, 90, 120, 60, 2, name: 'Tampo')
+  sel(tampo)
+  r = ok!(run(:countertop, 'cut'))
+  r['msg']
+end
+
+# === Apresentação
+check('scenes · cenas automáticas') do
+  floor(pilar: false)
+  box(0, 0, 0, 400, 15, 280, name: 'Parede')
+  box(0, 285, 0, 400, 15, 280, name: 'Parede')
+  box(0, 0, 280, 400, 300, 10, name: 'Laje')
+  r = ok!(run(:scenes, 'create'))
+  n = m.pages.size
+  expect(n >= 8, "só #{n} cenas")
+  r2 = ok!(run(:scenes, 'create'))
+  expect(m.pages.size == n, 'rodar de novo duplicou as cenas')
+  pl = m.pages[0]
+  expect(pl.camera.direction.z < -0.99, 'planta não está vista de cima')
+  expect(pl.section_on, 'planta sem plano de corte')
+  "#{n} cenas: #{m.pages.map(&:name).join(', ')}"
+end
+
+check('export_images · formatos, moldura e câmera') do
+  floor(pilar: false)
+  m.pages.add('Planta'); m.pages.add('Fachada')
+  r = ok!(run(:export_images, 'export', 'proporcao' => '4:5', 'largura' => 1080))
+  imgs = m.active_view.images
+  expect(imgs.size == 2, "exportou #{imgs.size} imagens")
+  expect(imgs[0][:height] == 1350, "altura #{imgs[0][:height]} (esperava 1350)")
+  g = ok!(run(:export_images, 'guide', 'guia' => true, 'proporcao' => '9:16'))
+  ov = m.overlays.first
+  expect(ov && ov.enabled?, 'moldura não ligou')
+  ov.draw(m.active_view)
+  c = ok!(run(:export_images, 'camera', 'cam_vista' => 'frente', 'cam_alt' => 150, 'cam_fov' => 40, 'cam_cena' => true))
+  cam = m.active_view.camera
+  expect((cam.eye.z * 2.54 - 150).abs < 0.1 && (cam.fov - 40).abs < 0.01, 'câmera não aplicada')
+  expect((cam.target.z - cam.eye.z).abs < 1e-6, 'não ficou em 2 pontos')
+  "#{imgs.size} imagens 1080×1350 · moldura 9:16 · câmera a 150 cm, 40°"
+end
+
+check('room_tags · etiquetar ambiente, atualizar, lista e CSV') do
+  f = floor(pilar: false)
+  UI.answers[:inputbox] = [['Sala de estar']]
+  UI.answers[:inputbox] = ->(*_a) { ['Sala de estar'] }
+  %w[3d tela].each do |estilo|
+    ok!(run(:room_tags, 'place', 'estilo' => estilo))
+    click_face(f)
+    r = pushed.last or raise 'sem resultado'
+    expect(r['ok'], "#{estilo}: #{r['msg']}")
+  end
+  u = ok!(run(:room_tags, 'update'))
+  l = ok!(run(:room_tags, 'list'))
+  ok!(run(:room_tags, 'csv'))
+  "#{u['msg']} · #{l['msg']}"
+end
+
+# === Quantitativo
+check('furniture · ficha, relatório, CSV e caderno') do
+  floor(pilar: false)
+  a = component('Sofá 3 lugares', 220, 90, 80, pt(50, 50))
+  b = component('Mesa de centro', 80, 80, 40, pt(150, 160))
+  sel(a)
+  ok!(run(:furniture, 'apply', 'nome' => 'Sofá Bia', 'fornecedor' => 'Loja X', 'preco' => 4500, 'qtd' => 1))
+  sel(a)
+  rd = ok!(run(:furniture, 'read'))
+  sel(a, b)
+  rp = ok!(run(:furniture, 'report'))
+  ok!(run(:furniture, 'csv'))
+  ok!(run(:furniture, 'sheet'))
+  "#{rp['msg']}"
+end
+
+check('takeoff · quantitativo depois de paginar e rodapé') do
+  f = floor
+  sel(f); ok!(run(:tiling, 'build'))
+  sel(f); ok!(run(:baseboard, 'build'))
+  box(0, 0, 0, 400, 15, 280, name: 'Parede')
+  m.selection.clear
+  r = ok!(run(:takeoff, 'run'))
+  ok!(run(:takeoff, 'csv'))
+  r['stats'].map { |s| s.join(' ') }.join(', ')
+end
+
+# === Essenciais
+check('model_health · examinar e corrigir') do
+  floor
+  m.entities.add_line(pt(900, 0), pt(950, 0)) # aresta solta
+  m.materials.add('Sem uso')
+  m.layers.add('Etiqueta vazia')
+  g = box(0, 0, 0, 10, 10, 10)
+  box(0, 0, 0, 5, 5, 5, ents: g.entities)
+  s = ok!(run(:model_health, 'scan'))
+  ok!(run(:model_health, 'fix'))
+  "nota #{s['score']} · #{s['msg']}"
+end
+
+check('align · alinhar e distribuir') do
+  gs = [box(0, 0, 0, 50, 50, 50), box(100, 30, 0, 50, 50, 70), box(300, 10, 0, 50, 50, 30)]
+  out = []
+  %w[min centro max distribuir].each do |modo|
+    sel(gs)
+    out << "#{modo}: #{ok!(run(:align, 'run', 'modo' => modo, 'eixo' => 'y'))['msg']}"
+  end
+  out.join(' | ')
+end
+
+check('replace · listar, selecionar iguais e substituir') do
+  a1 = component('Cadeira A', 45, 50, 90, pt(0, 0))
+  a2 = component('Cadeira A', 45, 50, 90, pt(100, 0))
+  component('Cadeira B', 50, 55, 85, pt(0, 200))
+  l = ok!(run(:replace, 'list'))
+  sel(a1)
+  ok!(run(:replace, 'select_same'))
+  expect(m.selection.size == 2, "selecionou #{m.selection.size}")
+  r = ok!(run(:replace, 'replace', 'def' => 'Cadeira B'))
+  expect(m.entities.grep(Sketchup::ComponentInstance).count { |i| i.definition.name == 'Cadeira B' } == 3, 'não substituiu')
+  "#{l['defs'].size} componentes · #{r['msg']}"
+end
+
+check('measure · medir seleção') do
+  f = floor
+  g = box(0, 0, 0, 100, 50, 80)
+  e = m.entities.add_line(pt(0, 0, 300), pt(250, 0, 300))
+  sel(f, g, e)
+  r = ok!(run(:measure, 'run'))
+  r['stats'].map { |s| s.join(' ') }.join(', ')
+end
+
+check('isolate · isolar, raio-x e mostrar tudo') do
+  a = box(0, 0, 0, 50, 50, 50)
+  b = box(100, 0, 0, 50, 50, 50)
+  sel(a)
+  ok!(run(:isolate, 'isolate'))
+  expect(b.hidden?, 'não escondeu o resto')
+  ok!(run(:isolate, 'restore'))
+  expect(!b.hidden?, 'não mostrou tudo de novo')
+  sel(a)
+  ok!(run(:isolate, 'xray'))
+  'isolou e restaurou'
+end
+
+check('auto_tags · organizar e listar') do
+  component('Cadeira Eames', 45, 50, 80, pt(0, 0))
+  component('Planta costela-de-adão', 40, 40, 120, pt(100, 0))
+  component('Luminária pendente', 30, 30, 40, pt(200, 0, 250))
+  f = floor; sel(f); run(:tiling, 'build')
+  r = ok!(run(:auto_tags, 'organize'))
+  l = ok!(run(:auto_tags, 'list'))
+  tag = (l['tags'] || [])[0]
+  ok!(run(:auto_tags, 'toggle', 'tag' => tag[0])) if tag
+  "#{r['msg']}"
+end
+
+# === Painel e atualização
+check('painel · abrir e mandar estado') do
+  P::Dialog.instance_variable_get(:@dlg).close
+  P::Dialog.show
+  init = $js.find { |j| j.start_with?('PLN.init(') } or raise 'painel não iniciou'
+  st = JSON.parse(init[/\APLN\.init\((.*)\)\z/m, 1])
+  expect(st['tools'].size == P::Registry.all.size, 'lista de ferramentas incompleta')
+  missing = st['tools'].map { |t| t['id'] } - FORMS.keys
+  expect(missing.empty?, "ferramentas sem formulário no painel: #{missing.join(', ')}")
+  extra = FORMS.keys - st['tools'].map { |t| t['id'] }
+  expect(extra.empty?, "formulários sem ferramenta no Ruby: #{extra.join(', ')}")
+  "#{st['tools'].size} ferramentas, todas com formulário"
+end
+
+# ---------------------------------------------------------------- relatório
+ok = $results.count { |r| r[1] == :ok }
+w = $results.map { |r| r[0].size }.max.to_i
+$results.each do |name, st, info, t|
+  puts format("%s  %-#{w}s  %5.2fs  %s", st == :ok ? 'OK    ' : 'FALHOU', name, t, info[0, 220])
+end
+puts "\n#{ok}/#{$results.size} cenários OK"
+exit(ok == $results.size ? 0 : 1)

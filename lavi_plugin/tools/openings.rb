@@ -78,7 +78,7 @@ module LAVIStudio
           best = nil
           ents.grep(Sketchup::Face).each do |f|
             next if f == face
-            next unless f.normal.dot(n) < -0.99
+            next unless f.normal.dot(n).abs > 0.99 # aceita face do outro lado mesmo se estiver invertida
             proj = pt.project_to_plane(f.plane)
             dist = pt.distance(proj)
             next if dist < 0.01

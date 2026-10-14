@@ -1306,6 +1306,12 @@ const MOCK = {
   }
 };
 
+// só para os testes (dev/forms_dump.js): formulários e valores padrão de cada ferramenta
+if(!window.sketchup || window.__MOCK__) window.__LAVI__={ forms:()=>Object.keys(FORMS).map(id=>{ const f=FORMS[id], acts=[];
+  (f.acts||[]).forEach(a=>acts.push(a[0])); (f.more||[]).forEach(a=>acts.push(a[0]));
+  f.secs.forEach(s=>s.f.forEach(x=>{ if(x.type==='acts') x.acts.forEach(a=>acts.push(a[0])); if(x.live) acts.push(x.live); }));
+  if(f.est) acts.push('estimate','surface');
+  return {id, defaults:defaults(id), acts:[...new Set(acts)]}; }) };
 if(!window.sketchup || window.__MOCK__){ window.__MOCK__=true; window.addEventListener('DOMContentLoaded',()=>PLN.init(MOCK.state())); }
 else window.addEventListener('DOMContentLoaded',()=>window.sketchup.ready(''));
 })();
