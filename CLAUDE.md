@@ -43,7 +43,9 @@ dev/preview.js                  abre o painel com mock e tira prints (Playwright
 dev/test_core.rb                testes da parte que não depende do SketchUp
 dev/make_icons.py               gera ui/icons/*.svg e ui/icon.svg a partir do IC do painel
 dev/load_test.rb + dev/stub/    carrega o .rbz com a API do SketchUp simulada (ruby -I dev/stub dev/load_test.rb)
-docs/                           prints das telas
+docs/                           prints das telas; docs/folhas/ = folhas com todas as telas + resultado 3D
+dev/render_sim.rb + zbuf.py     desenha o que cada ferramenta cria no SketchUp simulado (z-buffer, PNG)
+dev/prints_telas.js / prints_folhas.js  prints de todas as telas e montagem das folhas (para ela ver no celular)
 ```
 
 ### Contrato Ruby ↔ painel

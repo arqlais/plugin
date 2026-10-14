@@ -656,6 +656,8 @@ module Sketchup
       off = Geom::Vector3d.new(n.x * d, n.y * d, n.z * d)
       ents = @ents
       top_pts = pts.map { |q| q + off }
+      # face solta fica como base; face recortada dentro de outra (vão na parede) se move junto
+      free = edges.all? { |e| e.faces.size == 1 }
       # laterais olhando para fora do sólido: contorno anti-horário em volta da normal → fora = aresta × normal
       side = lambda do |ring|
         ring.each_with_index do |a, i|
@@ -670,11 +672,26 @@ module Sketchup
       end
       side.call(pts)
       @inner.each { |l| side.call(pts(l)) }
-      top = ents.add_face(top_pts)
-      @inner.each { |l| top.add_inner(pts(l).map { |q| ents.vertex_at(q + off) }) } if top
-      top.reverse! if top && top.normal.dot(off) < 0 # a tampa olha para fora do sólido
-      top.material = material if top
-      reverse! if d > 0 && !copy
+      # tampa chegando numa face do outro lado (atravessou a parede): vira furo nela
+      through = ents.to_a.grep(Face).find do |g|
+        !g.equal?(self) && g.normal.parallel?(n) && top_pts.all? { |q| q.on_plane?(g.plane) } &&
+          top_pts.all? { |q| [PointInside, PointOnEdge, PointOnVertex].include?(g.classify_point(q)) } &&
+          top_pts.any? { |q| g.classify_point(q) == PointInside || g.area > Face.newell(top_pts).length / 2 * 1.001 }
+      end
+      if through
+        through.add_inner(top_pts.map { |q| ents.vertex_at(q) })
+        top = nil
+      else
+        top = ents.add_face(top_pts)
+        @inner.each { |l| top.add_inner(pts(l).map { |q| ents.vertex_at(q + off) }) } if top
+        top.reverse! if top && top.normal.dot(off) < 0 # a tampa olha para fora do sólido
+        top.material = material if top
+      end
+      if free
+        reverse! if d > 0 && !copy
+      else
+        erase!
+      end
       nil
     end
 

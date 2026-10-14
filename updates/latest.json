@@ -1,6 +1,6 @@
 {
-  "version": "0.9.0",
+  "version": "0.9.1",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "9ee49a96035ad519af843fb5142e66c4bd9bd34445ee68722cc7dee87ff7290f",
-  "notes": ["5 ferramentas novas: Limpar DWG, Cotas automáticas, Copiar em grade ou caminho, Corrigir faces invertidas e Seleção inteligente","Todas as ferramentas testadas num SketchUp simulado","Portas e janelas: acha a parede mesmo com faces invertidas"]
+  "sha256": "93ba8d70f158a987837fbc5c098d6f132945d535b54fb2279e529da217c89d60",
+  "notes": ["Revestimento: peças recortadas no formato do pilar (antes sobrava um buraco em volta)","Cotas: não repete a cota total quando o contorno já mostra"]
 }

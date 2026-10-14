@@ -49,8 +49,9 @@ module LAVIStudio
               n += 1
             end
             bb = Geom::BoundingBox.new
+            full = { x: false, y: false } # o contorno já tem uma cota do tamanho total?
+            rings.each { |ring, outer| bb.add(ring) if outer }
             rings.each do |ring, outer|
-              bb.add(ring) if outer
               next if outer ? !externas : !internas
               # contorno externo anti-horário e furos horários: o lado de fora da parede fica à direita
               ring = ring.reverse if (signed_xy(ring) > 0) != outer
@@ -61,14 +62,18 @@ module LAVIStudio
                   dir = b - a
                   out = Geom::Vector3d.new(dir.y, -dir.x, 0)
                   out.length = off
+                  if outer
+                    full[:x] = true if dir.y.abs < 1e-6 && (a.distance(b) - bb.width).abs < 0.5.cm
+                    full[:y] = true if dir.x.abs < 1e-6 && (a.distance(b) - bb.height).abs < 0.5.cm
+                  end
                   add.call(a, b, out)
                 end
               end
             end
             if total && !bb.empty?
               z = bb.min.z
-              add.call(Geom::Point3d.new(bb.min.x, bb.min.y, z), Geom::Point3d.new(bb.max.x, bb.min.y, z), Geom::Vector3d.new(0, -2.2 * off, 0))
-              add.call(Geom::Point3d.new(bb.min.x, bb.min.y, z), Geom::Point3d.new(bb.min.x, bb.max.y, z), Geom::Vector3d.new(-2.2 * off, 0, 0))
+              add.call(Geom::Point3d.new(bb.min.x, bb.min.y, z), Geom::Point3d.new(bb.max.x, bb.min.y, z), Geom::Vector3d.new(0, -2.2 * off, 0)) unless full[:x] && externas
+              add.call(Geom::Point3d.new(bb.min.x, bb.min.y, z), Geom::Point3d.new(bb.min.x, bb.max.y, z), Geom::Vector3d.new(-2.2 * off, 0, 0)) unless full[:y] && externas
             end
           end
           H.ok("#{n} cota(s) criada(s) na etiqueta \"lavi · Cotas\".", stats: [['Cotas', n.to_s], ['Faces lidas', src.size.to_s]])

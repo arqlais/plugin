@@ -116,6 +116,7 @@ end
 # ---------------------------------------------------------------- casos
 $results = []
 def check(name)
+  return unless __FILE__ == $PROGRAM_NAME || $RUN_CHECKS
   return if ONLY && !name.start_with?(ONLY)
   fresh
   t0 = Time.now
@@ -553,7 +554,7 @@ check('dims · cotas de paredes (fora, dentro, totais) e de piso') do
   sel(w)
   r = ok!(run(:dims, 'build'))
   ds = m.entities.grep(Sketchup::Dimension)
-  expect(ds.size == 10, "esperava 10 cotas (4 fora, 4 dentro, 2 totais), veio #{ds.size}")
+  expect(ds.size == 8, "esperava 8 cotas (4 fora, 4 dentro; total repetiria a de fora), veio #{ds.size}")
   c = w.bounds.center
   fora = ds.first(4).all? { |d| mid = Geom.linear_combination(0.5, d.start[1], 0.5, d.end[1]); d.offset_vector.dot(mid - c) > 0 }
   expect(fora, 'cota externa apontando para dentro')
@@ -564,7 +565,13 @@ check('dims · cotas de paredes (fora, dentro, totais) e de piso') do
   f = floor
   sel(f)
   ok!(run(:dims, 'build', 'internas' => false))
-  "paredes: #{lens.uniq.join(' / ')} cm · piso: #{m.entities.grep(Sketchup::Dimension).size} cotas"
+  # ambiente em L: aí a cota total é útil
+  ok!(run(:dims, 'clear'))
+  l = m.entities.add_face(pt(0, 0, 0), pt(600, 0, 0), pt(600, 200, 0), pt(300, 200, 0), pt(300, 500, 0), pt(0, 500, 0))
+  sel(l)
+  ok!(run(:dims, 'build'))
+  nl = m.entities.grep(Sketchup::Dimension).size
+  "paredes: #{lens.uniq.join(' / ')} cm · piso em L: #{nl} cotas"
 end
 
 check('array · luminárias no forro e cadeiras no caminho') do
@@ -636,6 +643,7 @@ check('painel · abrir e mandar estado') do
 end
 
 # ---------------------------------------------------------------- relatório
+if __FILE__ == $PROGRAM_NAME
 ok = $results.count { |r| r[1] == :ok }
 w = $results.map { |r| r[0].size }.max.to_i
 $results.each do |name, st, info, t|
@@ -643,3 +651,4 @@ $results.each do |name, st, info, t|
 end
 puts "\n#{ok}/#{$results.size} cenários OK"
 exit(ok == $results.size ? 0 : 1)
+end

@@ -1317,7 +1317,7 @@ const MOCK = {
     ['smart_select','Seleção inteligente','base','base','Seleciona tudo do mesmo material, etiqueta ou componente, inverte e acha sujeira.',['Selecione uma referência','Escolha o critério','Pronto']],
     ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do lavi em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
   ],
-  state(){ return { name:'lavi', version:'0.6.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
+  state(){ return { name:'lavi', version:'0.9.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
     packages:[{id:'base',name:'Essencial',free:true,active:true},{id:'arq',name:'Arquitetura',active:true},{id:'rev',name:'Revestimentos',active:true},{id:'pres',name:'Apresentação',active:true},{id:'marc',name:'Marcenaria',active:true},{id:'quant',name:'Quantitativo',active:false}],
     tools:this.tools.map(t=>({id:t[0],name:t[1],tab:t[2],package:t[3],desc:t[4],steps:t[5],status:'ready',locked:t[3]==='quant'})) }; },
   run(tool, action, p){

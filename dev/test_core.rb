@@ -90,6 +90,16 @@ class TestCore < Minitest::Test
       r = P::Tools::Tiling.layout(room, [], 'padrao' => pat, 'pc' => 60, 'pl' => 20, 'rej' => 3)
       assert r[:pieces].sum { |p| G.area(p[:poly]) } < G.area(room) * 0.995, "#{pat}: junta não abriu espaço"
     end
+    # pilar quadrado e pilar em L: as peças são recortadas no formato do furo (sem buraco a mais)
+    [[[180, 130], [210, 130], [210, 160], [180, 160]], [[100, 50], [160, 50], [160, 70], [120, 70], [120, 110], [100, 110]]].each do |hole|
+      hl = hole.map { |x, y| [x.cm, y.cm] }
+      P::Tools::Tiling::PATTERNS.each do |pat|
+        r = P::Tools::Tiling.layout(room, [hl], 'padrao' => pat, 'pc' => 60, 'pl' => 20, 'seca' => true, 'ang' => 15)
+        sum = r[:pieces].sum { |p| G.area(p[:poly]) }
+        alvo = G.area(room) - G.area(hl)
+        assert_in_delta alvo, sum, alvo * 0.002, "#{pat} com pilar: soma #{sum} ≠ #{alvo}"
+      end
+    end
     # ponto inicial escolhido desloca a grade
     a = P::Tools::Tiling.layout(room, [], 'pc' => 60, 'pl' => 60, 'seca' => true, 'inicio' => 'ponto')
     b = P::Tools::Tiling.layout(room, [], 'pc' => 60, 'pl' => 60, 'seca' => true, 'inicio' => 'ponto', 'x' => 1)

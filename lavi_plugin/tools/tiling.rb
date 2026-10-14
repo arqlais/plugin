@@ -74,6 +74,69 @@ module LAVIStudio
           out
         end
 
+        # Tira da peça (convexa) as partes que caem dentro dos furos. Devolve pedaços convexos.
+        def cut_holes(poly, hparts)
+          parts = [poly]
+          hparts.each do |(hx0, hy0, hx1, hy1), convs|
+            convs.each do |hc|
+              parts = parts.flat_map do |pc|
+                bx0, by0, bx1, by1 = G.bbox(pc)
+                next [pc] if bx1 <= hx0 || bx0 >= hx1 || by1 <= hy0 || by0 >= hy1
+                minus_convex(pc, hc)
+              end
+            end
+          end
+          parts.select { |q| q.size >= 3 && G.area(q) > 1e-6 }
+        end
+
+        # peça − furo convexo (anti-horário) = pedaços fora de cada lado do furo
+        def minus_convex(pc, hole)
+          out = []
+          rest = pc
+          hole.each_with_index do |a, i|
+            b = hole[(i + 1) % hole.size]
+            d = G.sub(b, a)
+            nrm = [d[1], -d[0]] # aponta para fora do furo
+            k = G.dot(a, nrm)
+            outside = halfplane(rest, G.mul(nrm, -1), -k)
+            out << outside if outside.size >= 3 && G.area(outside) > 1e-6
+            rest = halfplane(rest, nrm, k)
+            break if rest.size < 3
+          end
+          out
+        end
+
+        def convex?(poly)
+          poly.each_index.all? do |i|
+            a = poly[i - 1]
+            b = poly[i]
+            q = poly[(i + 1) % poly.size]
+            G.cross(G.sub(b, a), G.sub(q, b)) >= -1e-9
+          end
+        end
+
+        # triângulos de um polígono simples anti-horário (corte de orelhas)
+        def triangulate(poly)
+          pts = poly.dup
+          tris = []
+          guard = 0
+          while pts.size > 3 && guard < 10_000
+            guard += 1
+            ear = pts.each_index.find do |i|
+              a = pts[i - 1]
+              b = pts[i]
+              q = pts[(i + 1) % pts.size]
+              next false if G.cross(G.sub(b, a), G.sub(q, b)) <= 1e-12
+              pts.none? { |x| !x.equal?(a) && !x.equal?(b) && !x.equal?(q) && G.point_in_poly?(x, [a, b, q]) }
+            end
+            break unless ear
+            tris << [pts[ear - 1], pts[ear], pts[(ear + 1) % pts.size]]
+            pts.delete_at(ear)
+          end
+          tris << pts if pts.size == 3
+          tris
+        end
+
         # Pedra orgânica: células de Voronoi em volta de pontos sorteados numa grade
         def stone(a, b, w, h, j, seed)
           site = lambda do |i, k|
@@ -115,6 +178,8 @@ module LAVIStudio
           c = G.centroid(room)
           rot = room.map { |q| G.rotate(q, -ang, c) }
           hrot = holes.map { |hl| hl.map { |q| G.rotate(q, -ang, c) } }
+          # furos (pilares, ralos) em partes convexas, para recortar as peças no formato do furo
+          hparts = hrot.map { |hl| hl2 = G.ccw(G.clean(hl)); [G.bbox(hl2), convex?(hl2) ? [hl2] : triangulate(hl2)] }
           x0, y0, x1, y1 = G.bbox(rot)
           o =
             if p['inicio'] == 'ponto' && origin
@@ -158,13 +223,18 @@ module LAVIStudio
                 next if poly.size < 3
                 ar = G.area(poly)
                 next if ar < tile_area * 0.002
-                cen = G.centroid(poly)
-                next if hrot.any? { |hl| G.point_in_poly?(cen, hl) }
-                if ar >= tile_area * 0.995 then full += 1 else cut += 1 end
+                parts = cut_holes(poly, hparts)
+                next if parts.empty?
+                ar2 = parts.sum { |q| G.area(q) }
+                next if ar2 < tile_area * 0.002
+                if ar2 >= tile_area * 0.995 then full += 1 else cut += 1 end
                 to = pat == 'organica' ? G.add(o, t[:o]) : G.add(base, t[:o])
-                pieces << { poly: poly.map { |q| G.rotate(q, ang, c) }, o: G.rotate(to, ang, c),
-                            ex: G.rotate(t[:ex], ang), ey: G.rotate(t[:ey], ang),
-                            k: (a + b) % 2, r: rnd(a * 3 + ti, b, 9 + seed) }
+                rr = rnd(a * 3 + ti, b, 9 + seed)
+                parts.each do |q|
+                  pieces << { poly: q.map { |x| G.rotate(x, ang, c) }, o: G.rotate(to, ang, c),
+                              ex: G.rotate(t[:ex], ang), ey: G.rotate(t[:ey], ang),
+                              k: (a + b) % 2, r: rr }
+                end
                 raise "Peças demais (mais de #{MAX_PIECES}). Use uma peça maior ou pagine por partes." if pieces.size > MAX_PIECES
               end
             end
