@@ -363,6 +363,26 @@ scene('25-escadas-l-u-caracol') do
   render('25-escadas-l-u-caracol', 'Escada em L com vidro · em U flutuante com montantes · caracol com corrimão', az: -50, el: 32)
 end
 
+scene('26-espalhar') do
+  f = m.entities.add_face(pt(0, 0, 0), pt(600, 0, 0), pt(600, 400, 0), pt(0, 400, 0))
+  f.reverse! if f.normal.z < 0
+  f.material = m.materials.add('Grama').tap { |x| x.color = Sketchup::Color.new(150, 170, 120) }
+  mk = lambda do |name, w, h, rgb|
+    d = m.definitions.add(name)
+    b = d.entities.add_face([-w / 2, -w / 2, 0], [w / 2, -w / 2, 0], [w / 2, w / 2, 0], [-w / 2, w / 2, 0])
+    b.reverse! if b.normal.z < 0
+    b.pushpull(h)
+    d.entities.grep(Sketchup::Face).each { |x| x.material = m.materials.add(name).tap { |mm| mm.color = Sketchup::Color.new(*rgb) } }
+    m.entities.add_instance(d, Geom::Transformation.new(pt(-500, -500)))
+  end
+  a1 = mk.call('Arbusto', 30.cm, 45.cm, [92, 120, 80])
+  a2 = mk.call('Pedra', 18.cm, 8.cm, [190, 186, 180])
+  sel(f, a1, a2)
+  run(:scatter, 'run', 'modo' => 'm2', 'dens' => 3, 'dist' => 25, 'escala' => 40, 'seed' => 7)
+  m.entities.erase_entities([a1, a2])
+  render('26-espalhar', 'Espalhar: arbustos e pedras sorteados num jardim de 24 m² (3 por m², 25 cm de distância)', az: -40, el: 35)
+end
+
 scene('20-luzes') do
   wm = m.materials.add('Parede').tap { |x| x.color = Sketchup::Color.new(236, 232, 226) }
   wall = m.entities.add_face(pt(0, 300, 0), pt(400, 300, 0), pt(400, 300, 280), pt(0, 300, 280))

@@ -163,6 +163,26 @@
   ]
  },
  {
+  "id": "scatter",
+  "defaults": {
+   "def": "",
+   "modo": "m2",
+   "dens": 10,
+   "qtd": 100,
+   "dist": 20,
+   "girar": true,
+   "escala": 20,
+   "normal": false,
+   "seed": 1
+  },
+  "acts": [
+   "run",
+   "clear",
+   "list",
+   "vary"
+  ]
+ },
+ {
   "id": "ripado",
   "defaults": {
    "sentido": "vertical",

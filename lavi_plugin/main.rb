@@ -14,7 +14,7 @@ module LAVIStudio
     LOAD_ERRORS = []
     TOOLBAR = [
       %i[scenes export_images room_tags],
-      %i[edges materials texmap lights],
+      %i[edges materials texmap lights scatter],
       %i[walls openings dwg_walls stairs railing roofs dims],
       %i[tiling ripado baseboard ceiling],
       %i[takeoff cut_list],
@@ -57,7 +57,7 @@ module LAVIStudio
       takeoff furniture
       model_health align replace auto_tags measure isolate
       dwg_clean dims array fix_faces smart_select
-      shape edges materials texmap lights randomize
+      shape edges materials texmap lights randomize scatter
     ].each { |f| safe_require('tools', f) }
 
     unless file_loaded?(__FILE__)

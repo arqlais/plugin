@@ -813,6 +813,33 @@ check('railing · varanda em L pelas linhas e por cliques') do
   "vidro em L: #{comp}, 2 vidros, 110 cm · montantes clicados: #{nm} peças"
 end
 
+check('scatter · grama no jardim com furo, distância mínima e vários objetos') do
+  fresh
+  f = floor(400, 300, 0, pilar: true)
+  d1 = m.definitions.add('Tufo de grama'); d1.entities.add_face([0, 0, 0], [2, 0, 0], [0, 0, 4])
+  d2 = m.definitions.add('Pedra'); d2.entities.add_face([0, 0, 0], [3, 0, 0], [0, 3, 0])
+  ok!(run(:scatter, 'list'))
+  sel(f)
+  r = ok!(run(:scatter, 'run', 'def' => 'Tufo de grama', 'modo' => 'm2', 'dens' => 20, 'dist' => 10, 'seed' => 3))
+  g = m.entities.grep(Sketchup::Group).last
+  ins = g.entities.grep(Sketchup::ComponentInstance)
+  expect((ins.size - 240).abs <= 5, "#{ins.size} tufos (esperava ~240 = 12 m² × 20)")
+  inside = ins.count { |i| o = i.transformation.origin; x = o.x * 2.54; y = o.y * 2.54; x >= 180 && x <= 210 && y >= 130 && y <= 160 }
+  expect(inside.zero?, "#{inside} tufos dentro do pilar")
+  ds = ins.map { |i| i.transformation.origin }.combination(2).map { |a, b| a.distance(b) * 2.54 }.min
+  expect(ds >= 9.99, "dois tufos a #{ds.round(1)} cm (mínimo 10)")
+  i1 = m.entities.add_instance(d1, IDENTITY); i2 = m.entities.add_instance(d2, Geom::Transformation.new(pt(50, 50)))
+  sel(f, i1, i2)
+  ok!(run(:scatter, 'run', 'modo' => 'total', 'qtd' => 60, 'dist' => 0))
+  g2 = m.entities.grep(Sketchup::Group).last
+  tipos = g2.entities.grep(Sketchup::ComponentInstance).map { |i| i.definition.name }.uniq.sort
+  expect(tipos == ['Pedra', 'Tufo de grama'], "misturou #{tipos.inspect}")
+  ok!(run(:scatter, 'clear'))
+  left = m.entities.grep(Sketchup::Group).count { |x| x.name.start_with?('Espalhar') }
+  expect(left.zero?, 'apagar espalhados')
+  "#{ins.size} tufos em 12 m², nenhum no pilar, distância ≥ 10 cm · 60 misturando #{tipos.join(' e ')} · apagar ok"
+end
+
 check('ripado · parede com porta, em pé e deitado, fundo, barras') do
   fresh
   f = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))

@@ -226,6 +226,10 @@ module Geom
       elsif a.size == 3 && a[0].is_a?(Point3d) # origem, eixo x, eixo y
         z = a[1].cross(a[2])
         set_axes(a[0], a[1].normalize, a[2].normalize, z.normalize)
+      elsif a.size == 2 && a[0].is_a?(Point3d) && a[1].is_a?(Vector3d) # origem + eixo z (x qualquer)
+        z = a[1].normalize
+        x = (z.x.abs < 1.0 / 64 && z.y.abs < 1.0 / 64 ? Vector3d.new(0, 1, 0) : Vector3d.new(0, 0, 1)).cross(z).normalize
+        set_axes(a[0], x, z.cross(x).normalize, z)
       elsif a.size == 4
         set_axes(*a)
       end
