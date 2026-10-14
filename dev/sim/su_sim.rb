@@ -867,6 +867,16 @@ module Sketchup
     def copy; @ents.copy_entity(self, IDENTITY); end
     def entities; make_unique; definition.entities; end
     def group?; true; end
+
+    def to_component
+      definition.instance_variable_set(:@group, false)
+      c = @ents.add_instance(definition, transformation)
+      c.material = material
+      c.layer = layer
+      c.name = name
+      erase!
+      c
+    end
   end
 
   class Image < Drawingelement; end

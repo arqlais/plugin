@@ -352,11 +352,16 @@
    "purge": true,
    "back": true,
    "loose": false,
-   "tiny": false
+   "tiny": false,
+   "todas": true
   },
   "acts": [
+   "select_heavy",
    "scan",
-   "fix"
+   "fix",
+   "heavy",
+   "proxy",
+   "unproxy"
   ]
  },
  {

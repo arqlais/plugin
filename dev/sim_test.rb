@@ -840,6 +840,33 @@ check('scatter · grama no jardim com furo, distância mínima e vários objetos
   "#{ins.size} tufos em 12 m², nenhum no pilar, distância ≥ 10 cm · 60 misturando #{tipos.join(' e ')} · apagar ok"
 end
 
+check('model_health · o que pesa, trocar por caixa e voltar') do
+  fresh
+  arv = m.definitions.add('Árvore pesada')
+  20.times { |k| f = arv.entities.add_face([k * 10, 0, 0], [k * 10 + 5, 0, 0], [k * 10, 5, 0]); f.pushpull(30) if f && k.even? }
+  sofa = m.definitions.add('Sofá')
+  sofa.entities.add_face([0, 0, 0], [80, 0, 0], [80, 30, 0], [0, 30, 0])
+  arvs = (0..4).map { |k| m.entities.add_instance(arv, Geom::Transformation.new(pt(k * 300, 0))) }
+  m.entities.add_instance(sofa, IDENTITY)
+  hv = ok!(run(:model_health, 'heavy'))
+  expect(hv['heavy'][0][0] == 'Árvore pesada', "mais pesado: #{hv['heavy'][0][0]}")
+  ok!(run(:model_health, 'select_heavy', 'def' => 'Árvore pesada'))
+  expect(m.selection.size == 5, "selecionou #{m.selection.size}")
+  bb0 = arvs[0].bounds
+  r = ok!(run(:model_health, 'proxy', 'todas' => true))
+  expect(arvs.all? { |i| i.definition.name.start_with?('lavi caixa') }, 'nem todas viraram caixa')
+  bb1 = arvs[0].bounds
+  expect((bb0.min.distance(bb1.min) + bb0.max.distance(bb1.max)) < 0.01, 'a caixa mudou de tamanho/lugar')
+  vis = arvs[0].definition.entities.grep(Sketchup::Face).size
+  expect(vis == 6, "caixa com #{vis} faces")
+  ok!(run(:model_health, 'fix', 'purge' => true))
+  expect(m.definitions['Árvore pesada'], 'limpar apagou o original escondido')
+  ok!(run(:model_health, 'unproxy'))
+  expect(arvs.all? { |i| i.definition.name == 'Árvore pesada' }, 'não voltou ao original')
+  expect(m.definitions.none? { |d| d.name.start_with?('lavi caixa') }, 'sobrou definição de caixa')
+  "mais pesada: #{hv['heavy'][0][0]} (#{hv['heavy'][0][3]}%) · #{r['stats'][0][1]} cópias viraram caixa de 6 faces, mesmo tamanho · limpar não apagou o original · voltou"
+end
+
 check('ripado · parede com porta, em pé e deitado, fundo, barras') do
   fresh
   f = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))

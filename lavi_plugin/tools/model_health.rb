@@ -10,6 +10,10 @@ module LAVIStudio
         def handle(action, p)
           case action
           when 'scan' then scan
+          when 'heavy' then heavy
+          when 'select_heavy' then select_heavy(p)
+          when 'proxy' then proxy(p)
+          when 'unproxy' then unproxy
           when 'fix'
             done = []
             H.operation('lavi · Saúde do modelo') do
@@ -115,8 +119,112 @@ module LAVIStudio
           "#{n} arestas minúsculas soltas apagadas"
         end
 
+        # ---- peso: o que mais pesa (faces × cópias) e caixas no lugar ---------------
+        def heavy
+          memo = {}
+          count = lambda do |d|
+            memo[d] ||= begin
+              memo[d] = 0
+              d.entities.grep(Sketchup::Face).size +
+                d.entities.to_a.select { |e| H.instance?(e) }.sum { |i| count.call(i.definition) }
+            end
+          end
+          rows = H.model.definitions.reject { |d| d.image? || d.instances.empty? || d.get_attribute(H::DICT, 'proxy_of') }.map do |d|
+            f = count.call(d)
+            [d.name, f, d.instances.size, f * d.instances.size, d.group?]
+          end
+          rows.sort_by! { |r| -r[3] }
+          total = H.model.entities.grep(Sketchup::Face).size + H.model.entities.to_a.select { |e| H.instance?(e) }.sum { |i| count.call(i.definition) }
+          big = H.model.materials.count { |mt| mt.texture && [mt.texture.image_width, mt.texture.image_height].max > 2048 }
+          top = rows.reject { |r| r[4] }.first(12)
+          H.ok(top.empty? ? 'Nenhum componente no modelo.' : 'Os componentes que mais pesam estão em cima. Selecione e troque por caixa enquanto modela.',
+               stats: [['Faces no modelo', H.br(total, 0)], ['Componentes', rows.count { |r| !r[4] }.to_s],
+                       ['Texturas maiores que 2K', big.to_s, big < 6]],
+               heavy: top.map { |n, f, c, t, _g| [n, f, c, total > 0 ? (100.0 * t / total).round(1) : 0] })
+        end
+
+        def select_heavy(p)
+          d = H.model.definitions[p['def'].to_s]
+          return H.err('Componente não encontrado.') unless d
+          ins = d.instances.select { |i| i.parent == H.model.active_entities.parent || i.parent.is_a?(Sketchup::Model) }
+          ins = d.instances if ins.empty?
+          H.selection.clear
+          H.selection.add(ins)
+          H.ok("#{ins.size} cópia(s) de \"#{d.name}\" selecionada(s).")
+        end
+
+        # troca os componentes selecionados (todas as cópias) por uma caixa leve do mesmo tamanho
+        def proxy(p)
+          sel = H.selection.to_a.select { |e| H.instance?(e) }
+          return H.err('Selecione os componentes pesados (árvores, sofás, carros…).') if sel.empty?
+          todas = p['todas'] != false && p['todas'] != 'false'
+          n = 0
+          saved = 0
+          H.operation('lavi · Trocar por caixa') do
+            mat = H.material('lavi Caixa', 'D6B3AB', 0.45)
+            sel.each do |i|
+              i = i.to_component if i.is_a?(Sketchup::Group) && i.respond_to?(:to_component)
+              next unless i.respond_to?(:definition=)
+              d = i.definition
+              next if d.get_attribute(H::DICT, 'proxy_of')
+              targets = todas ? d.instances.to_a : [i] # antes de criar a caixa (ela guarda uma cópia do original)
+              pd = box_for(d, mat)
+              targets.each do |t|
+                t.definition = pd
+                n += 1
+              end
+              saved += d.entities.grep(Sketchup::Face).size * targets.size
+            end
+          end
+          return H.err('Nada para trocar (só componentes e grupos).') if n.zero?
+          H.ok("#{n} cópia(s) viraram caixa. Antes do render, clique em Voltar os originais.",
+               stats: [['Trocadas', n.to_s], ['Faces a menos na tela', H.br(saved, 0)]])
+        end
+
+        # caixa com o tamanho do componente; guarda o original escondido dentro dela (não some ao limpar)
+        def box_for(d, mat)
+          name = "lavi caixa · #{d.name}"
+          pd = H.model.definitions[name]
+          return pd if pd && pd.get_attribute(H::DICT, 'proxy_of')
+          pd = H.model.definitions.add(name)
+          b = d.bounds
+          x0, y0, z0 = b.min.x, b.min.y, b.min.z
+          x1, y1, z1 = b.max.x, b.max.y, b.max.z
+          z1 = z0 + 0.1 if (z1 - z0).abs < 1e-3
+          f = pd.entities.add_face([x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0])
+          if f
+            f.reverse! if f.normal.z > 0
+            f.pushpull(-(z1 - z0))
+          end
+          pd.entities.grep(Sketchup::Face).each { |x| x.material = mat }
+          keep = pd.entities.add_instance(d, IDENTITY)
+          keep.hidden = true
+          pd.set_attribute(H::DICT, 'proxy_of', d.name)
+          pd
+        end
+
+        def unproxy
+          n = 0
+          gone = []
+          H.operation('lavi · Voltar os originais') do
+            H.model.definitions.to_a.each do |pd|
+              next unless pd.get_attribute(H::DICT, 'proxy_of')
+              keep = pd.entities.to_a.find { |e| e.respond_to?(:definition) && e.hidden? }
+              next unless keep
+              pd.instances.each do |i|
+                i.definition = keep.definition
+                n += 1
+              end
+              gone << pd
+            end
+            gone.each { |pd| H.model.definitions.remove(pd) if H.model.definitions.respond_to?(:remove) }
+          end
+          return H.err('Não há caixas no modelo.') if n.zero?
+          H.ok("#{n} cópia(s) voltaram ao original. Pronto para o render.")
+        end
+
         Registry.register(:model_health, name: 'Saúde do modelo', tab: :base, package: :base, handler: self,
-                                         desc: 'Encontra o que pesa e bagunça o arquivo e corrige com um clique.',
+                                         desc: 'Mostra o que pesa, limpa e corrige; troca componentes pesados por caixas enquanto modela.',
                                          steps: ['Analisar', 'Marcar o que corrigir', 'Corrigir'])
       end
     end

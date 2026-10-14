@@ -872,8 +872,12 @@ const FORMS = {
         {k:'purge',type:'tg',label:'Limpar itens sem uso',def:true,full:1},
         {k:'back',type:'tg',label:'Passar material do verso para a frente',def:true,full:1},
         {k:'loose',type:'tg',label:'Apagar linhas soltas fora de grupos',def:false,full:1},
-        {k:'tiny',type:'tg',label:'Apagar arestas minúsculas soltas',def:false,full:1}]}],
-    acts:[['scan','Analisar modelo','eye',1],['fix','Corrigir','check']], render:r=>renderHealth(r) },
+        {k:'tiny',type:'tg',label:'Apagar arestas minúsculas soltas',def:false,full:1}]},
+      {t:'Peso para modelar', f:[
+        {type:'acts',full:1,acts:[['heavy','Ver o que mais pesa','search'],['proxy','Trocar selecionados por caixa','replace'],['unproxy','Voltar os originais','refresh']]},
+        {k:'todas',type:'tg',label:'Trocar todas as cópias do componente',def:true,full:1}]}],
+    acts:[['scan','Analisar modelo','eye',1],['fix','Corrigir','check']], allActs:['select_heavy'], render:r=>r.heavy?renderHeavy(r):renderHealth(r),
+    hint:'Caixa no lugar: árvores, carros e móveis pesados viram uma caixa do mesmo tamanho e o SketchUp fica leve para modelar. Antes do render clique em Voltar os originais.' },
   align:{ secs:[
       {t:'Alinhar', f:[
         {k:'eixo',type:'seg',label:'Eixo',def:'x',full:1,opts:[['x','<b style="color:#E5484D">X</b> vermelho'],['y','<b style="color:#30A46C">Y</b> verde'],['z','<b style="color:#3E63DD">Z</b> azul']]},
@@ -1291,6 +1295,14 @@ function renderTakeoff(r){
   if(r.components&&r.components.length) h+=`<div class="tblwrap"><table class="tbl"><thead><tr><th>Componentes</th><th class="n">Qtd</th></tr></thead><tbody>${r.components.map(c=>`<tr><td>${esc(c[0])}</td><td class="n">${c[1]}</td></tr>`).join('')}</tbody></table></div>`;
   return h;
 }
+function renderHeavy(r){
+  if(!r.heavy||!r.heavy.length) return '';
+  const mx=Math.max(...r.heavy.map(h=>h[3]),1);
+  return `<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${r.heavy.map(h=>`<button class="btn ghost" data-act="sel:${esc(h[0])}" style="display:block;height:auto;padding:7px 10px;text-align:left">
+    <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h[0])}</span><span class="mono" style="color:#A88A80">${br(h[3],1)}%</span></div>
+    <div style="height:4px;border-radius:2px;background:var(--line);margin:5px 0 3px"><div style="height:4px;border-radius:2px;background:#3E4B57;width:${(h[3]/mx*100).toFixed(1)}%"></div></div>
+    <div style="font-size:10.5px;color:var(--muted)">${br(h[1],0)} faces × ${h[2]} cópia(s) · clique para selecionar</div></button>`).join('')}</div>`;
+}
 function renderHealth(r){
   if(r.score==null) return '';
   const C=2*Math.PI*30, v=r.score/100;
@@ -1488,6 +1500,7 @@ async function runAct(action, silent, btn){
   if(action==='center'){ setParam('inicio','centro',true); toast('Paginação centralizada na face.'); return; }
   if(action==='vary'){ setParam('seed',num(S.params[id].seed,0)+1,true); return; }
   if(action.startsWith('assign:')){ p.cat=action.slice(7); a='assign'; }
+  if(action.startsWith('sel:')){ p.def=action.slice(4); a='select_heavy'; }
   if(btn) btn.classList.add('busy');
   const res=await call(id, a, p);
   if(btn) btn.classList.remove('busy');
@@ -1498,6 +1511,7 @@ async function runAct(action, silent, btn){
   if(res.settings && Object.keys(res.settings).length){ Object.assign(S.params[id], res.settings); store.set('p:'+id,S.params[id]); }
   if(res.mats){ S.dyn.mats=[['','— sem material —']].concat(res.mats.map(m=>[m[0],m[1]])); if(silent&&res.ok&&S.tool===id) refreshTool(); }
   if(res.defs){ S.dyn.defs=res.defs.map(d=>[d[0],`${d[0]} (${d[1]})`]); if(!S.params[id].def&&res.defs[0]) S.params[id].def=res.defs[0][0]; if(silent&&res.ok&&S.tool===id) refreshTool(); }
+  if(a==='select_heavy'){ toast(res.msg); return; }
   if(res.picking){ toast(res.msg); if(res.stats){ S.results[id]=res; } refreshTool(); return; }
   if(!(silent&&res.ok)) { S.results[id]=res; refreshTool(); const r=$('#result'); if(r&&r.firstChild) r.scrollIntoView({behavior:'smooth',block:'nearest'}); }
   if(!res.ok && res.locked) toast(res.msg);
