@@ -7,7 +7,7 @@
 #  - é testada e desenhada fora do SketchUp (dev/test_core.rb, dev/render_dc.rb).
 # Todas as medidas aqui são em centímetros.
 
-module PlaneLA
+module LAVIStudio
   module Plugin
     module DCTree
       ALIAS = { 'lenx' => 'lenx', 'leny' => 'leny', 'lenz' => 'lenz' }.freeze

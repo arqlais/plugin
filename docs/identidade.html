@@ -1,0 +1,167 @@
+<title>Identidade do plugin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: escolhas à esquerda, prévia ao vivo fixa à direita (empilha no celular) */
+:root{
+  --bg:#F5F5F3; --surface:#FFFFFF; --fg:#22242A; --muted:#6E717A; --line:#E3E3DF; --soft:#EEEEEA;
+  --ui:'DM Sans',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  --c:#2D4BE0; --on:#FFFFFF;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#17181B;--surface:#202226;--fg:#ECECEA;--muted:#9A9DA5;--line:#33353B;--soft:#2A2C31;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17181B;--surface:#202226;--fg:#ECECEA;--muted:#9A9DA5;--line:#33353B;--soft:#2A2C31;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:400 15px/1.5 var(--ui);padding:28px 16px 48px}
+.wrap{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:32px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:1fr}.preview{position:static!important}}
+h1{font-size:28px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em;text-wrap:balance}
+.lead{color:var(--muted);margin:0 0 26px;max-width:60ch}
+h2{font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:28px 0 12px}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.opt{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;text-align:left;cursor:pointer;color:var(--fg);font:inherit;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,transform .15s}
+.opt:hover{transform:translateY(-1px)}
+.opt:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+.opt[aria-pressed="true"]{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent)}
+.opt b{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.opt small{color:var(--muted);font-size:12.5px;line-height:1.35}
+.sym{width:44px;height:44px;border-radius:11px;display:grid;place-items:center;background:var(--soft);color:var(--fg)}
+.sym svg{width:26px;height:26px}
+.sw{display:flex;align-items:center;gap:10px}
+.sw i{width:28px;height:28px;border-radius:8px;flex:none;border:1px solid rgba(0,0,0,.08)}
+.own{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.own input{flex:1;min-width:180px;height:42px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:0 12px;font:inherit}
+.preview{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+.cap{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
+.toolbar{display:flex;gap:6px;align-items:center;background:#E9E9E6;border-radius:8px;padding:6px 8px;width:max-content;max-width:100%}
+.toolbar span{width:24px;height:24px;border-radius:5px;background:#CFCFCB}
+.toolbar .me{width:30px;height:30px;border-radius:8px;background:var(--c);color:var(--on);display:grid;place-items:center}
+.toolbar .me svg{width:19px;height:19px}
+.panel{border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.ph{display:flex;align-items:center;gap:10px;padding:14px;background:var(--surface)}
+.logo{width:40px;height:40px;border-radius:11px;background:var(--c);color:var(--on);display:grid;place-items:center;flex:none}
+.logo svg{width:24px;height:24px}
+.ph strong{font-size:20px;letter-spacing:-.02em;line-height:1}
+.ph small{display:block;color:var(--muted);font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+.tabs{display:flex;gap:6px;padding:0 14px 12px;flex-wrap:wrap}
+.tab{font-size:12.5px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.tab.on{background:var(--c);color:var(--on);border-color:var(--c)}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 14px}
+.tool{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.tool .ti{width:30px;height:30px;border-radius:9px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);display:grid;place-items:center}
+.tool .ti svg{width:18px;height:18px}
+.tool b{font-size:13px}
+.btn{margin:0 14px 14px;height:42px;border-radius:11px;background:var(--c);color:var(--on);display:grid;place-items:center;font-weight:700;font-size:14px}
+.choice{font:500 13px var(--mono);background:var(--soft);border-radius:10px;padding:10px 12px;word-break:break-word}
+.copy{height:42px;border-radius:10px;border:1.5px solid var(--fg);background:transparent;color:var(--fg);font:700 14px var(--ui);cursor:pointer}
+.copy:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+.note{font-size:13px;color:var(--muted);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <main>
+    <h1>Monte a identidade do plugin</h1>
+    <p class="lead">Escolha um nome, um símbolo e uma cor. A prévia ao lado mostra como fica o ícone na barra do SketchUp e o painel. Quando gostar, copie a escolha e me mande no chat.</p>
+
+    <h2>Nome</h2>
+    <div class="opts" id="names"></div>
+    <div class="own"><input id="ownName" type="text" placeholder="Ou digite um nome seu" maxlength="24" aria-label="Digitar um nome próprio"></div>
+
+    <h2>Símbolo</h2>
+    <div class="opts" id="syms"></div>
+
+    <h2>Cor (sólida, sem degradê)</h2>
+    <div class="opts" id="colors"></div>
+  </main>
+
+  <aside class="preview" aria-label="Prévia">
+    <div class="card">
+      <div class="cap">Barra de ferramentas do SketchUp</div>
+      <div class="toolbar"><span></span><span></span><div class="me" id="tbIcon"></div><span></span><span></span></div>
+    </div>
+    <div class="card" style="padding:0;border:0;background:transparent">
+      <div class="panel">
+        <div class="ph"><div class="logo" id="pLogo"></div><div><strong id="pName"></strong><small>plugin · v0.5</small></div></div>
+        <div class="tabs"><span class="tab on">Apresentação</span><span class="tab">Arquitetura</span><span class="tab">Revestimentos</span></div>
+        <div class="tools">
+          <div class="tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v14H3zM3 9h18M7 5l2 4M12 5l2 4M17 5l2 4"/></svg></div><b>Cenas automáticas</b></div>
+          <div class="tool"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18v16H3zM12 4v7H3M8 15h8M8 18h5"/></svg></div><b>Quadro de áreas</b></div>
+        </div>
+        <div class="btn">Criar cenas</div>
+      </div>
+    </div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <div class="cap" style="margin:0">Sua escolha</div>
+      <div class="choice" id="choice"></div>
+      <button class="copy" id="copy" type="button">Copiar escolha</button>
+      <p class="note" id="copied" hidden>Copiado. Cole no chat para eu aplicar no plugin.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function(){
+  const NAMES=[
+    ['Cota','A linha de medida do desenho técnico. Curto e direto.'],
+    ['Vértice','O ponto onde as linhas se encontram.'],
+    ['Nanquim','A tinta do desenho à mão. Autoral.'],
+    ['Gabarito','A régua de símbolos da prancheta.'],
+    ['Prancheta','Onde todo projeto começa.'],
+    ['Ateliê','Seu espaço de criação.']
+  ];
+  const S=(d,fill)=>`<svg viewBox="0 0 24 24" fill="${fill?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const SYMS=[
+    ['cota','Linha de cota',S('<path d="M4 12h16M4 8v8M20 8v8M7 10l-3 2 3 2M17 10l3 2-3 2"/>')],
+    ['vertice','Vértice',S('<path d="M6 4v14h14"/><circle cx="6" cy="18" r="2.2" fill="currentColor" stroke="none"/>')],
+    ['planta','Planta com porta',S('<path d="M4 4h16v16H4zM4 14h6M10 14a6 6 0 0 0 0 6"/>')],
+    ['esquadro','Esquadro',S('<path d="M5 19V5l14 14zM9 15h3.5L9 11.5z"/>')],
+    ['monograma','Inicial do nome',null],
+    ['prumo','Prumo',S('<path d="M12 3v6M8 9h8l-4 11z"/>')]
+  ];
+  const COLORS=[
+    ['Cobalto','#2D4BE0','#FFFFFF'],['Vinho','#7A1F3D','#FFFFFF'],['Ameixa','#5B2A6E','#FFFFFF'],
+    ['Lilás','#7B5CFF','#FFFFFF'],['Rosa','#D93A7A','#FFFFFF'],['Terracota','#B5523B','#FFFFFF'],
+    ['Azul noite','#1F2A44','#FFFFFF'],['Grafite','#2B2D33','#FFFFFF']
+  ];
+  const get=(k,d)=>{try{return localStorage.getItem('id:'+k)||d}catch(e){return d}};
+  const put=(k,v)=>{try{localStorage.setItem('id:'+k,v)}catch(e){}};
+  const st={name:get('name','Cota'),sym:get('sym','cota'),color:get('color','#2D4BE0'),own:get('own','')};
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const curName=()=>st.own.trim()||st.name;
+  const symSvg=id=>{const s=SYMS.find(x=>x[0]===id)||SYMS[0];
+    if(s[0]!=='monograma') return s[2];
+    const l=esc((curName()[0]||'A').toUpperCase());
+    return `<svg viewBox="0 0 24 24"><text x="12" y="17" text-anchor="middle" font-family="DM Sans,sans-serif" font-weight="700" font-size="15" fill="currentColor">${l}</text></svg>`;};
+
+  function draw(){
+    $('names').innerHTML=NAMES.map(n=>`<button class="opt" type="button" data-name="${n[0]}" aria-pressed="${!st.own.trim()&&st.name===n[0]}"><b>${n[0]}</b><small>${n[1]}</small></button>`).join('');
+    $('syms').innerHTML=SYMS.map(s=>`<button class="opt" type="button" data-sym="${s[0]}" aria-pressed="${st.sym===s[0]}"><span class="sym">${symSvg(s[0])}</span><small>${s[1]}</small></button>`).join('');
+    $('colors').innerHTML=COLORS.map(c=>`<button class="opt" type="button" data-color="${c[1]}" aria-pressed="${st.color===c[1]}"><span class="sw"><i style="background:${c[1]}"></i><b style="font-size:15px">${c[0]}</b></span><small style="font-family:var(--mono)">${c[1]}</small></button>`).join('');
+    const col=COLORS.find(c=>c[1]===st.color)||COLORS[0];
+    document.documentElement.style.setProperty('--c',col[1]);
+    document.documentElement.style.setProperty('--on',col[2]);
+    $('tbIcon').innerHTML=symSvg(st.sym); $('pLogo').innerHTML=symSvg(st.sym);
+    $('pName').textContent=curName();
+    const sym=SYMS.find(x=>x[0]===st.sym)||SYMS[0];
+    $('choice').textContent=`Nome: ${curName()} · Símbolo: ${sym[1]} · Cor: ${col[0]} (${col[1]})`;
+  }
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    if(b.dataset.name){st.name=b.dataset.name;st.own='';$('ownName').value='';put('name',st.name);put('own','');}
+    else if(b.dataset.sym){st.sym=b.dataset.sym;put('sym',st.sym);}
+    else if(b.dataset.color){st.color=b.dataset.color;put('color',st.color);}
+    else if(b.id==='copy'){const t=$('choice').textContent;
+      const done=()=>{$('copied').hidden=false;setTimeout(()=>{$('copied').hidden=true},3000)};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(()=>{selectChoice();done();});}else{selectChoice();done();}
+      return;}
+    else return;
+    draw();
+  });
+  function selectChoice(){const r=document.createRange();r.selectNodeContents($('choice'));const s=getSelection();s.removeAllRanges();s.addRange(r);}
+  $('ownName').value=st.own;
+  $('ownName').addEventListener('input',e=>{st.own=e.target.value;put('own',st.own);draw();});
+  draw();
+})();
+</script>

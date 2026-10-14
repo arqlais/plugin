@@ -22,19 +22,19 @@ def file_loaded(_f) = nil
 IDENTITY = nil
 
 ROOT_DIR = File.expand_path('..', __dir__)
-module PlaneLA
+module LAVIStudio
   module Plugin
-    PLUGIN_NAME = 'Planê Plugin'
+    PLUGIN_NAME = 'LAVI'
     VERSION = '0.4.1'
-    ROOT = File.join(ROOT_DIR, 'plane_plugin')
+    ROOT = File.join(ROOT_DIR, 'lavi_plugin')
   end
 end
-%w[registry license helpers geom nesting].each { |f| require File.join(ROOT_DIR, 'plane_plugin', 'core', f) }
-module PlaneLA::Plugin::Dialog; def self.push(*); end; end
-require File.join(ROOT_DIR, 'plane_plugin', 'core', 'updater')
-Dir[File.join(ROOT_DIR, 'plane_plugin', 'tools', '*.rb')].sort.each { |f| require f }
+%w[registry license helpers geom nesting].each { |f| require File.join(ROOT_DIR, 'lavi_plugin', 'core', f) }
+module LAVIStudio::Plugin::Dialog; def self.push(*); end; end
+require File.join(ROOT_DIR, 'lavi_plugin', 'core', 'updater')
+Dir[File.join(ROOT_DIR, 'lavi_plugin', 'tools', '*.rb')].sort.each { |f| require f }
 
-P = PlaneLA::Plugin
+P = LAVIStudio::Plugin
 G = P::Geom2
 
 class TestCore < Minitest::Test
@@ -106,7 +106,7 @@ class TestCore < Minitest::Test
 
   def test_license
     serial = 'AB12C'
-    key = "PLANE-MARC-#{serial}-#{P::License.check_digits('MARC', serial)}"
+    key = "LAVI-MARC-#{serial}-#{P::License.check_digits('MARC', serial)}"
     assert_equal 'MARC', P::License.parse(key)
     assert_nil P::License.parse(key.sub(/.$/, key[-1] == '0' ? '1' : '0'))
     assert P::License.activate(key)[:ok]

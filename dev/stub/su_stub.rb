@@ -21,7 +21,7 @@ module UI
   def self.menu(n) Menu.new end
   def self.start_timer(*a,&b) ($timers ||= []) << b; 1 end
   def self.messagebox(*a) puts "MSGBOX: #{a[0]}"; 1 end
-  class Toolbar; def initialize(n) end; def add_item(c) end; def restore; end; end
+  class Toolbar; def initialize(n) end; def add_item(c) end; def add_separator; end; def restore; end; end
   class Command; attr_accessor :small_icon,:large_icon,:tooltip,:status_bar_text; def initialize(n,&b) end; end
   class HtmlDialog
     STYLE_DIALOG = 1

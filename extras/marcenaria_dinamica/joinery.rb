@@ -7,7 +7,7 @@
 #   e abrindo portas/gavetas com Interagir, mesmo sem o plugin.
 # - "Atualizar" remonta pelo cálculo do plugin; "Diagnóstico" grava um relatório do bloco.
 
-module PlaneLA
+module LAVIStudio
   module Plugin
     module Tools
       module Joinery
@@ -81,8 +81,8 @@ module PlaneLA
             frente: H.num(p['frente'], t[:frente]).to_i, nportas: H.num(p['nportas'], t[:nportas]).to_i,
             ngav: [[H.num(p['ngav'], t[:ngav]).to_i, 1].max, S::MAX_GAV].min, hgav: H.num(p['hgav'], 18),
             prat: [[H.num(p['prat'], t[:prat]).to_i, 0].max, S::MAX_PRAT].min, puxador: H.num(p['puxador'], 1).to_i,
-            matfrente: p['matfrente'] || 'PLN_Branco', matcaixa: p['matcaixa'] || 'PLN_Branco',
-            tampo: H.num(p['tampo'], t[:tampo]).to_i, mattampo: p['mattampo'] || 'PLN_QuartzoBranco',
+            matfrente: p['matfrente'] || 'LAVI_Branco', matcaixa: p['matcaixa'] || 'LAVI_Branco',
+            tampo: H.num(p['tampo'], t[:tampo]).to_i, mattampo: p['mattampo'] || 'LAVI_QuartzoBranco',
             esptampo: H.num(p['esptampo'], 2), esp: H.num(p['esp'], 1.5), espf: H.num(p['espf'], 1.8),
             fundo: H.num(p['fundo'], 0.6), folga: H.num(p['folga'], 0.3),
             rod: H.num(p['rod'], t[:rod]), rodrec: H.num(p['rodrec'], 5), pz: t[:pz]
@@ -98,17 +98,17 @@ module PlaneLA
         def create(p, at = ORIGIN, rot = nil)
           s = settings(p)
           inst = nil
-          H.operation('Planê · Marcenaria') do
+          H.operation('LAVI · Marcenaria') do
             ensure_materials
             defs = H.model.definitions
-            defn = defs.add(defs.unique_name("Planê #{s[:nome]} #{s[:lx].round}x#{s[:lz].round}"))
-            defn.description = "Módulo de marcenaria #{s[:nome].downcase} · Planê Plugin"
+            defn = defs.add(defs.unique_name("LAVI #{s[:nome]} #{s[:lx].round}x#{s[:lz].round}"))
+            defn.description = "Módulo de marcenaria #{s[:nome].downcase} · LAVI"
             fill(defn, s)
             tr = Geom::Transformation.new(at)
             tr = tr * rot if rot
             inst = H.model.active_entities.add_instance(defn, tr)
             copy_root_values(defn, inst)
-            inst.layer = H.tag('Planê · Marcenaria')
+            inst.layer = H.tag('LAVI · Marcenaria')
           end
           inst
         end
@@ -239,15 +239,15 @@ module PlaneLA
 
         def read_selected
           inst = cabinets.first
-          return H.err('Selecione um módulo de marcenaria do Planê.') unless inst
+          return H.err('Selecione um módulo de marcenaria do LAVI.') unless inst
           H.ok('Valores do módulo carregados no painel.', values: current(inst))
         end
 
         def update_selected(p)
           insts = cabinets
-          return H.err('Selecione um ou mais módulos de marcenaria do Planê.') if insts.empty?
+          return H.err('Selecione um ou mais módulos de marcenaria do LAVI.') if insts.empty?
           given = p.reject { |_k, v| v.nil? || v.to_s.empty? }
-          H.operation('Planê · Atualizar módulo') do
+          H.operation('LAVI · Atualizar módulo') do
             ensure_materials
             insts.each do |inst|
               vals = current(inst).merge(given)
@@ -281,7 +281,7 @@ module PlaneLA
           return H.err('Selecione o módulo.') unless inst
           path = UI.savepanel('Salvar diagnóstico', '', 'diagnostico_plane.txt')
           return H.ok('Cancelado.') unless path
-          lines = ["Planê Plugin #{VERSION} · SketchUp #{Sketchup.version} · #{Time.now}",
+          lines = ["LAVI #{VERSION} · SketchUp #{Sketchup.version} · #{Time.now}",
                    "Componentes dinâmicos: #{defined?($dc_observers) && $dc_observers ? 'ativo' : 'INATIVO'}", '']
           dump(inst, 0, lines)
           File.write(path, lines.join("\n"), encoding: 'UTF-8')
@@ -355,7 +355,7 @@ module PlaneLA
             %i[lx ly lz rod tampo frente nportas ngav prat].each { |k| q[k.to_s] = t[k] }
             q.merge!(over)
             inst = create(q, Geom::Point3d.new(x.cm, -150.cm, 0))
-            inst.definition.name = H.model.definitions.unique_name("Planê · #{nome}")
+            inst.definition.name = H.model.definitions.unique_name("LAVI · #{nome}")
             file = File.join(dir, "Plane - #{nome.tr('·', '-').gsub(/[^\w\- ]/, '').squeeze(' ').strip}.skp")
             saved += 1 if inst.definition.save_as(file)
             x += H.num(q['lx'], 60) + 20

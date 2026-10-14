@@ -1,14 +1,14 @@
 # Testes da marcenaria dinâmica (guardada à parte, fora do plugin por enquanto).
 # Rodar: ruby extras/marcenaria_dinamica/test_dc.rb
 require 'minitest/autorun'
-module PlaneLA; module Plugin; end; end
+module LAVIStudio; module Plugin; end; end
 %w[dc_formula dc_tree joinery_spec].each { |f| require File.join(__dir__, f) }
-P = PlaneLA::Plugin
+P = LAVIStudio::Plugin
 
 class TestDC < Minitest::Test
   def test_dc_option_encoding
-    s = P::JoinerySpec.opts([['Gaveta + portas', 2], ['Freijó', 'PLN_Freijo']])
-    assert_equal '&Gaveta%20%2B%20portas=2&Freij%C3%B3=PLN_Freijo&', s
+    s = P::JoinerySpec.opts([['Gaveta + portas', 2], ['Freijó', 'LAVI_Freijo']])
+    assert_equal '&Gaveta%20%2B%20portas=2&Freij%C3%B3=LAVI_Freijo&', s
   end
 
   def test_dc_formulas
@@ -17,7 +17,7 @@ class TestDC < Minitest::Test
     assert_equal 1.0, f.call('IF(AND(a=2,OR(b>5,b<1)),1,0)', 'a' => 2, 'b' => 0)
     assert_equal 'x', f.call('IF(1,"x","y")')
     assert_equal 4.0, f.call('MAX(1,4,-2)')
-    assert_equal 1.0, f.call('m="PLN_Freijo"', 'm' => 'PLN_Freijo')
+    assert_equal 1.0, f.call('m="LAVI_Freijo"', 'm' => 'LAVI_Freijo')
   end
 
   # Todas as combinações: nada pode sair da caixa do módulo (puxadores podem ficar na frente)
@@ -30,7 +30,7 @@ class TestDC < Minitest::Test
           [1, 2, 3, 4].each do |pux|
             [40, 60, 120].each do |lx|
               s = { tipo: tipo, nome: t[:nome], lx: lx, ly: t[:ly], lz: t[:lz], frente: frente, nportas: np, ngav: 4, hgav: 18,
-                    prat: 2, puxador: pux, matfrente: 'PLN_Freijo', matcaixa: 'PLN_Branco', tampo: t[:tampo], mattampo: 'PLN_Marmore',
+                    prat: 2, puxador: pux, matfrente: 'LAVI_Freijo', matcaixa: 'LAVI_Branco', tampo: t[:tampo], mattampo: 'LAVI_Marmore',
                     esptampo: 2, esp: 1.5, espf: 1.8, fundo: 0.6, folga: 0.3, rod: t[:rod], rodrec: 5, pz: t[:pz] }
               boxes = spec.build(s).boxes
               count += 1

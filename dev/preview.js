@@ -7,7 +7,7 @@ try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = requ
 
 const out = process.argv[2] || path.join(__dirname, '..', 'docs');
 fs.mkdirSync(out, { recursive: true });
-const url = 'file://' + path.join(__dirname, '..', 'plane_plugin', 'ui', 'index.html');
+const url = 'file://' + path.join(__dirname, '..', 'lavi_plugin', 'ui', 'index.html');
 
 (async () => {
   const browser = await chromium.launch();
@@ -25,11 +25,11 @@ const url = 'file://' + path.join(__dirname, '..', 'plane_plugin', 'ui', 'index.
     if (full) await page.evaluate(() => { const st = document.querySelectorAll('style'); st[st.length - 1].remove(); });
     console.log('print', name);
   };
-  const tool = async id => { await page.click(`[data-tab="${TABS[id]}"]`); await page.click(`.tool[data-tool="${id}"]`); };
+  const tool = async id => { await page.click(`.ri[data-tool="${id}"]`); };
   const TABS = { walls: 'arq', openings: 'arq', stairs: 'arq', roofs: 'arq', dwg_walls: 'arq', urban_index: 'arq', tiling: 'rev', wall_tiling: 'rev', baseboard: 'rev', ceiling: 'rev', scenes: 'pres', export_images: 'pres', room_tags: 'pres', furniture: 'quant', measure: 'base', isolate: 'base', cut_list: 'marc', countertop: 'marc', takeoff: 'quant', budget: 'quant', model_health: 'base', align: 'base', replace: 'base', auto_tags: 'base' };
 
   await shot('01-inicio');
-  await page.click('[data-tab="pres"]'); await shot('02-aba-apresentacao');
+  await shot('02-inicio-lista', true);
 
   await tool('scenes'); await page.click('[data-act="create"]'); await shot('03-cenas', true);
   await tool('room_tags'); await shot('04-ambientes', true);

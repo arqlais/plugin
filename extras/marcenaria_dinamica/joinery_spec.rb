@@ -1,7 +1,7 @@
 # Receita do módulo de marcenaria (independente do SketchUp).
 # Eixos: X = largura (0 à esquerda), Y = profundidade (0 = frente), Z = altura (0 = piso). Medidas em cm.
 
-module PlaneLA
+module LAVIStudio
   module Plugin
     module JoinerySpec
       T = DCTree
@@ -12,19 +12,19 @@ module PlaneLA
       MAX_PRAT = 6
 
       MAT_FRENTE = [
-        ['Branco TX', 'PLN_Branco', 'F4F4F2'], ['Off-white', 'PLN_Offwhite', 'EEE8DE'],
-        ['Areia', 'PLN_Areia', 'D9CBB5'], ['Rosa seco', 'PLN_RosaSeco', 'D8B4B0'],
-        ['Lilás', 'PLN_Lilas', 'BBA9D6'], ['Cinza', 'PLN_Cinza', 'A7A9AC'],
-        ['Grafite', 'PLN_Grafite', '4A4E54'], ['Preto', 'PLN_Preto', '1F1F21'],
-        ['Freijó', 'PLN_Freijo', 'A97E55'], ['Carvalho', 'PLN_Carvalho', 'C29B6C'],
-        ['Nogueira', 'PLN_Nogueira', '6E4B35'], ['Verde oliva', 'PLN_Oliva', '7C7D5B']
+        ['Branco TX', 'LAVI_Branco', 'F4F4F2'], ['Off-white', 'LAVI_Offwhite', 'EEE8DE'],
+        ['Areia', 'LAVI_Areia', 'D9CBB5'], ['Rosa seco', 'LAVI_RosaSeco', 'D8B4B0'],
+        ['Lilás', 'LAVI_Lilas', 'BBA9D6'], ['Cinza', 'LAVI_Cinza', 'A7A9AC'],
+        ['Grafite', 'LAVI_Grafite', '4A4E54'], ['Preto', 'LAVI_Preto', '1F1F21'],
+        ['Freijó', 'LAVI_Freijo', 'A97E55'], ['Carvalho', 'LAVI_Carvalho', 'C29B6C'],
+        ['Nogueira', 'LAVI_Nogueira', '6E4B35'], ['Verde oliva', 'LAVI_Oliva', '7C7D5B']
       ].freeze
       MAT_TAMPO = [
-        ['Quartzo branco', 'PLN_QuartzoBranco', 'F1EFEB'], ['Granito preto', 'PLN_GranitoPreto', '232325'],
-        ['Mármore', 'PLN_Marmore', 'E9E6E1'], ['Madeira', 'PLN_TampoMadeira', 'A97E55'],
-        ['Cimento queimado', 'PLN_Cimento', '9C9A96'], ['MDF igual à frente', 'PLN_Branco', 'F4F4F2']
+        ['Quartzo branco', 'LAVI_QuartzoBranco', 'F1EFEB'], ['Granito preto', 'LAVI_GranitoPreto', '232325'],
+        ['Mármore', 'LAVI_Marmore', 'E9E6E1'], ['Madeira', 'LAVI_TampoMadeira', 'A97E55'],
+        ['Cimento queimado', 'LAVI_Cimento', '9C9A96'], ['MDF igual à frente', 'LAVI_Branco', 'F4F4F2']
       ].freeze
-      FIXED = { 'PLN_Aluminio' => 'C8CACC', 'PLN_Cava' => '2F3A45', 'PLN_Ferragem' => '9EA3A8' }.freeze
+      FIXED = { 'LAVI_Aluminio' => 'C8CACC', 'LAVI_Cava' => '2F3A45', 'LAVI_Ferragem' => '9EA3A8' }.freeze
 
       TIPOS = {
         'inferior'   => { nome: 'Inferior',   lx: 60, ly: 58, lz: 90,  rod: 10, tampo: 1, frente: 2, nportas: 1, ngav: 3, prat: 1, pz: 0.85 },
@@ -47,7 +47,7 @@ module PlaneLA
 
       # s: hash com as escolhas (mesmas chaves do painel); medidas em cm
       def build(s)
-        r = T::Ent.new('Planê Marcenaria', :root, tipo: s[:tipo])
+        r = T::Ent.new('LAVI Marcenaria', :root, tipo: s[:tipo])
         r.set('lenx', s[:lx], access: 'TEXTBOX', label: 'Largura')
         r.set('leny', s[:ly], access: 'TEXTBOX', label: 'Profundidade')
         r.set('lenz', s[:lz], access: 'TEXTBOX', label: 'Altura')
@@ -113,16 +113,16 @@ module PlaneLA
       # Puxadores de porta (barra em pé no lado que abre)
       def door_handles(n, bar_x, left_x)
         T.leaf(n, 'Puxador barra', x: bar_x, y: '-Parent!ef-2.5', z: 'MAX(Parent!hf*Parent!pz-8,1)', lx: 1.2, ly: 2.5, lz: 16,
-                                   hidden: 'IF(Parent!px=2,0,1)', part: 'puxador', fixed_mat: 'PLN_Aluminio')
+                                   hidden: 'IF(Parent!px=2,0,1)', part: 'puxador', fixed_mat: 'LAVI_Aluminio')
         T.leaf(n, 'Puxador perfil', x: left_x, y: '-Parent!ef-1', z: 'Parent!py', lx: 'Parent!lf', ly: 1, lz: 3,
-                                    hidden: 'IF(Parent!px=1,0,1)', part: 'puxador', fixed_mat: 'PLN_Aluminio')
+                                    hidden: 'IF(Parent!px=1,0,1)', part: 'puxador', fixed_mat: 'LAVI_Aluminio')
         T.leaf(n, 'Cava', x: left_x, y: '-Parent!ef-0.05', z: 'Parent!py', lx: 'Parent!lf', ly: 0.05, lz: 2.5,
-                          hidden: 'IF(Parent!px=3,0,1)', part: 'acabamento', fixed_mat: 'PLN_Cava')
+                          hidden: 'IF(Parent!px=3,0,1)', part: 'acabamento', fixed_mat: 'LAVI_Cava')
       end
 
       def hinges(n, x)
         [['8', nil], ['Parent!hf-13', nil], ['Parent!hf/2-2.5', 'IF(Parent!hf<100,1,0)']].each do |z, hid|
-          T.leaf(n, 'Dobradiça', x: x, y: 0, z: z, lx: 3.5, ly: 1.2, lz: 5, hidden: hid, part: 'ferragem', fixed_mat: 'PLN_Ferragem')
+          T.leaf(n, 'Dobradiça', x: x, y: 0, z: z, lx: 3.5, ly: 1.2, lz: 5, hidden: hid, part: 'ferragem', fixed_mat: 'LAVI_Ferragem')
         end
       end
 
@@ -149,13 +149,13 @@ module PlaneLA
                                     pass: pass, hidden: 'IF(Parent!frente=5,0,1)', onclick: 'ANIMATE("rotx",0,-80)')
         T.leaf(n, 'Porta basculante', x: 0, y: '-Parent!ef', z: '-Parent!hf', lx: 'Parent!lf', ly: 'Parent!ef', lz: 'Parent!hf', mat: 'Parent!mf', part: 'porta')
         T.leaf(n, 'Puxador barra', x: 'Parent!lf/2-8', y: '-Parent!ef-2.5', z: 'Parent!hy', lx: 16, ly: 2.5, lz: 1.2,
-                                   hidden: 'IF(Parent!px=2,0,1)', part: 'puxador', fixed_mat: 'PLN_Aluminio')
+                                   hidden: 'IF(Parent!px=2,0,1)', part: 'puxador', fixed_mat: 'LAVI_Aluminio')
         T.leaf(n, 'Puxador perfil', x: 0, y: '-Parent!ef-1', z: 'Parent!py', lx: 'Parent!lf', ly: 1, lz: 3,
-                                    hidden: 'IF(Parent!px=1,0,1)', part: 'puxador', fixed_mat: 'PLN_Aluminio')
+                                    hidden: 'IF(Parent!px=1,0,1)', part: 'puxador', fixed_mat: 'LAVI_Aluminio')
         T.leaf(n, 'Cava', x: 0, y: '-Parent!ef-0.05', z: 'Parent!py', lx: 'Parent!lf', ly: 0.05, lz: 2.5,
-                          hidden: 'IF(Parent!px=3,0,1)', part: 'acabamento', fixed_mat: 'PLN_Cava')
+                          hidden: 'IF(Parent!px=3,0,1)', part: 'acabamento', fixed_mat: 'LAVI_Cava')
         %w[6 Parent!lf-9.5].each do |x|
-          T.leaf(n, 'Dobradiça', x: x, y: 0, z: -6, lx: 3.5, ly: 1.2, lz: 5, part: 'ferragem', fixed_mat: 'PLN_Ferragem')
+          T.leaf(n, 'Dobradiça', x: x, y: 0, z: -6, lx: 3.5, ly: 1.2, lz: 5, part: 'ferragem', fixed_mat: 'LAVI_Ferragem')
         end
       end
 
@@ -182,14 +182,14 @@ module PlaneLA
         T.leaf(b, 'Contrafrente', x: 'Parent!e+2.8', y: 'Parent!ef', z: 3, lx: 'Parent!vx-5.6', ly: 1.5, lz: 'Parent!bh', mat: 'Parent!mc', part: 'gaveta')
         T.leaf(b, 'Traseira da gaveta', x: 'Parent!e+2.8', y: 'Parent!ef+Parent!bd-1.5', z: 3, lx: 'Parent!vx-5.6', ly: 1.5, lz: 'Parent!bh', mat: 'Parent!mc', part: 'gaveta')
         T.leaf(b, 'Fundo da gaveta', x: 'Parent!e+1.3', y: 'Parent!ef', z: 2.4, lx: 'Parent!vx-2.6', ly: 'Parent!bd', lz: 0.6, mat: 'Parent!mc', part: 'fundo')
-        T.leaf(b, 'Corrediça', x: 'Parent!e', y: 'Parent!ef+1', z: 4, lx: 1.3, ly: 'Parent!bd-2', lz: 3.5, part: 'ferragem', fixed_mat: 'PLN_Ferragem')
-        T.leaf(b, 'Corrediça', x: 'Parent!w-Parent!e-1.3', y: 'Parent!ef+1', z: 4, lx: 1.3, ly: 'Parent!bd-2', lz: 3.5, part: 'ferragem', fixed_mat: 'PLN_Ferragem')
+        T.leaf(b, 'Corrediça', x: 'Parent!e', y: 'Parent!ef+1', z: 4, lx: 1.3, ly: 'Parent!bd-2', lz: 3.5, part: 'ferragem', fixed_mat: 'LAVI_Ferragem')
+        T.leaf(b, 'Corrediça', x: 'Parent!w-Parent!e-1.3', y: 'Parent!ef+1', z: 4, lx: 1.3, ly: 'Parent!bd-2', lz: 3.5, part: 'ferragem', fixed_mat: 'LAVI_Ferragem')
         T.leaf(b, 'Puxador barra', x: 'Parent!w/2-8', y: -2.5, z: 'Parent!hy', lx: 16, ly: 2.5, lz: 1.2,
-                                   hidden: 'IF(Parent!px=2,0,1)', part: 'puxador', fixed_mat: 'PLN_Aluminio')
+                                   hidden: 'IF(Parent!px=2,0,1)', part: 'puxador', fixed_mat: 'LAVI_Aluminio')
         T.leaf(b, 'Puxador perfil', x: 'Parent!f/2', y: -1, z: 'Parent!py', lx: 'Parent!lf', ly: 1, lz: 3,
-                                    hidden: 'IF(Parent!px=1,0,1)', part: 'puxador', fixed_mat: 'PLN_Aluminio')
+                                    hidden: 'IF(Parent!px=1,0,1)', part: 'puxador', fixed_mat: 'LAVI_Aluminio')
         T.leaf(b, 'Cava', x: 'Parent!f/2', y: -0.05, z: 'Parent!py', lx: 'Parent!lf', ly: 0.05, lz: 2.5,
-                          hidden: 'IF(Parent!px=3,0,1)', part: 'acabamento', fixed_mat: 'PLN_Cava')
+                          hidden: 'IF(Parent!px=3,0,1)', part: 'acabamento', fixed_mat: 'LAVI_Cava')
       end
     end
   end

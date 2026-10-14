@@ -1,6 +1,6 @@
 {
-  "version": "0.5.0",
-  "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/plane_plugin.rbz",
-  "sha256": "7b3e7c0c75e4a153d126cbdbf4325f097e3fb00684d48be31713aec1b517e1ce",
-  "notes": ["Novas ferramentas: cenas automáticas, exportar imagens, ambientes e quadro de áreas, ficha de mobiliário, medir e isolar seleção","Marcenaria dinâmica retirada por enquanto","Atualização automática agora só avisa, nunca instala sozinha"]
+  "version": "0.6.0",
+  "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
+  "sha256": "94549b7e6632ff0cbe3b978582f18506d02cbf44a6814d2526cb735eed66fe3d",
+  "notes": ["Novo nome LAVI, símbolo da planta e paleta sem degradê","Barra de ferramentas com um ícone por ferramenta","Painel redesenhado"]
 }

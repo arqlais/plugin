@@ -1,4 +1,4 @@
-# Avaliador das fórmulas de componente dinâmico usadas pelo Planê.
+# Avaliador das fórmulas de componente dinâmico usadas pelo LAVI.
 # Serve para o plugin montar o móvel já no lugar certo (sem depender do redesenho
 # do SketchUp) e para testar os blocos fora do SketchUp (dev/test_core.rb).
 #
@@ -6,7 +6,7 @@
 # IF, MAX, MIN, AND, OR, NOT, ABS, ROUND, FLOOR, CEILING, ANIMATE (ignorado)
 # e referências: nome, Parent!nome, LenX/LenY/LenZ.
 
-module PlaneLA
+module LAVIStudio
   module Plugin
     module DCFormula
       class Error < StandardError; end

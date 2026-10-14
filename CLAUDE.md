@@ -1,8 +1,8 @@
-# Planê Plugin — contexto do projeto
+# LAVI (plugin) — contexto do projeto
 
-Plugin para SketchUp (Ruby + painel HTML) que a Laís está criando para **vender como renda extra**, ligado à marca **Planê** dela.
+Plugin para SketchUp (Ruby + painel HTML) que a Laís está criando para **vender como renda extra**. Nome: **LAVI** (escolhido por ela na v0.6).
 É uma suíte única, com ferramentas divididas em **pacotes vendidos separadamente** e liberados por chave de licença.
-(Até a v0.3 se chamava "LAVI Tools"; ela pediu nome, símbolo e cor novos na v0.4.)
+(Histórico: v0.3 "LAVI Tools" laranja; v0.4–0.5 "Planê Plugin" rosa→lilás com símbolo de laço — ela rejeitou nome, degradê e símbolo; v0.6 virou LAVI.)
 
 ## Sobre a dona do projeto
 - Laís, freelancer de 3D, render, detalhamento e projeto executivo, estudante de arquitetura (Santo André/SP).
@@ -10,34 +10,36 @@ Plugin para SketchUp (Ruby + painel HTML) que a Laís está criando para **vende
 - Fala português. Responda e escreva textos de interface em **português do Brasil**.
 - Ela testa no próprio SketchUp e manda prints. Este ambiente não tem SketchUp: **a parte 3D nunca foi executada de verdade**. Trate tudo que mexe em geometria como "precisa de teste".
 
-## Identidade visual (decidida — não mudar sem ela pedir)
-- Nome **Planê Plugin** (o "ê" em degradê). Símbolo = **"P em laço"** da identidade da Planê (traço contínuo), branco sobre quadrado arredondado em degradê.
-- Acento **degradê rosa `#FF2E88` → lilás `#A970FF`**, texto quase preto `#1A1220` sobre o degradê. Grafite da Planê `#2F3A45`/`#3E4B57` no texto.
-- **Tema claro padrão** (`#F6F3F4`, cards brancos) com **modo escuro** (botão de lua, salvo em `Sketchup.write_default`).
-- Fontes: **Poppins** (interface) + **JetBrains Mono** (medidas e números), embutidas em `plane_plugin/ui/fonts/` (funciona offline).
-- Ela quer: **intuitivo, organizado, ícones/símbolos para tudo, bem dinâmico** (animações, prévias ao vivo).
-- **Rejeitado por ela:** laranja neon (v0.3); qualquer verde/lima neon; paleta petróleo/rosé/areia com serifa; preto + amarelo (ArchiTools); o nome "LAVI Tools" e o símbolo antigo.
+## Identidade visual (decidida por ela na v0.6 — não mudar sem ela pedir)
+- Nome **LAVI** (wordmark em Bodoni Moda 600, caixa alta, espaçado). Símbolo = **planta com porta** (quadrado + parede + giro de porta), `IC.lavi`.
+- **NUNCA usar degradê**, em nada (ela pediu explicitamente). Só cores sólidas.
+- Paleta das referências dela: cinza `#EFEFEF` (fundo), orquídea `#EAA2E5` (seleção), lima `#D3DC2A` (só o ícone principal), lima claro `#EBF5A0` (texto sobre vinho, selo grátis), vinho/mulberry `#5C0632` (marca, botão principal, texto forte), pink `#E1146C` (detalhes: números, destaque no título), areia `#E3E2D7` (dicas).
+- Fontes embutidas: **Anton** (títulos, caixa alta), **Bodoni Moda** (nome LAVI), **Montserrat** (interface), **JetBrains Mono** (medidas). Em `lavi_plugin/ui/fonts/`.
+- Layout: marca + **barra de ícones** (como a referência dela: só o ícone principal colorido em lima, o resto traço fino neutro, grupos separados) + lista limpa por grupo. Barra do SketchUp igual: ícone LAVI colorido + um botão monocromático por ferramenta principal (`TOOLBAR` em main.rb; ícones gerados por `python3 dev/make_icons.py` a partir de `IC` no index.html).
+- Modo claro padrão + escuro (lua). Ela quer intuitivo, organizado, ícones para tudo.
+- **Rejeitado por ela:** laranja neon; verde/lima neon como cor dominante (lima só no ícone principal veio da referência dela); petróleo/rosé/areia com serifa; preto + amarelo; "LAVI Tools"/símbolo antigo; "Planê Plugin", símbolo de laço e qualquer degradê.
 
 ## Estrutura
 ```
-plane_plugin.rb                 carregador (vai para a pasta Plugins); VERSION aqui
-plane_plugin/main.rb            requires, menu Extensões › Planê Plugin, barra de ferramentas, checagem de atualização
-plane_plugin/core/registry.rb   catálogo de ferramentas, PACOTES e ABAS
-plane_plugin/core/license.rb    licenças por pacote (DEV_MODE, SECRET)
-plane_plugin/core/helpers.rb    unidades, operação com desfazer, materiais, etiquetas, CSV pt-BR
-plane_plugin/core/geom.rb       matemática 2D (offset, recorte, áreas) + referencial de face
-plane_plugin/core/nesting.rb    plano de corte (prateleiras/guilhotina)
-plane_plugin/core/pickers.rb    ferramentas de clique (PointPicker, FacePicker)
-plane_plugin/core/updater.rb    atualização automática
-plane_plugin/core/dialog.rb     HtmlDialog único; callbacks ready/run/favorite/theme/activate/update/open_url
-plane_plugin/tools/*.rb         uma ferramenta por arquivo; cada uma chama Registry.register(..., handler: self)
-plane_plugin/ui/index.html      painel inteiro (CSS + JS); FORMS[id] declara campos, ações, prévia e resultado
-plane_plugin/ui/icon.svg        ícone da barra
+lavi_plugin.rb                 carregador (vai para a pasta Plugins); VERSION aqui
+lavi_plugin/main.rb            requires, menu Extensões › Planê Plugin, barra de ferramentas, checagem de atualização
+lavi_plugin/core/registry.rb   catálogo de ferramentas, PACOTES e ABAS
+lavi_plugin/core/license.rb    licenças por pacote (DEV_MODE, SECRET)
+lavi_plugin/core/helpers.rb    unidades, operação com desfazer, materiais, etiquetas, CSV pt-BR
+lavi_plugin/core/geom.rb       matemática 2D (offset, recorte, áreas) + referencial de face
+lavi_plugin/core/nesting.rb    plano de corte (prateleiras/guilhotina)
+lavi_plugin/core/pickers.rb    ferramentas de clique (PointPicker, FacePicker)
+lavi_plugin/core/updater.rb    atualização automática
+lavi_plugin/core/dialog.rb     HtmlDialog único; callbacks ready/run/favorite/theme/activate/update/open_url
+lavi_plugin/tools/*.rb         uma ferramenta por arquivo; cada uma chama Registry.register(..., handler: self)
+lavi_plugin/ui/index.html      painel inteiro (CSS + JS); FORMS[id] declara campos, ações, prévia e resultado
+lavi_plugin/ui/icon.svg        ícone da barra
 updates/latest.json + .rbz      o que a atualização automática baixa
 vendas/keygen.rb                gera chaves. NUNCA vai no .rbz nem para cliente
 dev/build.sh                    gera dist/*.rbz e atualiza updates/
 dev/preview.js                  abre o painel com mock e tira prints (Playwright)
 dev/test_core.rb                testes da parte que não depende do SketchUp
+dev/make_icons.py               gera ui/icons/*.svg e ui/icon.svg a partir do IC do painel
 dev/load_test.rb + dev/stub/    carrega o .rbz com a API do SketchUp simulada (ruby -I dev/stub dev/load_test.rb)
 docs/                           prints das telas
 ```
@@ -50,7 +52,7 @@ docs/                           prints das telas
 
 ### Pacotes (core/registry.rb)
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
-Chave: `PLANE-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
+Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
 ## Ferramentas — status (v0.5.0; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
@@ -100,14 +102,14 @@ Próximo nível que ela quer (imagens de referência): catálogo detalhado como 
 ## Atualização automática
 - `Updater` lê `https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json` 20 s depois de abrir o SketchUp e **só avisa** no painel. Desde a v0.5 **nunca instala sozinho** (ela reclamou do SketchUp instável); instala só quando ela clica (baixa o `.rbz`, confere SHA256, `Sketchup.install_from_archive`, pede para reiniciar).
 - Atenção: o LIA Render oficial e o LAVI Render dela (LIA modificado, backup no repo privado `lavi-app`, ramo `backup/lavi-render-v4`) usam a mesma pasta `thebox_render`: instalar um sobrescreve o outro.
-- Para publicar versão nova: subir `VERSION` em `plane_plugin.rb`, `sh dev/build.sh "nota 1" "nota 2"`, commit e merge no branch padrão.
+- Para publicar versão nova: subir `VERSION` em `lavi_plugin.rb`, `sh dev/build.sh "nota 1" "nota 2"`, commit e merge no branch padrão.
 - **Precisa de repositório público** (ou mover `updates/` para um host público, ex. o LAVI APP / site da Planê). Se o repo ficar privado, a atualização para de funcionar.
 
 ## Regras
 - **Código 100% original.** Projetos antigos dela tinham plugins de terceiros modificados para remover licença: nada disso entra aqui.
 - Antes de vender: `DEV_MODE = false` em `core/license.rb` e trocar o `SECRET` (o `keygen.rb` lê de lá). Com o repo público, o SECRET fica visível: o ideal é validar a chave online pelo app dela (Next.js + Redis + Mercado Pago PIX, já existente).
 - Toda alteração geométrica dentro de `Helpers.operation` (um Ctrl+Z desfaz tudo).
-- Namespace Ruby é `PlaneLA::Plugin` (o nome `Plane` sozinho era genérico demais). `main.rb` carrega cada arquivo com `safe_require` e mostra os erros num messagebox + `%TEMP%/plane_plugin_erros.txt`.
+- Namespace Ruby é `LAVIStudio::Plugin` (o nome `Plane` sozinho era genérico demais). `main.rb` carrega cada arquivo com `safe_require` e mostra os erros num messagebox + `%TEMP%/lavi_plugin_erros.txt`.
 - Ela usa **SketchUp 2026 (Ruby 3.2)** no Windows. Compatível com SketchUp 2019+ (Ruby 2.5): evitar `&.`, `tally`, `filter_map`, sintaxe de Ruby 3.
 - Antes de entregar: `ruby dev/test_core.rb`, `node dev/preview.js docs`, `sh dev/build.sh`, `ruby -I dev/stub dev/load_test.rb`. Entregar o `.rbz` + prints e explicar em linguagem simples o que testar.
 

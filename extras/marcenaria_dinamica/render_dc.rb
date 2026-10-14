@@ -3,10 +3,10 @@
 # Projeção oblíqua: frente (Y=0) virada para quem olha, lateral direita e topo visíveis.
 
 ROOT_DIR = File.expand_path('../..', __dir__)
-module PlaneLA; module Plugin; end; end
+module LAVIStudio; module Plugin; end; end
 %w[dc_formula dc_tree joinery_spec].each { |f| require File.join(__dir__, f) }
 
-S = PlaneLA::Plugin::JoinerySpec
+S = LAVIStudio::Plugin::JoinerySpec
 out = ARGV[0] || File.join(ROOT_DIR, 'docs')
 Dir.mkdir(out) unless Dir.exist?(out)
 COLORS = Hash[(S::MAT_FRENTE + S::MAT_TAMPO).map { |_l, n, h| [n, h] }].merge(S::FIXED)
@@ -14,8 +14,8 @@ COLORS = Hash[(S::MAT_FRENTE + S::MAT_TAMPO).map { |_l, n, h| [n, h] }].merge(S:
 def base(tipo, over = {})
   t = S::TIPOS[tipo]
   { tipo: tipo, nome: t[:nome], lx: t[:lx], ly: t[:ly], lz: t[:lz], frente: t[:frente], nportas: t[:nportas],
-    ngav: t[:ngav], hgav: 18, prat: t[:prat], puxador: 2, matfrente: 'PLN_Freijo', matcaixa: 'PLN_Branco',
-    tampo: t[:tampo], mattampo: 'PLN_QuartzoBranco', esptampo: 2, esp: 1.5, espf: 1.8, fundo: 0.6, folga: 0.3,
+    ngav: t[:ngav], hgav: 18, prat: t[:prat], puxador: 2, matfrente: 'LAVI_Freijo', matcaixa: 'LAVI_Branco',
+    tampo: t[:tampo], mattampo: 'LAVI_QuartzoBranco', esptampo: 2, esp: 1.5, espf: 1.8, fundo: 0.6, folga: 0.3,
     rod: t[:rod], rodrec: 5, pz: t[:pz] }.merge(over)
 end
 
@@ -55,7 +55,7 @@ CASES = [
   ['inferior_gaveta_porta', base('inferior')],
   ['inferior_2portas_120', base('inferior', lx: 120, frente: 1, nportas: 2, prat: 2)],
   ['gaveteiro_4', base('gaveteiro', puxador: 1)],
-  ['aereo_2portas', base('aereo', puxador: 3, matfrente: 'PLN_Lilas')],
+  ['aereo_2portas', base('aereo', puxador: 3, matfrente: 'LAVI_Lilas')],
   ['torre', base('torre')],
   ['nicho', base('nicho', prat: 2)],
   ['basculante', base('basculante')],

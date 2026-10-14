@@ -1,0 +1,23 @@
+# LAVI — ferramentas para arquitetura, interiores e marcenaria no SketchUp
+# Arquivo de carregamento (fica na pasta Plugins do SketchUp)
+
+require 'sketchup.rb'
+require 'extensions.rb'
+
+module LAVIStudio
+  module Plugin
+    PLUGIN_ID   = 'lavi_plugin'.freeze
+    PLUGIN_NAME = 'LAVI'.freeze
+    VERSION     = '0.6.0'.freeze
+
+    unless file_loaded?(__FILE__)
+      ext = SketchupExtension.new(PLUGIN_NAME, File.join(PLUGIN_ID, 'main'))
+      ext.description = 'Paredes, vãos, revestimentos, marcenaria em blocos dinâmicos, quantitativo e orçamento.'
+      ext.version     = VERSION
+      ext.creator     = 'Laís A. Vieira · LAVI'
+      ext.copyright   = "© #{Time.now.year} Laís A. Vieira"
+      Sketchup.register_extension(ext, true)
+      file_loaded(__FILE__)
+    end
+  end
+end
