@@ -768,6 +768,33 @@ check('stairs · guarda-corpo de vidro, montantes, cabos, mureta, corrimão') do
   out.join(', ')
 end
 
+check('shape · todas as arestas: cubo arredondado, chanfrado e peça em L deitada') do
+  fresh
+  b = box(0, 0, 0, 50, 50, 50, name: 'Cubo')
+  sel(b)
+  ok!(run(:shape, 'apply', 'modo' => 'tudo', 'acab' => 'redondo', 'raio' => 10, 'seg' => 6))
+  es = b.definition.entities
+  area = (es.grep(Sketchup::Face).sum(&:area) * 6.4516).round
+  exp = (6 * 900 + 12 * 30 * Math::PI * 5 + 4 * Math::PI * 100).round
+  expect((area - exp).abs < exp * 0.01, "área do cubo arredondado #{area} (esperava ~#{exp})")
+  expect(es.grep(Sketchup::Edge).all? { |e| e.faces.size == 2 }, 'cubo arredondado ficou aberto')
+  expect(es.grep(Sketchup::Edge).count(&:soft?) > 100, 'arestas curvas não ficaram suaves')
+  xs = es.grep(Sketchup::Face).flat_map(&:vertices).map { |v| (v.position.x * 2.54).round(2) }
+  expect(xs.minmax == [0.0, 50.0], "cubo mudou de tamanho #{xs.minmax}")
+  c = box(100, 0, 0, 60, 40, 30, name: 'Chanfro')
+  sel(c)
+  ok!(run(:shape, 'apply', 'modo' => 'tudo', 'acab' => 'chanfro', 'raio' => 5))
+  nb = c.definition.entities.grep(Sketchup::Face).size
+  expect(nb == 26, "chanfro: #{nb} faces (esperava 6 + 12 + 8 = 26)")
+  g = Sketchup.active_model.active_entities.add_group
+  f = g.entities.add_face([[0, 0, 0], [80, 0, 0], [80, 0, 20], [20, 0, 20], [20, 0, 60], [0, 0, 60]].map { |x, y, z| pt(x, y + 200, z) })
+  f.pushpull(f.normal.y < 0 ? 30.cm : -30.cm)
+  sel(g)
+  ok!(run(:shape, 'apply', 'modo' => 'tudo', 'acab' => 'redondo', 'raio' => 4, 'seg' => 4))
+  expect(g.entities.grep(Sketchup::Edge).all? { |e| e.faces.size == 2 }, 'peça em L ficou aberta')
+  "cubo 50 r10: #{area} cm² de superfície, fechado e suave · chanfro: #{nb} faces · peça em L deitada (eixo Y) arredondada e fechada"
+end
+
 check('shape · cantos arredondados, chanfro, bordas boleadas e curvar') do
   t = box(0, 0, 0, 120, 60, 3, name: 'Tampo')
   sel(t)

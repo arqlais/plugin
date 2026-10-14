@@ -19,14 +19,33 @@ def color_of(mat)
   [c.red, c.green, c.blue]
 end
 
+# faces ligadas por arestas suaves formam um grupo só (a linha entre elas não aparece, como no SketchUp)
+def smooth_groups(ents)
+  par = {}
+  find = ->(f) { par[f] = find.call(par[f]) if par[f] && !par[f].equal?(f); par[f] || f }
+  ents.grep(Sketchup::Edge).each do |e|
+    next unless e.respond_to?(:soft?) && e.soft?
+    fs = e.faces
+    next unless fs.size == 2
+    a = find.call(fs[0])
+    b = find.call(fs[1])
+    par[a] = b unless a.equal?(b)
+  end
+  par
+end
+
 def collect(ents, tr, mat, out)
+  par = smooth_groups(ents)
+  root = ->(f) { r = f; r = par[r] while par[r] && !par[r].equal?(r); r }
+  $grp_ids ||= {}
   ents.each do |e|
     next if e.respond_to?(:hidden?) && e.hidden?
     case e
     when Sketchup::Face
       loops = e.loops.map { |l| l.vertices.map { |v| v.position.transform(tr) } }
       n = e.normal.transform(tr)
-      out[:faces] << [loops, n.normalize, e.material || mat, e.back_material]
+      g = root.call(e)
+      out[:faces] << [loops, n.normalize, e.material || mat, e.back_material, ($grp_ids[[g.object_id, tr.to_a]] ||= $grp_ids.size)]
     when Sketchup::ComponentInstance
       collect(e.definition.entities, tr * e.transformation, e.material || mat, out)
     when Sketchup::DimensionLinear
@@ -69,7 +88,7 @@ def render(name, title, view: :iso, az: -55, el: 32, w: 860, h: 560)
   tx = ->(p) { [(ox + pad + (p[0] - xs.min) * k).round(1), (pad + 30 + (p[1] - ys.min) * k).round(1)] }
   light = Geom::Vector3d.new(-0.4, -0.7, 0.9).normalize
   # faces → z-buffer em Python (dev/zbuf.py) → imagem embutida no SVG
-  faces = data[:faces].map do |loops, n, mat, back|
+  faces = data[:faces].map do |loops, n, mat, back, grp|
     facing = n.dot(d) < 0
     col = color_of(facing ? mat : (back || mat))
     al = (facing ? mat : (back || mat))
@@ -78,7 +97,7 @@ def render(name, title, view: :iso, az: -55, el: 32, w: 860, h: 560)
     sh = 0.62 + 0.38 * n.dot(light).abs
     sh *= 0.85 unless facing
     { loops: loops.map { |l| l.map { |q| pr = proj.call(q); tx.call(pr) + [pr[2]] } },
-      rgb: col.map { |c| [[c * sh, 255].min, 0].max.round } }
+      rgb: col.map { |c| [[c * sh, 255].min, 0].max.round }, grp: grp }
   end
   json = File.join(OUTDIR, "#{name}.json")
   png = File.join(OUTDIR, "#{name}.z.png")
@@ -307,6 +326,18 @@ scene('19-arredondar-curvar') do
   b = box(0, 120, 0, 300, 45, 45, name: 'Banco', mat: m.materials.add('Concreto').tap { |x| x.color = Sketchup::Color.new(190, 186, 180) })
   sel(b); run(:shape, 'apply', 'modo' => 'curvar', 'raio_curva' => 250, 'sentido' => 'direita', 'seg_curva' => 32)
   render('19-arredondar-curvar', 'Cantos arredondados, chanfrados, bordas boleadas e banco curvo', az: -60, el: 40)
+end
+
+scene('23-arredondar-arestas') do
+  wh = m.materials.add('Branco').tap { |x| x.color = Sketchup::Color.new(236, 234, 230) }
+  c1 = box(0, 0, 0, 60, 60, 60, name: 'Cubo', mat: wh); sel(c1); run(:shape, 'apply', 'modo' => 'tudo', 'acab' => 'redondo', 'raio' => 10, 'seg' => 6)
+  c2 = box(90, 0, 0, 60, 60, 60, name: 'Cubo', mat: wh); sel(c2); run(:shape, 'apply', 'modo' => 'tudo', 'acab' => 'chanfro', 'raio' => 6)
+  box(180, 0, 0, 60, 60, 60, name: 'Cubo', mat: wh)
+  pf = box(0, 100, 0, 120, 50, 40, name: 'Puff', mat: m.materials.add('Linho').tap { |x| x.color = Sketchup::Color.new(200, 170, 160) })
+  sel(pf); run(:shape, 'apply', 'modo' => 'tudo', 'acab' => 'redondo', 'raio' => 12, 'seg' => 8)
+  tp = box(150, 100, 30, 120, 50, 4, name: 'Prateleira', mat: m.materials.add('Madeira').tap { |x| x.color = Sketchup::Color.new(184, 138, 98) })
+  sel(tp); run(:shape, 'apply', 'modo' => 'tudo', 'acab' => 'redondo', 'raio' => 1.5, 'seg' => 4)
+  render('23-arredondar-arestas', 'Todas as arestas: arredondado, chanfrado, original · puff e prateleira', az: -55, el: 28)
 end
 
 scene('20-luzes') do

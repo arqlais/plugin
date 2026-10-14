@@ -1,5 +1,6 @@
-# Arredondar, chanfrar e curvar: cantos arredondados ou chanfrados (tampos, mesas, bancadas),
-# bordas boleadas em cima/embaixo, e curvar uma peça reta em arco (banco, parede, balcão curvo).
+# Arredondar, chanfrar e curvar: todas as arestas da peça de uma vez (quinas viram esfera, como
+# um cubo arredondado), cantos arredondados ou chanfrados (tampos, mesas, bancadas), bordas
+# boleadas em cima/embaixo, e curvar uma peça reta em arco (banco, parede, balcão curvo).
 # Funciona em grupos/componentes que são "extrusões" (mesmo desenho embaixo e em cima) e em faces soltas.
 
 module LAVIStudio
@@ -15,18 +16,165 @@ module LAVIStudio
           sel = H.selection.to_a
           items = sel.select { |e| H.instance?(e) } + sel.grep(Sketchup::Face)
           return H.err('Selecione o grupo (tampo, mesa, banco…) ou a face que quer arredondar.') if items.empty?
-          modo = %w[cantos bordas curvar].include?(p['modo'].to_s) ? p['modo'].to_s : 'cantos'
+          modo = %w[tudo cantos bordas curvar].include?(p['modo'].to_s) ? p['modo'].to_s : 'tudo'
           ok = 0
           errs = []
-          H.operation("lavi · #{{ 'cantos' => 'Arredondar cantos', 'bordas' => 'Bolear bordas', 'curvar' => 'Curvar' }[modo]}") do
+          H.operation("lavi · #{{ 'tudo' => 'Arredondar arestas', 'cantos' => 'Arredondar cantos', 'bordas' => 'Bolear bordas', 'curvar' => 'Curvar' }[modo]}") do
             items.each do |it|
               r = it.is_a?(Sketchup::Face) ? face_corners(it, p) : solid(it, modo, p)
               r.is_a?(String) ? errs << r : ok += 1
             end
           end
           return H.err(errs.first) if ok.zero?
-          H.ok("#{ok} peça(s) #{{ 'cantos' => 'com cantos ' + (H.num(p['seg'], 8).to_i <= 1 ? 'chanfrados' : 'arredondados'), 'bordas' => 'com bordas boleadas', 'curvar' => 'curvadas' }[modo]}." +
+          chanfro = modo == 'tudo' ? p['acab'].to_s == 'chanfro' : H.num(p['seg'], 8).to_i <= 1
+          H.ok("#{ok} peça(s) #{{ 'tudo' => 'com todas as arestas ' + (chanfro ? 'chanfradas' : 'arredondadas'), 'cantos' => 'com cantos ' + (H.num(p['seg'], 8).to_i <= 1 ? 'chanfrados' : 'arredondados'), 'bordas' => 'com bordas boleadas', 'curvar' => 'curvadas' }[modo]}." +
                (errs.empty? ? '' : " #{errs.size} não deu: #{errs.first}"), stats: [['Peças', ok.to_s]])
+        end
+
+        # ---- todas as arestas (como um cubo de quinas redondas) -----------------
+        # A peça precisa ser uma extrusão em qualquer direção (caixa, tampo, puff, prateleira, peça em L).
+        # Cada "fatia" paralela às tampas é o desenho original recuado d e com os cantos de fora
+        # arredondados com raio r - d: assim as arestas viram cilindro e as quinas viram esfera.
+        def all_edges(ents, p)
+          pr = prism_any(ents)
+          return 'A peça precisa ter duas faces iguais e paralelas (caixa, tampo, puff, peça em L).' unless pr
+          return 'A peça tem furo (cuba, passagem): arredonde antes de recortar.' unless pr[:holes].empty?
+          chanfro = p['acab'].to_s == 'chanfro'
+          seg = chanfro ? 1 : [[H.num(p['seg'], 6).to_i, 2].max, 24].min
+          h = pr[:z1] - pr[:z0]
+          r = [H.cm([H.num(p['raio'], 2), 0.05].max), h / 2.0 - 0.001].min
+          layers = []
+          if chanfro
+            layers = [[r, pr[:z0]], [0, pr[:z0] + r], [0, pr[:z1] - r], [r, pr[:z1]]]
+          else
+            (0..seg).each { |k| a = Math::PI / 2 * (1 - k.to_f / seg); layers << [r - r * Math.cos(a), pr[:z0] + r - r * Math.sin(a)] }
+            (0..seg).each { |k| a = Math::PI / 2 * k.to_f / seg; layers << [r - r * Math.cos(a), pr[:z1] - r + r * Math.sin(a)] }
+          end
+          layers = layers.each_with_object([]) { |q, acc| acc << q unless acc.last && (acc.last[1] - q[1]).abs < 1e-6 && (acc.last[0] - q[0]).abs < 1e-6 }
+          rings = layers.map { |d, z| [ring(pr[:outer], d, r - d, seg), z] }
+          return 'O raio é grande demais para essa peça.' if rings.any? { |l, _| l.nil? }
+          tr = pr[:tr]
+          to3 = ->(q, z) { Geom::Point3d.new(q[0], q[1], z).transform(tr) }
+          rebuild(ents) do |e|
+            rings.each_cons(2) do |(la, za), (lb, zb)|
+              n = la.size
+              n.times { |i| facet(e, [to3.call(la[i], za), to3.call(la[(i + 1) % n], za), to3.call(lb[(i + 1) % n], zb), to3.call(lb[i], zb)]) }
+            end
+            [rings.first, rings.last].each_with_index do |(l, z), k|
+              pts = dedupe3(l.map { |q| to3.call(q, z) })
+              next if pts.size < 3
+              f = e.add_face(pts)
+              next unless f
+              out = pr[:axis].clone
+              out.reverse! if k.zero?
+              f.reverse! if f.normal.dot(out) < 0
+            end
+            e.grep(Sketchup::Face).each { |x| x.material = pr[:mat] } if pr[:mat]
+            unless chanfro
+              lim = (90.0 / seg + 3) * Math::PI / 180
+              e.grep(Sketchup::Edge).each do |ed|
+                fs = ed.faces
+                next unless fs.size == 2
+                a = fs[0].normal.angle_between(fs[1].normal)
+                next if a < 1e-4 || a > lim
+                ed.soft = true
+                ed.smooth = true
+              end
+            end
+          end
+          true
+        end
+
+        # desenho recuado d, com cantos de fora arredondados (raio rc) — sempre o mesmo número de pontos
+        def ring(poly, d, rc, seg)
+          base = d > 1e-9 ? G.offset_polyline(poly, d, true) : poly
+          return nil if base.size != poly.size || G.signed_area(base) <= 0
+          n = base.size
+          out = []
+          base.each_with_index do |b, i|
+            a = base[i - 1]
+            c = base[(i + 1) % n]
+            # o desenho recuado não pode virar do avesso
+            return nil if G.dot(G.sub(b, a), G.sub(poly[i], poly[i - 1])) <= 0
+            u = G.unit(G.sub(a, b))
+            v = G.unit(G.sub(c, b))
+            ang = Math.acos([[G.dot(u, v), 1].min, -1].max)
+            convex = G.cross(G.sub(b, a), G.sub(c, b)) > 0
+            if !convex || ang > Math::PI - 0.02 || rc < 1e-9
+              (seg + 1).times { out << b }
+              next
+            end
+            tlen = rc / Math.tan(ang / 2)
+            return nil if tlen > [G.len(G.sub(a, b)), G.len(G.sub(c, b))].min * 0.5 + 1e-6
+            p1 = G.add(b, G.mul(u, tlen))
+            p2 = G.add(b, G.mul(v, tlen))
+            cen = G.add(b, G.mul(G.unit(G.add(u, v)), rc / Math.sin(ang / 2)))
+            a1 = Math.atan2(p1[1] - cen[1], p1[0] - cen[0])
+            a2 = Math.atan2(p2[1] - cen[1], p2[0] - cen[0])
+            dd = a2 - a1
+            dd -= 2 * Math::PI while dd > Math::PI
+            dd += 2 * Math::PI while dd < -Math::PI
+            (0..seg).each { |k| t = a1 + dd * k / seg; out << [cen[0] + rc * Math.cos(t), cen[1] + rc * Math.sin(t)] }
+          end
+          out
+        end
+
+        def dedupe3(pts)
+          out = []
+          pts.each { |q| out << q unless out.any? { |o| o.distance(q) < 1e-4 } }
+          out
+        end
+
+        # quadrilátero entre duas fatias (vira triângulo onde a quina fecha num ponto)
+        def facet(e, pts)
+          q = dedupe3(pts)
+          return if q.size < 3
+          begin
+            e.add_face(q)
+          rescue ArgumentError
+            [[q[0], q[1], q[2]], [q[0], q[2], q[3]]].each do |t|
+              next if t.any?(&:nil?)
+              begin
+                e.add_face(t)
+              rescue ArgumentError
+                nil
+              end
+            end
+          end
+        end
+
+        # extrusão em qualquer direção: procura duas tampas iguais e paralelas com as laterais em pé
+        def prism_any(ents)
+          faces = ents.grep(Sketchup::Face)
+          return nil if faces.size < 5
+          axes = []
+          faces.sort_by { |f| [-(f.normal.z.abs > 0.999 ? 1 : 0), -f.area] }.each do |f|
+            n = f.normal
+            axes << n unless axes.any? { |a| a.parallel?(n) }
+          end
+          axes.each do |n|
+            caps = faces.select { |f| f.normal.parallel?(n) }
+            next unless caps.size == 2
+            next unless faces.all? { |f| caps.include?(f) || f.normal.dot(n).abs < 1e-3 }
+            next if (caps[0].area - caps[1].area).abs > caps[0].area * 0.01
+            org = caps[0].vertices[0].position
+            zax = n.clone
+            zax.normalize!
+            # tampa de baixo = a que fica atrás no sentido do eixo
+            bot, top = caps.sort_by { |f| (f.vertices[0].position - org).dot(zax) }
+            v0 = bot.outer_loop.vertices
+            xax = v0[1].position - v0[0].position
+            xax.normalize!
+            yax = zax.cross(xax)
+            tr = Geom::Transformation.axes(bot.vertices[0].position, xax, yax, zax)
+            inv = tr.inverse
+            to2 = ->(l) { G.clean(l.vertices.map { |v| q = v.position.transform(inv); [q.x, q.y] }) }
+            z1 = top.vertices[0].position.transform(inv).z
+            next if z1.abs < 1e-3
+            return { outer: G.ccw(to2.call(bot.outer_loop)), holes: bot.loops.reject(&:outer?).map { |l| to2.call(l) },
+                     z0: 0.0, z1: z1, tr: tr, axis: zax, mat: (bot.material || top.material) }
+          end
+          nil
         end
 
         # ---- leitura da peça como extrusão vertical --------------------------
@@ -62,6 +210,7 @@ module LAVIStudio
         def solid(inst, modo, p)
           inst.make_unique if inst.respond_to?(:make_unique)
           ents = H.entities_of(inst)
+          return all_edges(ents, p) if modo == 'tudo'
           if modo == 'curvar'
             bp = bar_profile(ents)
             return 'A peça precisa ser comprida no eixo X (vermelho) e ter as pontas retas para curvar.' unless bp
@@ -89,6 +238,7 @@ module LAVIStudio
 
         def face_corners(face, p)
           return 'Para curvar, selecione um grupo.' if p['modo'].to_s == 'curvar'
+          return 'Para arredondar todas as arestas, selecione um grupo ou componente (a peça inteira).' if p['modo'].to_s == 'tudo'
           return 'A face precisa estar deitada.' unless face.normal.z.abs > 0.999
           z = face.vertices[0].position.z
           outer = G.ccw(G.clean(face.outer_loop.vertices.map { |v| [v.position.x, v.position.y] }))
@@ -214,7 +364,7 @@ module LAVIStudio
         end
 
         Registry.register(:shape, name: 'Arredondar, chanfrar e curvar', tab: :base, package: :base, handler: self,
-                                  desc: 'Cantos arredondados ou chanfrados, bordas boleadas e peças curvas em arco.',
+                                  desc: 'Arredonda ou chanfra todas as arestas da peça, cantos, bordas, e curva peças em arco.',
                                   steps: ['Selecione o grupo ou a face', 'Escolha raio e acabamento', 'Aplicar'])
       end
     end

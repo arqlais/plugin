@@ -58,7 +58,7 @@ dev/prints_telas.js / prints_folhas.js  prints de todas as telas e montagem das 
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.11.0; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
+## Ferramentas — status (v0.11.1; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria; digitar "5" = 5 m, unidade escolhível) | arq |
@@ -82,7 +82,7 @@ Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA
 | array | Copiar em grade (numa face: luminárias no forro) ou ao longo de linhas (por distância ou quantidade, girando) | base |
 | fix_faces | Corrigir faces invertidas: orienta por arestas (reversed_in?), vira para fora (volume ou maioria), passa pintura do verso | base |
 | smart_select | Seleção inteligente: mesmo material/etiqueta/componente, inverter, linhas soltas, pisos de costas, escondidos | base |
-| shape | Arredondar/chanfrar quinas de peças (tampos, bancos, placas), bordas boleadas em cima/embaixo e **curvar** peça num raio (estilo "shape" do Blender; v0.11) | base |
+| shape | **Todas as arestas** (v0.11.1, referência dela = Round Corner: cubo de quinas redondas ou chanfradas; extrusão em qualquer eixo, quinas viram esfera, arestas curvas suaves; peças com furo recusadas) + quinas de peças (tampos, bancos, placas), bordas boleadas em cima/embaixo e **curvar** peça num raio (v0.11) | base |
 | edges | Aba **Render** (v0.11, ideia vinda do LAVI Render dela, código 100% novo): suavizar por ângulo, ocultar/mostrar arestas, linhas do estilo liga/desliga | pres |
 | materials | Render: conta-gotas, trocar material na cena toda (entra nos blocos), limpar materiais de dentro do bloco, prontos (vidros, espelhos, metais) | pres |
 | texmap | Render: projeção de textura caixa/plana/esférica com tamanho real e rotação | pres |

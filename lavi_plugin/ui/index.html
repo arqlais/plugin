@@ -516,6 +516,8 @@ P.gc_vidro=GC('<path d="M6 32V20L38 2v12z" fill="currentColor" fill-opacity=".15
 P.gc_montantes=GC('<path d="M6 20L38 2" stroke-width="2"/><path d="M9 32V18.5M15 28V15M21 26V11.5M27 22V8M33 18V5" stroke-width="1"/>');
 P.gc_cabos=GC('<path d="M6 20L38 2" stroke-width="2"/><path d="M6 24l32-18M6 28l32-18M6 32l32-18" stroke-width=".8"/><path d="M6 34V20M38 16V2" stroke-width="1.5"/>');
 P.gc_mureta=GC('<path d="M6 34V20L38 2v14z" fill="currentColor" fill-opacity=".3"/>');
+P.sh_tudo=PIC('<path d="M10 16a6 6 0 0 1 6-6h18a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6z" fill="currentColor" fill-opacity=".15"/><path d="M14 13l4-4M36 13l3-3M14 33l4-4" stroke-dasharray="1.5 2"/>');
+P.sh_chanfro=PIC('<path d="M10 15l5-5h20l5 5v16l-5 5H15l-5-5z" fill="currentColor" fill-opacity=".15"/><path d="M15 10v26M35 10v26M10 15h30M10 31h30" stroke-dasharray="1.5 2"/>');
 P.sh_cantos=PIC('<path d="M8 32V14a6 6 0 0 1 6-6h24v24z" fill="currentColor" fill-opacity=".15"/>');
 P.sh_bordas=PIC('<path d="M5 28V18a4 4 0 0 1 4-4h28a4 4 0 0 1 4 4v10z" fill="currentColor" fill-opacity=".15"/>');
 P.sh_curvar=PIC('<path d="M6 30A26 26 0 0 1 40 30M10 34A22 22 0 0 1 36 34" /><path d="M6 30l4 4M40 30l-4 4"/>');
@@ -872,11 +874,13 @@ const FORMS = {
     acts:[['inverter','Inverter seleção','refresh',1]] },
   shape:{ secs:[
       {t:'O que fazer', f:[
-        {k:'modo',type:'cards',full:1,def:'cantos',opts:[['cantos','Cantos','sh_cantos'],['bordas','Bordas','sh_bordas'],['curvar','Curvar','sh_curvar']]}]},
+        {k:'modo',type:'cards',full:1,def:'tudo',opts:[['tudo','Todas as arestas','sh_tudo'],['cantos','Cantos','sh_cantos'],['bordas','Bordas','sh_bordas'],['curvar','Curvar','sh_curvar']]}]},
+      {t:'Acabamento', when:p=>(p.modo||'tudo')==='tudo', f:[
+        {k:'acab',type:'cards',full:1,def:'redondo',opts:[['redondo','Arredondado','sh_tudo'],['chanfro','Chanfrado','sh_chanfro']]}]},
       {t:'Medidas', when:p=>p.modo!=='curvar', f:[
-        {k:'raio',type:'num',label:'Raio',unit:'cm',def:5,chips:[1,2,5,10,30],step:.5},
-        {k:'seg',type:'num',label:'Segmentos (1 = chanfro)',unit:'',def:8,chips:[1,4,8,16]},
-        {k:'quais',type:'seg',label:'Quais cantos',def:'',full:1,opts:[['','Todos'],['convexos','Só os de fora'],['retos','Só os de 90°']],when:p=>p.modo!=='bordas'},
+        {k:'raio',type:'num',label:'Raio',unit:'cm',def:2,chips:[.5,1,2,5,10],step:.5},
+        {k:'seg',type:'num',label:'Segmentos (1 = chanfro)',unit:'',def:6,chips:[1,4,6,8,16],when:p=>(p.modo||'tudo')!=='tudo'||p.acab!=='chanfro'},
+        {k:'quais',type:'seg',label:'Quais cantos',def:'',full:1,opts:[['','Todos'],['convexos','Só os de fora'],['retos','Só os de 90°']],when:p=>p.modo==='cantos'},
         {k:'cima',type:'tg',label:'Borda de cima',def:true,full:1,when:p=>p.modo==='bordas'},
         {k:'baixo',type:'tg',label:'Borda de baixo',def:false,full:1,when:p=>p.modo==='bordas'}]},
       {t:'Curva', when:p=>p.modo==='curvar', f:[
@@ -884,7 +888,7 @@ const FORMS = {
         {k:'sentido',type:'seg',label:'Curvar para a',def:'esquerda',full:1,opts:[['esquerda','Esquerda'],['direita','Direita']]},
         {k:'seg_curva',type:'num',label:'Segmentos',unit:'',def:24,chips:[12,24,48]}]}],
     acts:[['apply','Aplicar','shape',1]], prev:p=>prevShape(p),
-    hint:'Cantos e bordas: tampos, mesas, nichos, bancadas (peças com o mesmo desenho embaixo e em cima) ou uma face deitada. Curvar: peça comprida no eixo vermelho (X), como banco, mureta ou balcão.' },
+    hint:'Todas as arestas: arredonda ou chanfra a peça inteira de uma vez (caixa, puff, tampo, prateleira, peça em L), as quinas viram esfera. Cantos e bordas: tampos, mesas, nichos, bancadas (peças com o mesmo desenho embaixo e em cima) ou uma face deitada. Curvar: peça comprida no eixo vermelho (X), como banco, mureta ou balcão.' },
   edges:{ secs:[
       {t:'Na seleção', f:[
         {k:'angulo',type:'range',label:'Suavizar até',unit:'graus',def:30,min:5,max:90,step:1,full:1},
@@ -1113,7 +1117,12 @@ function prevRoof(p){
    <text x="${W/2}" y="14" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="var(--ink2)">${br(i,0)}% · ${br(ang,1)}°</text>${warn}</svg>`;
 }
 function prevShape(p){
-  const m=p.modo||'cantos', r=num(p.raio,5), sg=Math.max(1,num(p.seg,8)|0);
+  const m=p.modo||'tudo', r=num(p.raio,2), sg=Math.max(1,num(p.seg,6)|0);
+  if(m==='tudo'){ const ch=p.acab==='chanfro', k=Math.min(Math.max(r*5,4),34), n=ch?1:Math.max(2,sg);
+    const arc=(cx,cy,a0,a1)=>Array.from({length:n+1},(_,i)=>{const t=(a0+(a1-a0)*i/n)*Math.PI/180; return (cx+k*Math.cos(t)).toFixed(1)+' '+(cy+k*Math.sin(t)).toFixed(1);}).join('L');
+    const box=(x0,y0,w,h)=>`M${x0+k} ${y0}H${x0+w-k}L${arc(x0+w-k,y0+k,270,360)}V${y0+h-k}L${arc(x0+w-k,y0+h-k,0,90)}H${x0+k}L${arc(x0+k,y0+h-k,90,180)}V${y0+k}L${arc(x0+k,y0+k,180,270)}Z`;
+    const lines=`M${30+k} 30V120M${130-k} 30V120M30 ${30+k}H130M30 ${120-k}H130M${170+k} 30V120M${270-k} 30V120M170 ${30+k}H270M170 ${120-k}H270`;
+    return `<span class="tagline">${ch?'CHANFRO':'ARREDONDADO'} ${br(r,1)} cm · FRENTE E CORTE</span><svg viewBox="0 0 300 150" width="300" height="150"><path d="${box(30,30,100,90)}" fill="#D6B3AB" stroke="#3E4B57"/><path d="${box(170,30,100,90)}" fill="var(--card)" stroke="#3E4B57"/><path d="${lines}" stroke="#3E4B57" stroke-width=".6" stroke-dasharray="2 2.5" fill="none"/></svg>`; }
   if(m==='curvar'){ const R=Math.max(10,num(p.raio_curva,300)), L=200, a=L/R, s=120/Math.max(R*Math.sin(Math.min(a,Math.PI/2)),60);
     const pts=Array.from({length:25},(_,i)=>{const t=a*i/24; return [40+R*Math.sin(t)*s*.9, 110-(R-R*Math.cos(t))*s*.9*(p.sentido==='direita'?-1:1)];});
     return `<span class="tagline">CURVAR · RAIO ${br(R,0)} cm</span><svg viewBox="0 0 300 150" width="300" height="150"><path d="M40 110h180" stroke="var(--line2)" stroke-dasharray="4 3"/><path d="M${pts.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join('L')}" fill="none" stroke="#3E4B57" stroke-width="10" stroke-linejoin="round" opacity=".85"/></svg>`; }
@@ -1524,7 +1533,7 @@ const MOCK = {
     ['array','Copiar em grade ou caminho','base','base','Espalha cópias numa face (luminárias no forro) ou ao longo de linhas (cadeiras, postes).',['Selecione o objeto e a face ou as linhas','Escolha o espaçamento','Copiar']],
     ['fix_faces','Corrigir faces invertidas','base','base','Vira para fora as faces de costas (azuis) e passa a pintura do verso para a frente.',['Selecione (ou nada = modelo todo)','Corrigir','Pronto para render']],
     ['smart_select','Seleção inteligente','base','base','Seleciona tudo do mesmo material, etiqueta ou componente, inverte e acha sujeira.',['Selecione uma referência','Escolha o critério','Pronto']],
-    ['shape','Arredondar, chanfrar e curvar','base','base','Cantos arredondados ou chanfrados, bordas boleadas e peças curvas em arco.',['Selecione o grupo ou a face','Escolha raio e acabamento','Aplicar']],
+    ['shape','Arredondar, chanfrar e curvar','base','base','Arredonda ou chanfra todas as arestas da peça, cantos, bordas, e curva peças em arco.',['Selecione o grupo ou a face','Escolha raio e acabamento','Aplicar']],
     ['edges','Arestas e linhas','render','pres','Suaviza curvas, esconde as linhas de blocos com muitas arestas e tira as linhas do estilo.',['Selecione os blocos (ou nada = tudo)','Suavizar ou esconder','Pronto para render']],
     ['materials','Materiais','render','pres','Conta-gotas, trocar material na cena toda, limpar bloco e materiais prontos (vidros, espelho, metais).',['Pegue o material com o conta-gotas','Escolha o novo','Trocar na cena toda']],
     ['texmap','Ajustar texturas','render','pres','Projeção em caixa, plana ou esférica com tamanho real e rotação; gira a textura 90°.',['Selecione o bloco com textura','Escolha projeção e tamanho','Aplicar']],
@@ -1532,7 +1541,7 @@ const MOCK = {
     ['randomize','Variar objetos','render','pres','Gira, muda o tamanho e mistura materiais das cópias (plantas, cadeiras) para a cena ficar natural.',['Selecione as cópias','Escolha quanto variar','Variar']],
     ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do lavi em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
   ],
-  state(){ return { name:'lavi', version:'0.11.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
+  state(){ return { name:'lavi', version:'0.11.1', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
     packages:[{id:'base',name:'Essencial',free:true,active:true},{id:'arq',name:'Arquitetura',active:true},{id:'rev',name:'Revestimentos',active:true},{id:'pres',name:'Apresentação',active:true},{id:'marc',name:'Marcenaria',active:true},{id:'quant',name:'Quantitativo',active:false}],
     tools:this.tools.map(t=>({id:t[0],name:t[1],tab:t[2],package:t[3],desc:t[4],steps:t[5],status:'ready',locked:t[3]==='quant'})) }; },
   run(tool, action, p){

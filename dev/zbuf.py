@@ -46,9 +46,12 @@ def main(src, dst):
     pal = np.array([f['rgb'] for f in faces] + [list(bg)], dtype=np.uint8)
     img = pal[ids]  # -1 vira o fundo (último)
     # contorno onde muda a face (como as arestas do SketchUp)
+    # faces do mesmo grupo suave não ganham linha entre elas
+    gmap = np.array([f.get('grp', i) if f.get('grp') is not None else i for i, f in enumerate(faces)] + [-1], dtype=np.int64)
+    gid = gmap[ids]
     edge = np.zeros((H, W), dtype=bool)
-    edge[:, 1:] |= ids[:, 1:] != ids[:, :-1]
-    edge[1:, :] |= ids[1:, :] != ids[:-1, :]
+    edge[:, 1:] |= gid[:, 1:] != gid[:, :-1]
+    edge[1:, :] |= gid[1:, :] != gid[:-1, :]
     ink = np.array(d.get('ink', [62, 75, 87]), dtype=np.float32)
     out = img.astype(np.float32)
     out[edge] = out[edge] * 0.35 + ink * 0.65

@@ -1,6 +1,6 @@
 {
   "version": "0.11.0",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "5ec36fe50454277d929221873e314c5d2e1d452c3ea7d2bd98018660297f8a02",
-  "notes": ["Portas e janelas: posição pela distância da ponta da parede ou de um ponto (pode digitar)","Escada: guarda-corpo de vidro, montantes, cabos, mureta ou corrimão","Arredondar, chanfrar e curvar peças","Nova aba Render: arestas, materiais (conta-gotas, trocar, prontos), texturas, luzes/fachos/neon, variar objetos"]
+  "sha256": "1de31314ae3a6461e076edef9185cffd08a64bdee4af4859bcedad1363b89804",
+  "notes": ["Arredondar ou chanfrar todas as arestas da peça de uma vez (cubo, puff, tampo, prateleira, peça em L)"]
 }

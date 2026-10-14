@@ -428,9 +428,10 @@
  {
   "id": "shape",
   "defaults": {
-   "modo": "cantos",
-   "raio": 5,
-   "seg": 8,
+   "modo": "tudo",
+   "acab": "redondo",
+   "raio": 2,
+   "seg": 6,
    "quais": "",
    "cima": true,
    "baixo": false,
