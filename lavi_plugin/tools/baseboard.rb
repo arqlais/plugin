@@ -1,4 +1,5 @@
-# Rodapé automático: contorna o piso (e os pilares) pulando as portas marcadas
+# Rodapé: vários modelos (reto, chanfrado, boleado, frisado, clássico, filete), alturas padrão,
+# contorna o piso e os pilares, pula as portas e calcula as barras.
 
 module LAVIStudio
   module Plugin
@@ -7,43 +8,70 @@ module LAVIStudio
         extend self
         H = Helpers
         G = Geom2
+        MODELS = %w[reto chanfrado boleado frisado classico filete].freeze
 
         def handle(action, p)
           return H.err('Ação desconhecida.') unless action == 'build'
           faces = H.selected_faces.select { |f, tr| H.horizontal?(f, tr) }
           return H.err('Selecione a face do piso. Para pular portas, segure Shift e selecione também as linhas das portas.') if faces.empty?
           doors = H.selection.grep(Sketchup::Edge)
-          alt = H.cm(H.num(p['alt'], 7))
-          esp = H.cm(H.num(p['esp'], 1.5))
+          alt = H.num(p['alt'], 7)
+          esp = H.num(p['esp'], 1.5)
+          prof = profile(p['modelo'].to_s, alt, esp).map { |u, v| [H.cm(u), H.cm(v)] }
           total = 0.0
           H.operation('lavi · Rodapé') do
             mat = H.material("lavi_Rodape_#{p['cor'].to_s.delete('#')}", p['cor'] || 'FFFFFF')
             grp = H.model.active_entities.add_group
             faces.each do |face, tr|
               fr = G.face_frame(face, tr)
+              to3 = ->(q, v) { G.to_3d(q, fr, v) }
               face.loops.each do |lp|
-                runs(lp, doors).each do |edges_pts, closed|
-                  pts2 = G.clean(edges_pts.map { |v| G.to_2d(v.transform(tr), fr) })
-                  next if pts2.size < 2
-                  sign = lp.outer? ? 1.0 : -1.0
-                  loop_poly = lp.vertices.map { |v| G.to_2d(v.position.transform(tr), fr) }
-                  sign = -sign if G.signed_area(loop_poly) < 0
-                  total += piece(grp.entities, pts2, closed, esp * sign, alt, fr)
+                loop2 = lp.vertices.map { |v| G.to_2d(v.position.transform(tr), fr) }
+                # ambiente à esquerda: contorno anti-horário, pilar (furo) horário
+                flip = (G.signed_area(loop2) > 0) != lp.outer?
+                runs(lp, doors).each do |pts3, closed|
+                  pts2 = pts3.map { |v| G.to_2d(v.transform(tr), fr) }
+                  pts2.reverse! if flip
+                  g = grp.entities.add_group
+                  total += Sweep.build(g.entities, pts2, closed, prof, to3)
                 end
               end
             end
             grp.material = mat
             grp.name = 'Rodapé'
             grp.layer = H.tag('lavi · Rodapé')
-            H.mark(grp, 'baseboard', 'metros' => H.to_m(total))
+            H.mark(grp, 'baseboard', 'metros' => H.to_m(total), 'modelo' => p['modelo'].to_s, 'altura_cm' => alt)
           end
           barra = H.num(p['barra'], 2.4)
           perda = H.num(p['perda'], 10)
           m = H.to_m(total)
-          stats = [['Comprimento', "#{H.br(m)} m"], ["Barras de #{H.br(barra)} m (+#{H.br(perda, 0)}%)", ((m * (1 + perda / 100)) / barra).ceil.to_s]]
-          preco = H.num(p['preco'], 0)
-          stats << ['Custo estimado', "R$ #{H.br(m * (1 + perda / 100) * preco)}"] if preco > 0
+          stats = [['Comprimento', "#{H.br(m)} m"], ["Barras de #{H.br(barra)} m (+#{H.br(perda, 0)}%)", ((m * (1 + perda / 100)) / barra).ceil.to_s],
+                   ['Modelo', "#{p['modelo'] || 'reto'} · #{H.br(alt, 1)} × #{H.br(esp, 1)} cm"]]
           H.ok("Rodapé criado#{doors.empty? ? '' : " (#{doors.size} linha(s) de porta puladas)"}.", stats: stats)
+        end
+
+        # Perfil em cm: u = da parede para dentro do ambiente, v = do piso para cima
+        def profile(model, h, e)
+          e = [e, 0.3].max
+          h = [h, 1].max
+          case model
+          when 'chanfrado'
+            c = [e * 0.8, h * 0.3].min
+            [[0, 0], [e, 0], [e, h - c], [e - c, h], [0, h]]
+          when 'boleado'
+            r = [e, h / 2.0].min
+            [[0, 0], [e, 0]] + Sweep.arc(e - r, h - r, r, 0, 90, 6) + [[0, h]]
+          when 'frisado'
+            f = [e * 0.25, 0.3].min
+            [[0, 0], [e, 0], [e, h * 0.55], [e - f, h * 0.58], [e, h * 0.61], [e, h * 0.78], [e - f, h * 0.81], [e, h * 0.84], [e, h], [0, h]]
+          when 'classico'
+            b = e * 0.55
+            [[0, 0], [e, 0], [e, h * 0.62]] + Sweep.arc(e, h * 0.62 + (e - b), e - b, 270, 180, 5) + [[b, h * 0.9], [b + e * 0.2, h * 0.93], [b, h], [0, h]]
+          when 'filete' # rodapé de embutir: filete fino e baixo, quase rente à parede
+            [[0, 0], [[e, 0.6].min, 0], [[e, 0.6].min, h], [0, h]]
+          else
+            [[0, 0], [e, 0], [e, h], [0, h]]
+          end
         end
 
         # Divide o contorno em trechos contínuos, quebrando nas arestas de porta
@@ -70,30 +98,8 @@ module LAVIStudio
           out
         end
 
-        def piece(ents, pts, closed, off, alt, fr)
-          other = G.offset_polyline(pts, off, closed)
-          to3 = ->(arr) { arr.map { |q| G.to_3d(q, fr) } }
-          g = ents.add_group
-          if closed
-            a = g.entities.add_face(to3.call(pts))
-            b = g.entities.add_face(to3.call(other))
-            small = G.area(pts) < G.area(other) ? a : b
-            big = small == a ? b : a
-            small.erase! if small && small.valid?
-            face = big
-          else
-            face = g.entities.add_face(to3.call(pts + other.reverse))
-          end
-          return 0.0 unless face && face.valid?
-          face.reverse! if face.normal.dot(fr[:n]) < 0
-          face.pushpull(alt)
-          len = 0.0
-          (closed ? pts.size : pts.size - 1).times { |i| len += G.len(G.sub(pts[(i + 1) % pts.size], pts[i])) }
-          len
-        end
-
         Registry.register(:baseboard, name: 'Rodapé', tab: :rev, package: :rev, handler: self,
-                                      desc: 'Contorna o piso e os pilares, pula as portas e calcula as barras.',
+                                      desc: 'Modelos reto, chanfrado, boleado, frisado e clássico; pula portas e calcula as barras.',
                                       steps: ['Selecione o piso', 'Shift + clique nas linhas das portas', 'Gerar rodapé'])
       end
     end

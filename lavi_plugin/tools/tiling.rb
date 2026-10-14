@@ -367,6 +367,29 @@ module LAVIStudio
           [outs, total]
         end
 
+        # Peça sólida com acabamento: relevo (alturas variadas), chanfrado (borda inclinada) ou
+        # rústico (as duas coisas + topo levemente torto, como pedra natural). Devolve a face de cima.
+        def stone_piece(e, pc, fr, esp, acab, var, chanfro, big)
+          bot = G.ccw(pc[:poly])
+          r1 = (pc[:r] * 7919.0) % 1.0
+          r2 = (pc[:r] * 104_729.0) % 1.0
+          r3 = (pc[:r] * 15_485_863.0) % 1.0
+          h = esp + (acab == 'chanfrado' ? 0 : var * r1)
+          top2 = bot
+          if acab != 'relevo' && chanfro > 0
+            t = G.offset_polyline(bot, chanfro, true)
+            top2 = t if t.size == bot.size && G.signed_area(t) > G.area(bot) * 0.15
+          end
+          c = G.centroid(bot)
+          tilt = acab == 'rustico' ? [(r2 - 0.5) * var / big, (r3 - 0.5) * var / big] : [0, 0]
+          z = ->(q) { 0.15.cm + h + tilt[0] * (q[0] - c[0]) + tilt[1] * (q[1] - c[1]) }
+          b3 = bot.map { |q| G.to_3d(q, fr, 0.15.cm) }
+          t3 = top2.map { |q| G.to_3d(q, fr, z.call(q)) }
+          n = bot.size
+          n.times { |i| Sweep.quad(e, b3[i], b3[(i + 1) % n], t3[(i + 1) % n], t3[i]) }
+          e.add_face(t3)
+        end
+
         def piece_materials(p)
           texs = Array(p['texturas']).select { |f| File.exist?(f.to_s) }
           return texs.map { |f| texture_material(f) } unless texs.empty?
@@ -386,6 +409,11 @@ module LAVIStudio
           t = targets
           return H.err('Selecione a face do piso ou da parede (ou clique em Selecionar).') if t.empty?
           relevo = p['relevo'] == true || p['relevo'] == 'true'
+          acab = %w[plano reto relevo chanfrado rustico].include?(p['acabamento'].to_s) ? p['acabamento'].to_s : (relevo ? 'reto' : 'plano')
+          relevo = acab == 'reto'
+          var = H.mm(H.num(p['var'], 4))
+          chanfro = H.mm(H.num(p['chanfro'], 3))
+          big = H.cm([H.num(p['pc'], 60), H.num(p['pl'], 60)].max)
           rejunte = p['mostrar_rej'] != false && p['mostrar_rej'] != 'false'
           esp = H.mm([H.num(p['esp'], 9), 0.1].max)
           outs = nil
@@ -403,14 +431,19 @@ module LAVIStudio
               res[:pieces].each do |pc|
                 pts = pc[:poly].map { |q| G.to_3d(q, fr, 0.15.cm) }
                 begin
-                  f = e.add_face(pts)
+                  if %w[relevo chanfrado rustico].include?(acab)
+                    f = stone_piece(e, pc, fr, esp, acab, var, chanfro, big)
+                  else
+                    f = e.add_face(pts)
+                  end
                   next unless f
                   f.reverse! if f.normal.dot(fr[:n]) < 0
                   mat = mats.size == 1 ? mats[0] : textured ? mats[(pc[:r] * mats.size).floor % mats.size] : mats[pc[:k]]
                   if mat.texture
-                    a = G.to_3d(pc[:o], fr, 0.15.cm)
-                    b = G.to_3d(G.add(pc[:o], pc[:ex]), fr, 0.15.cm)
-                    d = G.to_3d(G.add(pc[:o], pc[:ey]), fr, 0.15.cm)
+                    pl = f.plane # pontos no plano da própria face (peça com relevo fica mais alta)
+                    a = G.to_3d(pc[:o], fr, 0.15.cm).project_to_plane(pl)
+                    b = G.to_3d(G.add(pc[:o], pc[:ex]), fr, 0.15.cm).project_to_plane(pl)
+                    d = G.to_3d(G.add(pc[:o], pc[:ey]), fr, 0.15.cm).project_to_plane(pl)
                     f.position_material(mat, [a, Geom::Point3d.new(0, 0, 1), b, Geom::Point3d.new(1, 0, 1),
                                               d, Geom::Point3d.new(0, 1, 1)], true)
                   else

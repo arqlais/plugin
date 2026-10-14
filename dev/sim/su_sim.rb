@@ -396,7 +396,17 @@ module Sketchup
   def self.is_pro?; true; end
   def self.temp_dir; Dir.tmpdir; end
   def self.active_model; @model ||= Model.new; end
-  def self.reset_model!; @model = Model.new; end
+  def self.reset_model!
+    @model = Model.new
+    (@app_obs || []).each { |o| o.onNewModel(@model) if o.respond_to?(:onNewModel) }
+    @model
+  end
+  def self.add_observer(o) (@app_obs ||= []) << o; true end
+
+  class EntitiesObserver; end
+  class AppObserver; end
+  class ModelObserver; end
+  class SelectionObserver; end
   def self.install_from_archive(path, *_a) (@installed ||= []) << path; true end
   def self.find_support_file(*_a) nil end
   def self.require(f) Kernel.require(f) end
@@ -547,6 +557,17 @@ module Sketchup
     def smooth?; @smooth; end
     def bounds; Geom::BoundingBox.new.add(@start.position, @end.position); end
     def find_faces; @ents ? @ents.find_faces_for(self) : 0; end
+
+    # divide a aresta num ponto (o vértice se junta a outro que já esteja ali)
+    def split(pt)
+      pt = Geom::Point3d.new(pt.to_a)
+      v = @ents.vertex_at(pt)
+      old_end = @end
+      @end.edges_list.delete(self)
+      @end = v
+      v.edges_list << self
+      @ents.add_edge_v(v, old_end)
+    end
 
     def reversed_in?(face)
       vs = face.outer_loop.vertices
@@ -1041,8 +1062,12 @@ module Sketchup
       i = ComponentInstance.new(defn, tr)
       i.ents = self
       @items << i
+      (@observers || []).each { |o| o.onElementAdded(self, i) if o.respond_to?(:onElementAdded) }
       i
     end
+
+    def add_observer(o) (@observers ||= []) << o; true end
+    def remove_observer(o) (@observers || []).delete(o); true end
 
     def add_text(t, p, v = nil)
       x = Text.new(t, p, v)
@@ -1543,7 +1568,7 @@ module Sketchup
     def active_path; nil; end
     def active_path=(_p) end
     def tools; self; end
-    def guid; 'modelo-sim'; end
+    def guid; "modelo-#{object_id}"; end
     def bounds; @entities.bounds; end
     def valid?; true; end
     def name; @title; end

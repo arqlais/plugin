@@ -58,7 +58,7 @@ dev/prints_telas.js / prints_folhas.js  prints de todas as telas e montagem das 
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.9.0; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
+## Ferramentas — status (v0.10.0; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria; digitar "5" = 5 m, unidade escolhível) | arq |
@@ -67,17 +67,17 @@ Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA
 | stairs | Escada reta Blondel, maciça ou flutuante, corrimão | arq |
 | roofs | Telhado 1/2/4 águas, beiral, telhas | arq |
 | urban_index | TO, CA, permeabilidade vs. limites da lei | arq |
-| tiling | **Revestimento** (v0.8, um só para piso e parede; referência dela = plugin REVEST, só a ideia): 8 padrões (horizontal, vertical, diagonal, tijolinho ½/⅓, damas, chevron, espinha, pedra orgânica = Voronoi), junta/junta seca, espessura e peças 3D, rejunte com cor, ângulo + girar pelos 2 pontos no modelo, ponto inicial clicado, centralizar, várias imagens sorteadas por peça (`position_material` com a imagem ocupando a peça, "Variar combinação" = `seed`), estimativa ao vivo (ação `estimate`), Editar paginação (grupo guarda `params`, `face_pid`, `face_tr`). Gerador de padrões igual em Ruby (`Tiling.layout/unit`) e JS (`tilePieces`), mesmo sorteio (`rnd`/`tileRnd`). Teste: soma das peças = área em todos os padrões | rev |
-| baseboard | Rodapé (pula linhas de porta selecionadas com Shift, pilares) | rev |
-| ceiling | Forro com sanca, placas | rev |
+| tiling | **Revestimento** (v0.8, um só para piso e parede; referência dela = plugin REVEST, só a ideia): 8 padrões (horizontal, vertical, diagonal, tijolinho ½/⅓, damas, chevron, espinha, pedra orgânica = Voronoi), junta/junta seca, espessura e peças 3D, rejunte com cor, ângulo + girar pelos 2 pontos no modelo, ponto inicial clicado, centralizar, várias imagens sorteadas por peça (`position_material` com a imagem ocupando a peça, "Variar combinação" = `seed`), estimativa ao vivo (ação `estimate`), Editar paginação (grupo guarda `params`, `face_pid`, `face_tr`). Gerador de padrões igual em Ruby (`Tiling.layout/unit`) e JS (`tilePieces`), mesmo sorteio (`rnd`/`tileRnd`). Teste: soma das peças = área em todos os padrões. Furos (pilares) recortam as peças no formato (convexo ou triangulado). **Acabamento**: plano, 3D reto, relevo (alturas variadas), chanfrado, rústico (pedra natural, topo inclinado); pedras prontas (São Tomé, pedra ferro, Miracema, canjiquinha, seixo, mosaico português) | rev |
+| baseboard | Rodapé com modelos (reto, chanfrado, boleado, frisado, clássico, filete) + prontos (MDF 7/10/15, poliestireno, porcelanato, madeira); perfil puxado por `core/sweep.rb` (meia-esquadria); pula portas e pilares | rev |
+| ceiling | Forro: rebaixado com **tabica 3 cm** (padrão dela, junta de dilatação), **cortineiro 10/15/20 cm** (linha da janela selecionada com Shift), sanca fechada/aberta, ou **só moldura** de teto (cantoneira, chanfro, côncava, degraus, clássica) sem rebaixo. Tudo ajustável | rev |
 | cut_list | Lista de peças + plano de corte + fita + ferragens + CSV | marc |
-| countertop | Recorte de cuba/cooktop no tampo | marc |
+| countertop | Recorte **no formato do bloco** colocado (corte horizontal do componente na altura do tampo), **automático ao colocar** (EntitiesObserver; nomes cuba/pia/lavatório/cooktop/tanque/fogão ou marcado "Este bloco sempre recorta"; pref `auto_recorte`), folga; ainda tem o modo por medida | marc |
 | takeoff | Quantitativo por material (piso/parede/teto) + itens + CSV | quant |
 | scenes | Cenas automáticas: plantas por nível (corte 1,20), cobertura, cortes AA/BB, 4 fachadas, perspectiva | pres |
 | export_images | Exportar cenas em PNG/JPG (formatos feed/story/A4…), moldura + grade de terços na tela (Overlay, SU 2023+), atalhos de câmera (altura, abertura, 2 pontos, vista) | pres |
 | room_tags | Etiqueta de ambiente (texto 3D no piso ou rótulo) + quadro de áreas CSV; guarda persistent_id da face | pres |
 | furniture | Ficha de mobiliário (dict `plane_item`), relatório por ambiente, CSV, caderno HTML com miniaturas | quant |
-| dwg_clean | Limpar DWG: achata (transform_by_vectors), tira textos/cotas/guias, apaga linhas minúsculas, explode blocos, fecha faces (find_faces) | arq |
+| dwg_clean | Limpar DWG: achata, tira anotações, apaga linhas minúsculas, explode blocos, **fecha geometria** (liga pontas soltas até X cm, divide linha nos encontros em T), fecha faces, **marca e seleciona o que ficou aberto** (pontos-guia na etiqueta "lavi · Aberturas"); botão só mostrar aberturas | arq |
 | dims | Cotas automáticas: contorno juntado dos trechos (arestas usadas por 1 face só), externas/internas/totais, etiqueta "lavi · Cotas", apagar | arq |
 | array | Copiar em grade (numa face: luminárias no forro) ou ao longo de linhas (por distância ou quantidade, girando) | base |
 | fix_faces | Corrigir faces invertidas: orienta por arestas (reversed_in?), vira para fora (volume ou maioria), passa pintura do verso | base |

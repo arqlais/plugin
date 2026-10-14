@@ -323,6 +323,25 @@ check('tiling · parede, peças 3D, texturas, junta seca') do
   "#{fs.size} faces (peças 3D), #{usados} imagens sorteadas · junta seca ok"
 end
 
+check('tiling · pedra São Tomé rústica, relevo e chanfrado') do
+  out = []
+  %w[relevo chanfrado rustico].each do |acab|
+    fresh
+    f = floor(pilar: false)
+    sel(f)
+    ok!(run(:tiling, 'build', 'padrao' => 'organica', 'pc' => 40, 'pl' => 30, 'rej' => 10, 'acabamento' => acab, 'var' => 6, 'chanfro' => 4, 'esp' => 15))
+    g = groups_named(/Paginação/)[0]
+    fs = g.definition.entities.grep(Sketchup::Face)
+    tops = fs.select { |x| x.normal.z > 0.9 }
+    alturas = tops.map { |x| (x.bounds.max.z * 25.4).round(1) }.uniq
+    inclinadas = tops.count { |x| x.normal.z < 0.99999 }
+    expect(alturas.size > (acab == 'chanfrado' ? 0 : 5), "#{acab}: alturas não variam (#{alturas.size})")
+    expect(acab != 'rustico' || inclinadas > 5, 'rústico sem inclinação')
+    out << "#{acab}: #{tops.size} pedras, #{alturas.size} alturas"
+  end
+  out.join(' · ')
+end
+
 check('tiling · ponto inicial, giro e escolher face clicando') do
   f = floor(pilar: false)
   ok!(run(:tiling, 'pick'))
@@ -343,22 +362,53 @@ check('tiling · ponto inicial, giro e escolher face clicando') do
 end
 
 # === Rodapé, forro
-check('baseboard · rodapé no piso') do
-  f = floor
-  sel(f)
+check('baseboard · todos os modelos, com pilar e porta pulada') do
+  out = []
+  %w[reto chanfrado boleado frisado classico filete].each do |mod|
+    fresh
+    f = floor
+    sel(f)
+    r = ok!(run(:baseboard, 'build', 'modelo' => mod, 'alt' => 10, 'esp' => 2))
+    g = m.entities.grep(Sketchup::ComponentInstance).last
+    h = (g.bounds.depth * 2.54).round(1)
+    expect(h == 10.0, "#{mod}: altura #{h} cm")
+    expect(r['stats'][0][1] == '15,20 m', "#{mod}: comprimento #{r['stats'][0][1]}")
+    out << mod
+  end
+  fresh
+  f = floor(pilar: false)
+  porta = f.edges.find { |e| e.start.position.y.abs < 0.01 && e.end.position.y.abs < 0.01 }
+  sel(f, porta)
   r = ok!(run(:baseboard, 'build'))
-  r['stats'].map { |s| s.join(' ') }.join(', ')
+  expect(r['stats'][0][1] == '10,00 m', "com porta pulada: #{r['stats'][0][1]}")
+  "#{out.join(', ')} (10 cm, 15,20 m) · pulando a porta: 10,00 m"
 end
 
-check('ceiling · forro com e sem sanca') do
+check('ceiling · rebaixado com tabica, cortineiro, sanca e moldura') do
   f = floor(pilar: false)
   sel(f)
   a = ok!(run(:ceiling, 'build'))
-  sel(f)
-  fz = m.entities.grep(Sketchup::ComponentInstance).first.bounds
-  expect(((fz.min.z * 2.54) - 260).abs < 2, "forro em #{(fz.min.z * 2.54).round} cm (esperava 260)")
-  b = ok!(run(:ceiling, 'build', 'sanca' => true))
-  "#{a['msg']} | com sanca: #{b['msg']}"
+  g = m.entities.grep(Sketchup::ComponentInstance).last
+  fz = g.bounds
+  expect(((fz.min.z * 2.54) - 260).abs < 0.1, "forro em #{(fz.min.z * 2.54).round(1)} cm (esperava 260)")
+  slab = g.definition.entities.grep(Sketchup::ComponentInstance).find { |x| x.name.to_s.empty? && x.bounds.depth < 2.cm }
+  expect(slab && (slab.bounds.min.x * 2.54 - 3).abs < 0.05, "forro não recuou 3 cm da parede (#{slab && (slab.bounds.min.x * 2.54).round(2)})")
+  expect(g.definition.entities.grep(Sketchup::ComponentInstance).any? { |x| x.name == 'Tabica' }, 'sem tabica')
+  janela = f.edges.find { |e| e.start.position.y.abs < 0.01 && e.end.position.y.abs < 0.01 }
+  sel(f, janela)
+  b = ok!(run(:ceiling, 'build', 'cortineiro' => true, 'cort_larg' => 15))
+  g2 = m.entities.grep(Sketchup::ComponentInstance).last
+  slab2 = g2.definition.entities.grep(Sketchup::ComponentInstance).find { |x| x.name.to_s.empty? && x.bounds.depth < 2.cm }
+  expect((slab2.bounds.min.y * 2.54 - 15).abs < 0.05, "cortineiro não recuou 15 cm (#{(slab2.bounds.min.y * 2.54).round(2)})")
+  expect((slab2.bounds.min.x * 2.54 - 3).abs < 0.05, 'tabica dos outros lados sumiu')
+  sel(f); ok!(run(:ceiling, 'build', 'tipo' => 'sanca', 'sanca_tipo' => 'aberta'))
+  out = []
+  %w[reta chanfro cove degrau classica].each do |mod|
+    sel(f)
+    r = ok!(run(:ceiling, 'build', 'tipo' => 'moldura', 'mold_modelo' => mod, 'mold_tam' => 8))
+    out << "#{mod} #{r['stats'].find { |x| x[0] == 'Moldura' }[1]}"
+  end
+  "#{a['stats'].map { |x| x.join(' ') }.join(', ')} · cortineiro: #{b['stats'].last.join(' ')} · molduras: #{out.join(', ')}"
 end
 
 # === Marcenaria
@@ -372,11 +422,44 @@ check('cut_list · lista, plano de corte e CSV') do
   "#{r['stats'].map { |s| s.join(' ') }.join(', ')} · #{c['msg']}"
 end
 
-check('countertop · recorte de cuba no tampo') do
+check('countertop · recorte por medida') do
   tampo = box(0, 0, 90, 120, 60, 2, name: 'Tampo')
   sel(tampo)
-  r = ok!(run(:countertop, 'cut'))
+  r = ok!(run(:countertop, 'run', 'modo' => 'medida'))
   r['msg']
+end
+
+check('countertop · recorte automático no formato do bloco ao colocar') do
+  tampo = box(0, 0, 88, 200, 60, 3, name: 'Tampo')
+  dfn = m.definitions.add('Cuba inox 50x40')
+  f = dfn.entities.add_face(pt(0, 0), pt(50, 0), pt(50, 40), pt(0, 40))
+  f.reverse! if f.normal.z > 0
+  f.pushpull(-20.cm)
+  $timers = []
+  m.entities.add_instance(dfn, Geom::Transformation.new(pt(30, 10, 72))) # borda 1 cm acima do tampo
+  $timers.each(&:call)
+  top = tampo.definition.entities.grep(Sketchup::Face).find { |x| x.normal.z > 0.99 }
+  expect(top.loops.size == 2, "tampo sem furo depois de colocar a cuba (#{top.loops.size - 1} furos)")
+  furo = top.loops[1].vertices.map { |v| v.position }
+  w = ((furo.map(&:x).max - furo.map(&:x).min) * 2.54).round(1)
+  d = ((furo.map(&:y).max - furo.map(&:y).min) * 2.54).round(1)
+  expect([w, d] == [50.0, 40.0], "furo de #{w} × #{d} (esperava 50 × 40)")
+  bottom = tampo.definition.entities.grep(Sketchup::Face).find { |x| x.normal.z < -0.99 }
+  expect(bottom.loops.size == 2, 'o furo não atravessou o tampo')
+  # outra cuba, desta vez recortada pelo botão (com folga)
+  c2 = m.definitions.add('Lavatório oval')
+  f2 = c2.entities.add_face(pt(0, 0), pt(40, 0), pt(40, 30), pt(0, 30))
+  f2.reverse! if f2.normal.z > 0
+  f2.pushpull(-15.cm)
+  ok!(run(:countertop, 'auto', 'auto' => false))
+  i2 = m.entities.add_instance(c2, Geom::Transformation.new(pt(130, 15, 76)))
+  $timers.each(&:call)
+  expect(top.loops.size == 2, 'recortou com o automático desligado')
+  sel(i2)
+  r = ok!(run(:countertop, 'run', 'folga' => 1))
+  expect(top.loops.size == 3, 'o botão não recortou a segunda cuba')
+  ok!(run(:countertop, 'auto', 'auto' => true))
+  "automático: #{w} × #{d} cm atravessando · botão com folga: #{r['stats'][1][1]}"
 end
 
 # === Apresentação
@@ -545,6 +628,22 @@ check('dwg_clean · achatar, tirar anotações, sujeira e fechar faces') do
   zs = g.definition.entities.grep(Sketchup::Edge).flat_map { |x| x.vertices.map { |v| v.position.z.round(4) } }.uniq
   expect(zs == [0.0], "ainda há alturas diferentes: #{zs.inspect}")
   r['stats'].map { |a, b| "#{a} #{b}" }.join(', ')
+end
+
+check('dwg_clean · fechar aberturas e marcar o que ficou aberto') do
+  # retângulo com 1 cm de abertura num canto e uma linha solta a 30 cm (longe demais)
+  es = m.entities.add_edges(pt(1, 0), pt(400, 0), pt(400, 300), pt(0, 300), pt(0, 0.5))
+  m.entities.add_line(pt(600, 0), pt(600, 100))
+  m.entities.add_edges(pt(150, 300), pt(150, 180), pt(400, 180)) # parede interna encostando em T
+  sel(es + m.entities.grep(Sketchup::Edge))
+  r = ok!(run(:dwg_clean, 'clean', 'tol' => 2))
+  st = r['stats'].map { |a, b| [a, b.to_i] }.to_h
+  expect(st['Aberturas fechadas'] >= 1, 'não fechou a abertura de 1 cm')
+  expect(m.entities.grep(Sketchup::Face).size >= 2, "encontro em T não fechou os dois ambientes (#{m.entities.grep(Sketchup::Face).size} faces)")
+  expect(st['Pontas ainda abertas'] == 2, "pontas abertas #{st['Pontas ainda abertas']}")
+  expect(m.entities.grep(Sketchup::ConstructionPoint).size == 2, 'não marcou as pontas abertas')
+  g = ok!(run(:dwg_clean, 'gaps'))
+  "#{r['msg'][0, 60]}… · mostrar: #{g['msg'][0, 40]}"
 end
 
 check('dims · cotas de paredes (fora, dentro, totais) e de piso') do

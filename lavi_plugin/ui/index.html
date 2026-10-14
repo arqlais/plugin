@@ -486,6 +486,31 @@ const store = {
 };
 
 /* ---------------- estado ---------------- */
+/* perfis de rodapé e moldura (iguais aos do Ruby: tools/baseboard.rb e tools/ceiling.rb) */
+const arcPts=(cx,cy,r,a0,a1,n)=>Array.from({length:n+1},(_,i)=>{const t=(a0+(a1-a0)*i/n)*Math.PI/180;return [cx+r*Math.cos(t),cy+r*Math.sin(t)];});
+function rodProfile(m,h,e){ e=Math.max(e,.3); h=Math.max(h,1);
+  if(m==='chanfrado'){ const c=Math.min(e*.8,h*.3); return [[0,0],[e,0],[e,h-c],[e-c,h],[0,h]]; }
+  if(m==='boleado'){ const r=Math.min(e,h/2); return [[0,0],[e,0],...arcPts(e-r,h-r,r,0,90,6),[0,h]]; }
+  if(m==='frisado'){ const f=Math.min(e*.25,.3); return [[0,0],[e,0],[e,h*.55],[e-f,h*.58],[e,h*.61],[e,h*.78],[e-f,h*.81],[e,h*.84],[e,h],[0,h]]; }
+  if(m==='classico'){ const b=e*.55; return [[0,0],[e,0],[e,h*.62],...arcPts(e,h*.62+(e-b),e-b,270,180,5),[b,h*.9],[b+e*.2,h*.93],[b,h],[0,h]]; }
+  if(m==='filete') return [[0,0],[Math.min(e,.6),0],[Math.min(e,.6),h],[0,h]];
+  return [[0,0],[e,0],[e,h],[0,h]]; }
+function moldProfile(m,s){ s=Math.max(s,1);
+  if(m==='chanfro') return [[0,0],[s,0],[0,s]];
+  if(m==='cove') return [[0,0],[s,0],...arcPts(s,s,s,270,180,8).slice(1)];
+  if(m==='degrau') return [[0,0],[s,0],[s,s*.3],[s*.62,s*.3],[s*.62,s*.65],[s*.3,s*.65],[s*.3,s],[0,s]];
+  if(m==='classica') return [[0,0],[s,0],[s,s*.15],...arcPts(s,s*.85,s*.7,270,180,6).slice(1),[s*.15,s],[0,s]];
+  return [[0,0],[s,0],[s,1],[1,1],[1,s],[0,s]]; }
+function profPic(pts, ceiling){ const k=26/Math.max(...pts.map(q=>Math.max(q[0],q[1])));
+  const d=pts.map((q,i)=>(i?'L':'M')+(12+q[0]*k).toFixed(1)+' '+(ceiling?(7+q[1]*k):(33-q[1]*k)).toFixed(1)).join('')+'Z';
+  return PIC(`<path d="M12 4v32" stroke-width="1"/><path d="${ceiling?'M8 7h30':'M8 33h30'}" stroke-width="1"/><path d="${d}" fill="currentColor" fill-opacity=".18"/>`); }
+const ROD=[['reto','Reto'],['chanfrado','Chanfrado'],['boleado','Boleado'],['frisado','Frisado'],['classico','Clássico'],['filete','Filete']];
+ROD.forEach(m=>{ P['rod_'+m[0]]=profPic(rodProfile(m[0],10,2.2),false); });
+const MOLD=[['reta','Cantoneira'],['chanfro','Chanfro'],['cove','Côncava'],['degrau','Degraus'],['classica','Clássica']];
+MOLD.forEach(m=>{ P['mold_'+m[0]]=profPic(moldProfile(m[0],8),true); });
+P.forro_rebaixado=PIC('<path d="M6 6v30M40 6v30" stroke-width="1"/><path d="M9 16h28" stroke-width="2"/><path d="M6 13h3v3" stroke-width="1"/><path d="M40 13h-3v3" stroke-width="1"/>');
+P.forro_sanca=PIC('<path d="M6 6v30M40 6v30" stroke-width="1"/><path d="M6 20h8v-8h18v8h8" stroke-width="2"/>');
+P.forro_moldura=PIC('<path d="M6 6v30M40 6v30" stroke-width="1"/><path d="M6 8h34" stroke-width="1"/><path d="M6 8h5L6 13zM40 8h-5l5 5z" fill="currentColor" fill-opacity=".3"/>');
 const TILE_PATS=[['horizontal','Horizontal'],['vertical','Vertical'],['diagonal','Diagonal'],['tijolo','Tijolinho'],['damas','Damas'],['chevron','Chevron'],['espinha','Espinha'],['organica','Pedra orgânica']];
 const S = { state:null, route:'home', tool:null, params:{}, results:{}, reqs:{}, seq:0, update:null, q:'' };
 
@@ -576,7 +601,14 @@ const FORMS = {
       {t:'Superfície', f:[{type:'html',html:surfHtml}]},
       {t:'Padrão de paginação', f:[
         {k:'padrao',type:'cards',full:1,def:'horizontal',opts:TILE_PATS.map(x=>[x[0],x[1],'pat_'+x[0]])},
-        {k:'amarr',type:'seg',label:'Amarração',def:'meia',full:1,opts:[['meia','½ peça'],['terco','⅓ peça']],when:p=>p.padrao==='tijolo'}]},
+        {k:'amarr',type:'seg',label:'Amarração',def:'meia',full:1,opts:[['meia','½ peça'],['terco','⅓ peça']],when:p=>p.padrao==='tijolo'},
+        {type:'chips',full:1,label:'Pedras prontas',set:[
+          ['São Tomé',{padrao:'organica',pc:40,pl:30,acabamento:'rustico',var:6,chanfro:4,cor:'#E3D3B5',correj:'#B9AE9C',rej:10,seca:false}],
+          ['Pedra ferro',{padrao:'organica',pc:30,pl:25,acabamento:'relevo',var:8,cor:'#6B4A3A',correj:'#4A3F38',rej:12,seca:false}],
+          ['Miracema',{padrao:'horizontal',pc:23,pl:11.5,acabamento:'rustico',var:3,chanfro:2,cor:'#B8B2A7',correj:'#8E887E',rej:8,seca:false}],
+          ['Canjiquinha',{padrao:'tijolo',amarr:'terco',pc:20,pl:3,acabamento:'relevo',var:10,cor:'#D9CBB0',seca:true}],
+          ['Seixo',{padrao:'organica',pc:8,pl:6,acabamento:'chanfrado',chanfro:12,cor:'#BFB8AE',correj:'#8F887E',rej:5,seca:false}],
+          ['Mosaico português',{padrao:'organica',pc:5,pl:5,acabamento:'relevo',var:3,cor:'#EDE9E2',correj:'#9C9087',rej:6,seca:false}]]}]},
       {t:'Peça e junta', f:[
         {type:'chips',full:1,label:'Formatos comuns',set:[['60×60',{pc:60,pl:60}],['90×90',{pc:90,pl:90}],['120×60',{pc:120,pl:60}],['120×20',{pc:120,pl:20}],['60×15',{pc:60,pl:15}],['30×7,5',{pc:30,pl:7.5}],['20×20',{pc:20,pl:20}]]},
         {k:'pc',type:'num',label:'Largura',unit:'cm',def:60},
@@ -586,7 +618,9 @@ const FORMS = {
         {k:'seca',type:'tg',label:'Junta seca (sem espaço entre as peças)',def:false,full:1},
         {k:'mostrar_rej',type:'tg',label:'Mostrar rejunte',def:true,full:1,when:p=>!p.seca},
         {k:'correj',type:'color',label:'Cor do rejunte',def:'#BDB6AE',when:p=>!p.seca&&p.mostrar_rej!==false},
-        {k:'relevo',type:'tg',label:'Peças em 3D (com espessura)',def:false,full:1}]},
+        {k:'acabamento',type:'select',label:'Acabamento',def:'plano',full:1,opts:[['plano','Plano (só a face)'],['reto','3D reto (com espessura)'],['relevo','Relevo (alturas variadas)'],['chanfrado','Chanfrado (borda boleada)'],['rustico','Rústico (pedra natural)']]},
+        {k:'var',type:'num',label:'Variação de altura',unit:'mm',def:4,chips:[2,4,8,12],when:p=>['relevo','rustico'].includes(p.acabamento)},
+        {k:'chanfro',type:'num',label:'Chanfro da borda',unit:'mm',def:3,chips:[2,3,5,10],when:p=>['chanfrado','rustico'].includes(p.acabamento)}]},
       {t:'Posicionamento', f:[
         {k:'ang',type:'num',label:'Ângulo',unit:'°',def:0,chips:[0,45,90],step:5},
         {k:'inicio',type:'seg',label:'Começar em',def:'canto',full:1,opts:[['canto','Canto'],['centro','Centro'],['ponto','Ponto escolhido']]},
@@ -601,24 +635,43 @@ const FORMS = {
         {k:'caixa',type:'num',label:'m² por caixa',unit:'m²',def:1.44,step:.01}]}],
     acts:[['build','Gerar paginação','play',1],['edit','Editar paginação','pen']], prev:p=>prevTiles(p), est:1 },
   baseboard:{ secs:[
-      {t:'Rodapé', f:[
-        {k:'alt',type:'num',label:'Altura',unit:'cm',def:7,chips:[5,7,10,15]},
-        {k:'esp',type:'num',label:'Espessura',unit:'cm',def:1.5,step:.5},
-        {k:'cor',type:'color',label:'Cor',def:'#FFFFFF'},
-        {k:'barra',type:'num',label:'Barra vendida com',unit:'m',def:2.4,step:.1}]},
-      {t:'Compra', f:[
-        {k:'perda',type:'num',label:'Perda',unit:'%',def:10},
-        {k:'preco',type:'num',label:'Preço por metro',unit:'R$',def:0}]}],
-    acts:[['build','Gerar rodapé','play',1]],
+      {t:'Modelo', f:[
+        {k:'modelo',type:'cards',full:1,def:'reto',opts:ROD.map(m=>[m[0],m[1],'rod_'+m[0]])},
+        {type:'chips',full:1,label:'Prontos',set:[['MDF branco 7',{modelo:'reto',alt:7,esp:1.5,cor:'#FFFFFF'}],['MDF branco 10',{modelo:'reto',alt:10,esp:1.5,cor:'#FFFFFF'}],['MDF branco 15',{modelo:'frisado',alt:15,esp:1.5,cor:'#FFFFFF'}],['Poliestireno 5',{modelo:'boleado',alt:5,esp:1.2,cor:'#F7F5F2'}],['Porcelanato 7',{modelo:'reto',alt:7,esp:1,cor:'#D8CFC4'}],['Madeira 10',{modelo:'chanfrado',alt:10,esp:2,cor:'#A9774E'}],['Clássico 20',{modelo:'classico',alt:20,esp:2.5,cor:'#FFFFFF'}],['Filete embutido',{modelo:'filete',alt:5,esp:.6,cor:'#2F3A44'}]]}]},
+      {t:'Medidas', f:[
+        {k:'alt',type:'num',label:'Altura',unit:'cm',def:7,chips:[5,7,10,12,15,20],step:.5},
+        {k:'esp',type:'num',label:'Espessura',unit:'cm',def:1.5,chips:[1,1.5,2,2.5],step:.1},
+        {k:'cor',type:'color',label:'Cor',def:'#FFFFFF'}]},
+      {t:'Compra', opt:1, closed:1, f:[
+        {k:'barra',type:'num',label:'Barra vendida com',unit:'m',def:2.4,step:.1},
+        {k:'perda',type:'num',label:'Perda',unit:'%',def:10}]}],
+    acts:[['build','Gerar rodapé','play',1]], prev:p=>prevRod(p),
     hint:'Selecione o piso. Para pular as portas, segure Shift e clique também nas linhas das portas.' },
   ceiling:{ secs:[
+      {t:'Tipo', f:[
+        {k:'tipo',type:'cards',full:1,def:'rebaixado',opts:[['rebaixado','Rebaixado','forro_rebaixado'],['sanca','Sanca','forro_sanca'],['moldura','Só moldura','forro_moldura']]}]},
       {t:'Forro', f:[
-        {k:'alt',type:'num',label:'Pé-direito final',unit:'cm',def:260,chips:[240,250,260,270]},
-        {k:'esp',type:'num',label:'Espessura',unit:'cm',def:1.25,step:.25},
-        {k:'sanca',type:'tg',label:'Fazer sanca no perímetro',def:false,full:1},
-        {k:'sanca_larg',type:'num',label:'Largura da sanca',unit:'cm',def:40,when:p=>p.sanca},
-        {k:'sanca_desc',type:'num',label:'Rebaixo da sanca',unit:'cm',def:15,when:p=>p.sanca}]}],
-    acts:[['build','Gerar forro','play',1]], prev:p=>prevCeiling(p) },
+        {k:'alt',type:'num',label:'Pé-direito final',unit:'cm',def:260,chips:[240,250,260,270,280]},
+        {k:'esp',type:'num',label:'Espessura da placa',unit:'cm',def:1.25,step:.25,when:p=>p.tipo!=='moldura'}]},
+      {t:'Tabica', when:p=>p.tipo!=='moldura', f:[
+        {k:'tabica',type:'tg',label:'Junta de dilatação na parede (tabica)',def:true,full:1},
+        {k:'tab_larg',type:'num',label:'Recuo da parede',unit:'cm',def:3,chips:[1,2,3,5],step:.5,when:p=>p.tabica!==false},
+        {k:'tab_prof',type:'num',label:'Profundidade da junta',unit:'cm',def:3,step:.5,when:p=>p.tabica!==false}]},
+      {t:'Cortineiro', opt:1, when:p=>p.tipo!=='moldura', f:[
+        {k:'cortineiro',type:'tg',label:'Cortineiro na janela',def:false,full:1},
+        {k:'cort_larg',type:'num',label:'Largura',unit:'cm',def:15,chips:[10,15,20],when:p=>p.cortineiro},
+        {k:'cort_alt',type:'num',label:'Altura acima do forro',unit:'cm',def:20,when:p=>p.cortineiro}]},
+      {t:'Sanca', when:p=>p.tipo==='sanca', f:[
+        {k:'sanca_tipo',type:'seg',label:'Tipo',def:'fechada',full:1,opts:[['fechada','Fechada'],['aberta','Aberta (luz indireta)']]},
+        {k:'sanca_larg',type:'num',label:'Largura',unit:'cm',def:40,chips:[30,40,60]},
+        {k:'sanca_desc',type:'num',label:'Rebaixo',unit:'cm',def:15,chips:[10,15,20]},
+        {k:'sanca_aba',type:'num',label:'Aba da fenda de luz',unit:'cm',def:5,when:p=>p.sanca_tipo==='aberta'}]},
+      {t:'Moldura', when:p=>p.tipo==='moldura', f:[
+        {k:'mold_modelo',type:'cards',full:1,def:'cove',opts:MOLD.map(m=>[m[0],m[1],'mold_'+m[0]])},
+        {k:'mold_tam',type:'num',label:'Tamanho',unit:'cm',def:6,chips:[3,5,7,10,15],step:.5},
+        {k:'teto',type:'tg',label:'Desenhar o teto (placa) também',def:false,full:1}]}],
+    acts:[['build','Gerar','play',1]], prev:p=>prevCeiling(p),
+    hint:'Selecione o piso do ambiente. Para o cortineiro, segure Shift e clique também na linha do piso junto à janela.' },
   cut_list:{ secs:[
       {t:'Chapa', f:[
         {k:'chapa_c',type:'num',label:'Comprimento',unit:'mm',def:2750},
@@ -631,7 +684,13 @@ const FORMS = {
     hint:'Selecione os móveis (ou nada, para ler o modelo todo). Peças escondidas pelas opções do bloco não entram.',
     render:r=>renderCut(r) },
   countertop:{ secs:[
-      {t:'Recorte', f:[
+      {t:'Como recortar', f:[
+        {k:'modo',type:'seg',label:'Recorte',def:'bloco',full:1,opts:[['bloco','No formato do bloco'],['medida','Por medida']]}]},
+      {t:'Pelo bloco', when:p=>p.modo!=='medida', f:[
+        {k:'auto',type:'tg',label:'Recortar sozinho quando eu colocar uma cuba ou cooktop',def:true,full:1,live:'auto'},
+        {k:'folga',type:'num',label:'Folga em volta',unit:'cm',def:0,step:.5},
+        {type:'acts',full:1,acts:[['mark','Este bloco sempre recorta','check'],['unmark','Este bloco não recorta','x']]}]},
+      {t:'Por medida', when:p=>p.modo==='medida', f:[
         {k:'tipo',type:'cards',full:1,def:'cuba',opts:[['cuba','Cuba','cuba'],['cuba_dupla','Cuba dupla','cuba_dupla'],['cooktop','Cooktop','cooktop']],
           onchange:(p,v)=>{const d={cuba:[50,40],cuba_dupla:[80,40],cooktop:[56,49]}[v];p.larg=d[0];p.prof=d[1];}},
         {k:'larg',type:'num',label:'Largura do furo',unit:'cm',def:50},
@@ -640,7 +699,8 @@ const FORMS = {
         {k:'pos',type:'seg',label:'Posição',def:'centro',full:1,opts:[['esquerda','Esquerda'],['centro','Centro'],['direita','Direita']]},
         {k:'desloc',type:'num',label:'Distância da lateral',unit:'cm',def:30,when:p=>p.pos!=='centro'},
         {k:'inserir',type:'tg',label:'Colocar a cuba / cooktop',def:true}]}],
-    acts:[['cut','Recortar tampo','play',1]], prev:p=>prevTop(p) },
+    acts:[['run','Recortar','countertop',1]], prev:p=>p.modo==='medida'?prevTop(p):prevBlock(p),
+    hint:'Pelo bloco: coloque a cuba (componente) em cima do tampo. O furo sai no formato dela. Blocos com cuba, pia, lavatório, cooktop, tanque ou fogão no nome recortam sozinhos; para outros, use "Este bloco sempre recorta".' },
   scenes:{ secs:[
       {t:'Níveis', f:[
         {k:'niveis',type:'text',label:'Níveis (nome=altura em cm, separados por ;)',def:'Térreo=0',full:1},
@@ -738,8 +798,13 @@ const FORMS = {
         {k:'z',type:'num',label:'Altura',unit:'cm',def:0,when:p=>p.achatar!==false},
         {k:'anotacoes',type:'tg',label:'Tirar textos, cotas e guias',def:true,full:1},
         {k:'minimo',type:'num',label:'Apagar linhas menores que',unit:'mm',def:1,step:.5},
+        {k:'explodir',type:'tg',label:'Explodir os blocos',def:false,full:1}]},
+      {t:'Fechar geometria', f:[
+        {k:'fechar',type:'tg',label:'Ligar as pontas soltas (linhas que não se encontram)',def:true,full:1},
+        {k:'tol',type:'num',label:'Ligar se a distância for até',unit:'cm',def:2,chips:[1,2,5,10],step:.5,when:p=>p.fechar!==false},
         {k:'faces',type:'tg',label:'Fechar as faces',def:true,full:1},
-        {k:'explodir',type:'tg',label:'Explodir os blocos',def:false,full:1}]}],
+        {k:'marcar',type:'tg',label:'Marcar e selecionar o que ficou aberto',def:true,full:1},
+        {type:'acts',full:1,acts:[['gaps','Só mostrar onde está aberto','search']]}]}],
     acts:[['clean','Limpar planta','dwg_clean',1]],
     hint:'Use logo depois de importar o DWG. Achatar resolve as linhas em alturas diferentes que impedem de fechar faces.' },
   dims:{ secs:[
@@ -868,7 +933,9 @@ function prevTiles(p){
   const ang=num(p.ang,0), tex=(p.texturas||[]);
   const o=p.inicio==='centro'?[-num(p.pc,60)/2,-num(p.pl,60)/2]:[-rw/2,-rh/2];
   const r=tilePieces(p,Math.hypot(rw,rh)/2+10,o);
-  const fill=t=>tex.length?`url(#tx${Math.floor(t.r*tex.length)%tex.length})`:(p.padrao==='damas'&&t.k?(p.cor2||'#3E4B57'):(p.cor||'#E9E3DC'));
+  const tone=(hex,k)=>{ const h=(hex||'#E9E3DC').replace('#',''); return '#'+[0,2,4].map(i=>Math.max(0,Math.min(255,Math.round(parseInt(h.substr(i,2),16)*k))).toString(16).padStart(2,'0')).join(''); };
+  const rough=['relevo','chanfrado','rustico'].includes(p.acabamento);
+  const fill=t=>tex.length?`url(#tx${Math.floor(t.r*tex.length)%tex.length})`:(p.padrao==='damas'&&t.k?(p.cor2||'#3E4B57'):(rough?tone(p.cor,.86+.28*((t.r*7919)%1)):(p.cor||'#E9E3DC')));
   const defs=tex.map((f,i)=>`<pattern id="tx${i}" patternContentUnits="objectBoundingBox" width="1" height="1"><rect width="1" height="1" fill="${['#C9B49A','#B89C7E','#D8C6AE','#A88B6E'][i%4]}"/>${window.__MOCK__?'':`<image href="file:///${esc(f)}" width="1" height="1" preserveAspectRatio="none"/>`}</pattern>`).join('');
   const polys=r.pieces.map(t=>`<polygon points="${t.pts.map(q=>(q[0]*s).toFixed(1)+','+(q[1]*s).toFixed(1)).join(' ')}" fill="${fill(t)}" stroke="${p.seca?'rgba(0,0,0,.25)':(p.correj||'#BDB6AE')}" stroke-width="${p.seca?.5:1}" stroke-opacity="${p.seca?1:.9}"/>`).join('');
   const bg=p.seca?'#999':(p.mostrar_rej===false?'#ddd':(p.correj||'#BDB6AE'));
@@ -944,14 +1011,36 @@ function prevRoof(p){
    <path d="M${W/2-run+20} ${H-26}V${H-14}M${W/2+run-20} ${H-26}V${H-14}" stroke="var(--ink2)" stroke-width="2"/>
    <text x="${W/2}" y="14" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="var(--ink2)">${br(i,0)}% · ${br(ang,1)}°</text>${warn}</svg>`;
 }
+function prevRod(p){
+  const pts=rodProfile(p.modelo||'reto',num(p.alt,7),num(p.esp,1.5)), h=num(p.alt,7), k=Math.min(110/Math.max(h,1),9);
+  const d=pts.map((q,i)=>(i?'L':'M')+(70+q[0]*k).toFixed(1)+' '+(135-q[1]*k).toFixed(1)).join('')+'Z';
+  return `<span class="tagline">CORTE DO RODAPÉ · ${br(h,1)} × ${br(num(p.esp,1.5),1)} cm</span><svg viewBox="0 0 300 150" width="300" height="150">
+   <path d="M70 10V135H280" fill="none" stroke="var(--ink2)" stroke-width="2"/><path d="${d}" fill="${p.cor||'#fff'}" stroke="#3E4B57" stroke-width="1.2"/>
+   ${dimV(135-h*k,135,40,br(h,1))}</svg>`;
+}
+function prevBlock(p){
+  return `<span class="tagline">TAMPO + BLOCO DA CUBA</span><svg viewBox="0 0 300 130" width="300" height="130">
+   <rect x="30" y="20" width="240" height="90" rx="2" fill="var(--card)" stroke="var(--ink2)"/>
+   <path d="M105 42h90a14 14 0 0 1 14 14v22a14 14 0 0 1-14 14h-90a14 14 0 0 1-14-14V56a14 14 0 0 1 14-14z" fill="#D6B3AB" stroke="#3E4B57" stroke-dasharray="4 3"/>
+   <text x="150" y="72" text-anchor="middle" font-family="Poppins" font-size="11" fill="#3E4B57">furo no formato do bloco</text></svg>`;
+}
 function prevCeiling(p){
-  const W=300,H=110, s=.32, alt=num(p.alt,260);
-  const san=p.sanca, sl=num(p.sanca_larg,40)*s, sd=num(p.sanca_desc,15)*s;
-  return `<span class="tagline">CORTE</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
-   <path d="M14 ${H-10}H${W-14}M14 10V${H-10}M${W-14} 10V${H-10}" stroke="var(--ink2)" stroke-width="2"/>
-   ${san?`<path d="M14 ${24+sd}h${sl}v${-sd}H${W-14-sl}v${sd}H${W-14}" fill="none" stroke="#3E4B57" stroke-width="4"/>`:`<path d="M14 24H${W-14}" stroke="#3E4B57" stroke-width="4"/>`}
-   
-   ${dimV(24+(san?0:0),H-10,W/2,br(alt,0)+' cm')}</svg>`;
+  const W=300,H=150, ts=.5, alt=num(p.alt,260), tipo=p.tipo||'rebaixado';
+  const yF=60, x0=20, x1=W-20, wall='var(--ink2)';
+  let g=`<path d="M${x0} 10V${H-8}M${x1} 10V${H-8}" stroke="${wall}" stroke-width="2"/><path d="M${x0} 14H${x1}" stroke="var(--line2)" stroke-dasharray="4 3"/>`;
+  if(tipo==='moldura'){ const pts=moldProfile(p.mold_modelo||'cove',num(p.mold_tam,6)), k=3;
+    const pr=(sx)=>pts.map((q,i)=>(i?'L':'M')+(sx>0?x0+q[0]*k:x1-q[0]*k).toFixed(1)+' '+(14+q[1]*k).toFixed(1)).join('')+'Z';
+    g+=`<path d="${pr(1)}" fill="#D6B3AB" stroke="#3E4B57"/><path d="${pr(-1)}" fill="#D6B3AB" stroke="#3E4B57"/>`;
+    return `<span class="tagline">CORTE · MOLDURA ${br(num(p.mold_tam,6),1)} cm</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${g}</svg>`; }
+  const tab=p.tabica!==false?num(p.tab_larg,3)*ts*2:0, cort=p.cortineiro?num(p.cort_larg,15)*ts*2:0;
+  const L=x0+(cort||tab), R=x1-tab;
+  if(tipo==='sanca'){ const sl=num(p.sanca_larg,40)*ts, sd=num(p.sanca_desc,15)*ts*2, ab=p.sanca_tipo==='aberta';
+    g+=`<path d="M${L} ${yF+sd}H${L+sl}${ab?`v-${num(p.sanca_aba,5)*ts*2}`:`V${yF}`}M${R} ${yF+sd}H${R-sl}${ab?`v-${num(p.sanca_aba,5)*ts*2}`:`V${yF}`}M${L+sl+(ab?10:0)} ${yF}H${R-sl-(ab?10:0)}" fill="none" stroke="#3E4B57" stroke-width="3"/>`;
+  } else g+=`<path d="M${L} ${yF}H${R}" stroke="#3E4B57" stroke-width="3"/>`;
+  if(tab) g+=`<path d="M${x1-tab} ${yF}V${yF-num(p.tab_prof,3)*ts*2}H${x1}" fill="none" stroke="#A88A80" stroke-width="1.5"/>`+(cort?'':`<path d="M${x0+tab} ${yF}V${yF-num(p.tab_prof,3)*ts*2}H${x0}" fill="none" stroke="#A88A80" stroke-width="1.5"/>`);
+  if(cort) g+=`<path d="M${L} ${yF}V${yF-num(p.cort_alt,20)*ts*2}H${x0}" fill="none" stroke="#3E4B57" stroke-width="2"/><text x="${x0+cort/2}" y="${yF+14}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="var(--ink2)">${br(num(p.cort_larg,15),0)}</text>`;
+  if(tab) g+=`<text x="${x1-tab/2}" y="${yF+14}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="var(--ink2)">${br(num(p.tab_larg,3),0)}</text>`;
+  return `<span class="tagline">CORTE · PÉ-DIREITO ${br(alt,0)} cm${tab?' · TABICA':''}${cort?' · CORTINEIRO':''}</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${g}${dimV(yF,H-8,W/2,br(alt,0)+' cm')}</svg>`;
 }
 function prevTop(p){
   const W=300,H=130, tw=240, td=100, s=tw/120, ox=30, oy=15;
@@ -1098,6 +1187,7 @@ function viewTool(id){
   if(t.steps&&t.steps.length) h+=`<ol class="steps">${t.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>`;
   if(spec.prev) h+=`<div class="panel box"><div class="preview" id="prev">${spec.prev(p)}</div></div>`;
   spec.secs.forEach((s,i)=>{
+    if(s.when && !s.when(p)) return;
     const body=`<div class="fields">${s.f.map(f=>fieldHtml(f,p,id)).join('')}</div>`;
     const opt = s.opt ? ' <em>opcional</em>' : '';
     h+= s.closed ? `<details class="panel"><summary>${esc(s.t)}${opt}${ic('down')}</summary>${body}</details>`
@@ -1296,8 +1386,8 @@ const MOCK = {
     ['roofs','Telhado','arq','arq','1, 2 ou 4 águas com beiral, inclinação e contagem de telhas.',['Selecione o contorno da cobertura','Escolha águas e inclinação','Gerar']],
     ['urban_index','Índices urbanísticos','arq','arq','TO, CA e permeabilidade conferidos com a lei do seu terreno.',['Selecione faces','Marque terreno, projeção, construída, permeável','Compare com a lei']],
     ['tiling','Revestimento','rev','rev','Paginação de piso e parede: 8 padrões, junta, texturas variadas e estimativa ao vivo.',['Selecione a face','Escolha padrão, peça e posição','Gerar paginação']],
-    ['baseboard','Rodapé','rev','rev','Contorna o piso e os pilares, pula as portas e calcula as barras.',['Selecione o piso','Shift + clique nas linhas das portas','Gerar rodapé']],
-    ['ceiling','Forro e sanca','rev','rev','Forro de gesso no pé-direito certo, com sanca e conta de placas.',['Selecione o piso','Informe o pé-direito','Gerar forro']],
+    ['baseboard','Rodapé','rev','rev','Modelos reto, chanfrado, boleado, frisado e clássico; pula portas e calcula as barras.',['Selecione o piso','Shift + clique nas linhas das portas','Gerar rodapé']],
+    ['ceiling','Forro e moldura','rev','rev','Forro rebaixado com tabica e cortineiro, sanca aberta ou fechada, ou só moldura de teto.',['Selecione o piso (e a linha da janela)','Escolha o tipo e as medidas','Gerar']],
     ['scenes','Cenas automáticas','pres','pres','Plantas por nível, cobertura, cortes AA/BB, 4 fachadas e perspectiva num clique.',['Informe os níveis','Marque o que quer','Criar cenas']],
     ['export_images','Exportar imagens','pres','pres','Salva todas as cenas em PNG ou JPG de uma vez, na resolução que você escolher.',['Escolha tamanho e formato','Escolha a pasta','Pronto']],
     ['room_tags','Ambientes e quadro de áreas','pres','pres','Clica no piso e escreve nome, área e pé-direito; gera o quadro de áreas.',['Escolha o estilo','Clique no piso de cada ambiente','Exporte o quadro de áreas']],
@@ -1305,7 +1395,7 @@ const MOCK = {
     ['measure','Medir seleção','base','base','Soma na hora área, comprimento, volume e medidas do que está selecionado.',['Selecione o que quer medir','Clique em Medir']],
     ['isolate','Isolar seleção','base','base','Esconde todo o resto para trabalhar numa parte; Mostrar tudo devolve.',['Selecione o que quer ver','Isolar','Mostrar tudo para voltar']],
     ['cut_list','Lista de peças e plano de corte','marc','marc','Peças com medidas reais, chapas encaixadas, fita de borda e ferragens.',['Selecione os móveis','Gerar lista','Ver plano de corte e exportar']],
-    ['countertop','Recorte de cuba e cooktop','marc','marc','Abre o furo no tampo e já encaixa a cuba ou o cooktop.',['Selecione o módulo com tampo','Escolha cuba ou cooktop','Recortar']],
+    ['countertop','Recorte de cuba e cooktop','marc','marc','Coloque o bloco da cuba ou do cooktop no tampo: o furo sai no formato dele, sozinho.',['Coloque o bloco em cima do tampo','O recorte sai sozinho','Ou selecione e clique em Recortar']],
     ['takeoff','Quantitativo','quant','quant','m² de piso, parede e teto por material, itens e componentes, em planilha.',['Pinte o modelo com materiais','Gerar quantitativo','Exportar para Excel']],
     ['model_health','Saúde do modelo','base','base','Encontra o que pesa e bagunça o arquivo e corrige com um clique.',['Analisar','Marcar o que corrigir','Corrigir']],
     ['align','Alinhar e distribuir','base','base','Alinha pela borda ou centro e distribui com espaço igual.',['Selecione os objetos','Escolha eixo e modo','Aplicar']],
@@ -1317,7 +1407,7 @@ const MOCK = {
     ['smart_select','Seleção inteligente','base','base','Seleciona tudo do mesmo material, etiqueta ou componente, inverte e acha sujeira.',['Selecione uma referência','Escolha o critério','Pronto']],
     ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do lavi em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
   ],
-  state(){ return { name:'lavi', version:'0.9.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
+  state(){ return { name:'lavi', version:'0.10.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,
     packages:[{id:'base',name:'Essencial',free:true,active:true},{id:'arq',name:'Arquitetura',active:true},{id:'rev',name:'Revestimentos',active:true},{id:'pres',name:'Apresentação',active:true},{id:'marc',name:'Marcenaria',active:true},{id:'quant',name:'Quantitativo',active:false}],
     tools:this.tools.map(t=>({id:t[0],name:t[1],tab:t[2],package:t[3],desc:t[4],steps:t[5],status:'ready',locked:t[3]==='quant'})) }; },
   run(tool, action, p){

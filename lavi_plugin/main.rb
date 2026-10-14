@@ -45,7 +45,7 @@ module LAVIStudio
       report_errors
     end
 
-    %w[registry license helpers geom nesting pickers updater dialog].each do |f|
+    %w[registry license helpers geom sweep nesting pickers updater dialog].each do |f|
       safe_require('core', f)
     end
     %w[

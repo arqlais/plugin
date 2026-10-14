@@ -103,7 +103,9 @@
    "seca": false,
    "mostrar_rej": true,
    "correj": "#BDB6AE",
-   "relevo": false,
+   "acabamento": "plano",
+   "var": 4,
+   "chanfro": 3,
    "ang": 0,
    "inicio": "canto",
    "cor": "#E9E3DC",
@@ -124,12 +126,12 @@
  {
   "id": "baseboard",
   "defaults": {
+   "modelo": "reto",
    "alt": 7,
    "esp": 1.5,
    "cor": "#FFFFFF",
    "barra": 2.4,
-   "perda": 10,
-   "preco": 0
+   "perda": 10
   },
   "acts": [
    "build"
@@ -138,11 +140,22 @@
  {
   "id": "ceiling",
   "defaults": {
+   "tipo": "rebaixado",
    "alt": 260,
    "esp": 1.25,
-   "sanca": false,
+   "tabica": true,
+   "tab_larg": 3,
+   "tab_prof": 3,
+   "cortineiro": false,
+   "cort_larg": 15,
+   "cort_alt": 20,
+   "sanca_tipo": "fechada",
    "sanca_larg": 40,
-   "sanca_desc": 15
+   "sanca_desc": 15,
+   "sanca_aba": 5,
+   "mold_modelo": "cove",
+   "mold_tam": 6,
+   "teto": false
   },
   "acts": [
    "build"
@@ -166,6 +179,9 @@
  {
   "id": "countertop",
   "defaults": {
+   "modo": "bloco",
+   "auto": true,
+   "folga": 0,
    "tipo": "cuba",
    "larg": 50,
    "prof": 40,
@@ -175,7 +191,10 @@
    "inserir": true
   },
   "acts": [
-   "cut"
+   "run",
+   "auto",
+   "mark",
+   "unmark"
   ]
  },
  {
@@ -330,11 +349,15 @@
    "z": 0,
    "anotacoes": true,
    "minimo": 1,
+   "explodir": false,
+   "fechar": true,
+   "tol": 2,
    "faces": true,
-   "explodir": false
+   "marcar": true
   },
   "acts": [
-   "clean"
+   "clean",
+   "gaps"
   ]
  },
  {

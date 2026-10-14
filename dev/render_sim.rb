@@ -33,6 +33,9 @@ def collect(ents, tr, mat, out)
       out[:dims] << [e.start[1].transform(tr), e.end[1].transform(tr), e.offset_vector.transform(tr)]
     when Sketchup::Edge
       out[:edges] << [e.start.position.transform(tr), e.end.position.transform(tr)] if e.faces.empty?
+    when Sketchup::ConstructionPoint
+      q = e.position.transform(tr)
+      out[:marks] = (out[:marks] || []) << q
     end
   end
   out
@@ -84,6 +87,10 @@ def render(name, title, view: :iso, az: -55, el: 32, w: 860, h: 560)
   svg = +%(<svg xmlns="http://www.w3.org/2000/svg" width="#{w}" height="#{h}" viewBox="0 0 #{w} #{h}"><image width="#{w}" height="#{h}" href="data:image/png;base64,#{img}"/>)
   svg << %(<text x="24" y="34" font-family="Poppins" font-weight="600" font-size="17" fill="#3E4B57">#{title}</text>)
   data[:edges].each { |a, b| p1 = tx.call(proj.call(a)); p2 = tx.call(proj.call(b)); svg << %(<line x1="#{p1[0]}" y1="#{p1[1]}" x2="#{p2[0]}" y2="#{p2[1]}" stroke="#A88A80" stroke-width="1.2"/>) }
+  (data[:marks] || []).each do |q|
+    c = tx.call(proj.call(q))
+    svg << %(<circle cx="#{c[0]}" cy="#{c[1]}" r="14" fill="none" stroke="#C0392B" stroke-width="2.5"/><path d="M#{c[0] - 8} #{c[1] - 8}l16 16m0 -16l-16 16" stroke="#C0392B" stroke-width="2.5"/>)
+  end
   data[:dims].each do |a, b, o|
     pa = tx.call(proj.call(a.offset(o))); pb = tx.call(proj.call(b.offset(o)))
     ea = tx.call(proj.call(a)); eb = tx.call(proj.call(b))
@@ -206,4 +213,77 @@ scene('11-dwg-paredes') do
   es << m.entities.add_line(pt(600, 0), pt(600, 400)) << m.entities.add_line(pt(600, 400), pt(0, 400)) << m.entities.add_line(pt(0, 400), pt(0, 0))
   sel(es); run(:dwg_walls, 'build')
   render('11-dwg-paredes', 'DWG → Paredes · linhas da planta viram paredes com o vão da porta')
+end
+
+scene('12-forro-tabica-cortineiro') do
+  f = floor(160, 120, pilar: false)
+  box(-15, 0, 0, 15, 120, 280, name: 'Parede').material = m.materials.add('Parede').tap { |x| x.color = Sketchup::Color.new(236, 232, 226) }
+  janela = f.edges.find { |e| e.start.position.y.abs < 0.01 && e.end.position.y.abs < 0.01 }
+  sel(f, janela)
+  run(:ceiling, 'build', 'cortineiro' => true, 'cort_larg' => 15, 'cort_alt' => 20)
+  f.hidden = true
+  render('12-forro-tabica-cortineiro', 'Forro com tabica de 3 cm e cortineiro de 15 cm (visto de baixo)', view: :below, az: -110, el: 30)
+end
+
+scene('13-moldura-classica') do
+  f = floor(pilar: false)
+  wm = m.materials.add('Parede').tap { |x| x.color = Sketchup::Color.new(236, 232, 226) }
+  box(-15, -15, 0, 15, 315, 260, name: 'Parede').material = wm
+  box(-15, 300, 0, 415, 15, 260, name: 'Parede').material = wm
+  sel(f)
+  run(:ceiling, 'build', 'tipo' => 'moldura', 'mold_modelo' => 'classica', 'mold_tam' => 12, 'teto' => true)
+  sel(f)
+  run(:baseboard, 'build', 'modelo' => 'classico', 'alt' => 15, 'esp' => 2.5)
+  render('13-moldura-classica', 'Sem rebaixo: moldura clássica no teto + rodapé clássico', az: -120, el: 18)
+end
+
+scene('14-rodapes') do
+  %w[reto chanfrado boleado frisado classico filete].each_with_index do |mod, i|
+    f = m.entities.add_face(pt(i * 70, 0), pt(i * 70 + 45, 0), pt(i * 70 + 45, 30), pt(i * 70, 30))
+    f.reverse! if f.normal.z < 0
+    sel(f)
+    run(:baseboard, 'build', 'modelo' => mod, 'alt' => 12, 'esp' => 3, 'cor' => '#FFFFFF')
+    f.hidden = true
+  end
+  render('14-rodapes', 'Rodapés: reto, chanfrado, boleado, frisado, clássico e filete', az: -70, el: 28)
+end
+
+scene('15-cuba-automatica') do
+  tampo = box(0, 0, 88, 200, 60, 3, name: 'Tampo')
+  tampo.material = m.materials.add('Granito').tap { |x| x.color = Sketchup::Color.new(90, 90, 92) }
+  dfn = m.definitions.add('Cuba inox')
+  f = dfn.entities.add_face(pt(0, 0), pt(50, 0), pt(50, 40), pt(0, 40))
+  f.reverse! if f.normal.z > 0
+  f.pushpull(-20.cm)
+  $timers = []
+  c = m.entities.add_instance(dfn, Geom::Transformation.new(pt(30, 10, 72)))
+  c.material = m.materials.add('Inox').tap { |x| x.color = Sketchup::Color.new(200, 204, 208) }
+  d2 = m.definitions.add('Cooktop 4 bocas')
+  g = d2.entities.add_face(pt(0, 0), pt(56, 0), pt(56, 49), pt(0, 49))
+  g.reverse! if g.normal.z > 0
+  g.pushpull(-6.cm)
+  k = m.entities.add_instance(d2, Geom::Transformation.new(pt(125, 6, 86)))
+  k.material = m.materials.add('Vidro preto').tap { |x| x.color = Sketchup::Color.new(30, 30, 32) }
+  $timers.each(&:call)
+  c.hidden = true
+  k.hidden = true
+  render('15-cuba-automatica', 'Recorte automático: a cuba e o cooktop furaram o tampo no formato deles', el: 50, az: -60)
+end
+
+scene('16-pedra-rustica') do
+  f = m.entities.add_face(pt(0, 0), pt(200, 0), pt(200, 140), pt(0, 140))
+  f.reverse! if f.normal.z < 0
+  sel(f)
+  run(:tiling, 'build', 'padrao' => 'organica', 'pc' => 40, 'pl' => 30, 'rej' => 12, 'acabamento' => 'rustico', 'var' => 15, 'chanfro' => 8, 'esp' => 20, 'cor' => '#E3D3B5', 'correj' => '#8F887E')
+  f.hidden = true
+  render('16-pedra-rustica', 'Pedra São Tomé rústica: alturas e inclinações diferentes, borda chanfrada', az: -60, el: 22)
+end
+
+scene('17-dwg-aberturas') do
+  m.entities.add_edges(pt(1, 0), pt(400, 0), pt(400, 300), pt(0, 300), pt(0, 0.5))
+  m.entities.add_edges(pt(150, 300), pt(150, 180), pt(260, 180))
+  m.entities.add_line(pt(262, 180), pt(400, 180.5))
+  sel(m.entities.grep(Sketchup::Edge))
+  run(:dwg_clean, 'clean', 'tol' => 1.5)
+  render('17-dwg-aberturas', 'Limpar DWG: fechou o canto aberto e os encontros em T; a abertura de 2 cm ficou marcada', view: :top)
 end

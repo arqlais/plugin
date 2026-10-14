@@ -29,7 +29,7 @@ module LAVIStudio
     ROOT = File.join(ROOT_DIR, 'lavi_plugin')
   end
 end
-%w[registry license helpers geom nesting].each { |f| require File.join(ROOT_DIR, 'lavi_plugin', 'core', f) }
+%w[registry license helpers geom sweep nesting].each { |f| require File.join(ROOT_DIR, 'lavi_plugin', 'core', f) }
 module LAVIStudio::Plugin::Dialog; def self.push(*); end; end
 require File.join(ROOT_DIR, 'lavi_plugin', 'core', 'updater')
 Dir[File.join(ROOT_DIR, 'lavi_plugin', 'tools', '*.rb')].sort.each { |f| require f }
