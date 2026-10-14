@@ -62,12 +62,15 @@ module LAVIStudio
 
       # manual = true quando a pessoa clicou em "Procurar atualização"
       def check(manual = false)
+        # se uma consulta anterior travou sem resposta, libera depois de 1 min
+        @busy = false if @busy && @busy_since && Time.now - @busy_since > 60
         return if @busy
         unless defined?(Sketchup::Http::Request)
           UI.messagebox('Esta versão do SketchUp não permite atualização automática. Instale o .rbz novo pelo Gerenciador de extensões.') if manual
           return
         end
         @busy = true
+        @busy_since = Time.now
         @checked_at = Time.now
         @req = Sketchup::Http::Request.new("#{MANIFEST_URL}?t=#{Time.now.to_i}", Sketchup::Http::GET)
         @req.start do |_r, res|
@@ -76,18 +79,22 @@ module LAVIStudio
         end
       rescue StandardError => e
         @busy = false
+        log("consulta: #{e.class}: #{e.message}")
         notify(state: 'error', msg: "Não consegui procurar atualização: #{e.message}") if manual
       end
 
       def handle_manifest(res, manual)
         unless res && res.status_code == 200
+          log("manifesto: status #{res ? res.status_code : 'sem resposta'}")
           notify(state: 'error', msg: 'Sem conexão com o servidor de atualizações.') if manual
           return
         end
-        info = JSON.parse(res.body)
+        info = JSON.parse(res.body.to_s.dup.force_encoding('UTF-8'))
+        log("manifesto ok: remota #{info['version']}, instalada #{VERSION}")
         @last = info
         if newer?(info['version'])
           notify(state: 'available', version: info['version'], notes: info['notes'] || [])
+          popup(info) unless manual || @install_after_check
           if @install_after_check
             @install_after_check = false
             download(info)
@@ -101,7 +108,28 @@ module LAVIStudio
           UI.messagebox("Você já está na versão mais nova (#{VERSION}).") if manual
         end
       rescue StandardError => e
+        log("manifesto inválido: #{e.class}: #{e.message}")
         notify(state: 'error', msg: "Arquivo de atualização inválido: #{e.message}") if manual
+      end
+
+      # Aviso no canto do SketchUp (aparece mesmo com o painel fechado), uma vez por versão
+      def popup(info)
+        return if @popped == info['version']
+        return unless defined?(UI::Notification) && defined?(EXTENSION)
+        @popped = info['version']
+        @note = UI::Notification.new(EXTENSION, "LAVI #{info['version']} disponível. Clique em Atualizar: instala sozinho, sem reinstalar.")
+        @note.on_accept('Atualizar') { install_now }
+        @note.on_dismiss('Depois') {}
+        @note.show
+      rescue StandardError => e
+        log("aviso: #{e.class}: #{e.message}")
+      end
+
+      # Registro simples para descobrir por que a atualização não apareceu (%TEMP%/lavi_atualizacao.txt)
+      def log(msg)
+        File.open(File.join(Dir.tmpdir, 'lavi_atualizacao.txt'), 'a') { |f| f.puts("#{Time.now.strftime('%d/%m %H:%M:%S')} #{msg}") }
+      rescue StandardError
+        nil
       end
 
       def download(info)
@@ -111,6 +139,7 @@ module LAVIStudio
           if res && res.status_code == 200
             install(res.body, info)
           else
+            log("download: status #{res ? res.status_code : 'sem resposta'}")
             notify(state: 'error', msg: 'Falha ao baixar a atualização. Tente de novo mais tarde.')
           end
         end
@@ -131,6 +160,7 @@ module LAVIStudio
         notify(state: 'installed', version: info['version'])
         UI.messagebox("LAVI atualizado para #{info['version']}.\nFeche e abra o SketchUp para usar a versão nova.\n(Não precisa reinstalar nada.)")
       rescue StandardError => e
+        log("instalação: #{e.class}: #{e.message}")
         notify(state: 'error', msg: "Não consegui instalar: #{e.message}")
       end
 

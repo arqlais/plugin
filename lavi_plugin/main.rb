@@ -107,6 +107,8 @@ module LAVIStudio
       # mostra erros (se houver) e procura atualização em silêncio depois que o SketchUp abrir
       UI.start_timer(3, false) { report_errors }
       UI.start_timer(20, false) { Updater.check(false) if defined?(Updater) && Updater.auto? }
+      # e de novo a cada 3 h, para quem deixa o SketchUp aberto o dia todo
+      UI.start_timer(3 * 3600, true) { Updater.check(false) if defined?(Updater) && Updater.auto? }
       file_loaded(__FILE__)
     end
   end

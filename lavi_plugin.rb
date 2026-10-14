@@ -8,7 +8,7 @@ module LAVIStudio
   module Plugin
     PLUGIN_ID   = 'lavi_plugin'.freeze
     PLUGIN_NAME = 'LAVI'.freeze
-    VERSION     = '0.7.0'.freeze
+    VERSION     = '0.7.1'.freeze
 
     unless file_loaded?(__FILE__)
       ext = SketchupExtension.new(PLUGIN_NAME, File.join(PLUGIN_ID, 'main'))
@@ -17,6 +17,7 @@ module LAVIStudio
       ext.creator     = 'Laís A. Vieira · LAVI'
       ext.copyright   = "© #{Time.now.year} Laís A. Vieira"
       Sketchup.register_extension(ext, true)
+      EXTENSION = ext # usado no aviso de atualização (UI::Notification)
       file_loaded(__FILE__)
     end
   end

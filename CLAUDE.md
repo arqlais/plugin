@@ -55,7 +55,7 @@ docs/                           prints das telas
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.6.1; nada de geometria testado por ela ainda)
+## Ferramentas — status (v0.7.1; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria; digitar "5" = 5 m, unidade escolhível) | arq |
@@ -101,6 +101,7 @@ Próximo nível que ela quer (imagens de referência): catálogo detalhado como 
 
 ## Atualização automática
 - `Updater` lê `https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/latest.json` 20 s depois de abrir o SketchUp e de novo ao abrir o painel (se faz mais de 1 h). Guarda o aviso (`Updater.state`, vai no `send_state`) e o painel mostra a **barra "Nova versão · Atualizar" em todas as telas** (`#updbar`). Um clique (`update` → `install`) baixa, confere SHA256 e instala; depois só reiniciar o SketchUp, sem reinstalar pelo Gerenciador. Ela pediu isso: não quer ficar reinstalando.
+- v0.7.1: também mostra um aviso no canto do SketchUp (`UI::Notification` com botão Atualizar, usa a constante `EXTENSION` do carregador), mesmo com o painel fechado; procura de novo a cada 3 h; grava o que aconteceu em `%TEMP%/lavi_atualizacao.txt`. Ela reclamou que "não aparece para atualizar sozinho".
 - Nunca instala sem clique. Desde a v0.5 **nunca instala sozinho** (ela reclamou do SketchUp instável); instala só quando ela clica (baixa o `.rbz`, confere SHA256, `Sketchup.install_from_archive`, pede para reiniciar).
 - Atenção: o LIA Render oficial e o LAVI Render dela (LIA modificado, backup no repo privado `lavi-app`, ramo `backup/lavi-render-v4`) usam a mesma pasta `thebox_render`: instalar um sobrescreve o outro.
 - Para publicar versão nova: subir `VERSION` em `lavi_plugin.rb`, `sh dev/build.sh "nota 1" "nota 2"`, commit e merge no branch padrão.

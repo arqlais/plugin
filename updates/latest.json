@@ -1,6 +1,6 @@
 {
-  "version": "0.7.0",
+  "version": "0.7.1",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "3fd03ce53248599e918edf02d20cb3c6a99d2ef886c77cecf00602ef35ffc350",
-  "notes": ["Visual novo, mais limpo: fonte Poppins, lista simples, campos em linhas","Ícones da barra mais finos e ícone principal sem fundo verde","Paredes: digite 5 e Enter para fazer 5 m","Exportar imagens: formatos de feed/story/A4, moldura e grade de terços, atalhos de câmera","Painel volta ao tamanho normal ao clicar no ícone","Orçamento removido"]
+  "sha256": "93fdf4e079442754bc19e294e679940530c1282cda9913d3b9b5635ffcd9acb6",
+  "notes": ["Aviso de versão nova no canto do SketchUp, mesmo com o painel fechado","Procura atualização de novo a cada 3 horas"]
 }
