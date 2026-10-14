@@ -14,6 +14,8 @@ module LAVIStudio
         }.freeze
 
         def handle(action, p)
+          # ficha de mobiliário mora em furniture.rb
+          return Furniture.handle(action == 'moveis_csv' ? 'csv' : action, p) if %w[apply read report moveis_csv sheet].include?(action)
           q = quantities(p)
           case action
           when 'run'
@@ -110,9 +112,9 @@ module LAVIStudio
           end
         end
 
-        Registry.register(:takeoff, name: 'Quantitativo', tab: :quant, package: :quant, handler: self,
-                                    desc: 'm² de piso, parede e teto por material, itens e componentes, em planilha.',
-                                    steps: ['Pinte o modelo com materiais', 'Gerar quantitativo', 'Exportar para Excel'])
+        Registry.register(:takeoff, name: 'Quantitativo e mobiliário', tab: :quant, package: :quant, handler: self,
+                                    desc: 'm² por material, itens, ficha de cada móvel, relatório e caderno de especificação.',
+                                    steps: ['Pinte o modelo ou selecione o móvel', 'Gerar ou aplicar a ficha', 'Excel ou caderno'])
       end
     end
   end

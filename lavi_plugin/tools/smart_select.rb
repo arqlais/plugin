@@ -11,7 +11,9 @@ module LAVIStudio
                   'inverter' => 'que não estavam selecionados', 'soltas' => 'linhas soltas (sem face)',
                   'costas' => 'faces de costas para cima', 'escondidos' => 'escondidos' }.freeze
 
-        def handle(action, _p)
+        def handle(action, p)
+          # trocar componente mora em replace.rb
+          return Replace.handle(action, p) if %w[list select_same replace].include?(action)
           return H.err('Ação desconhecida.') unless NAMES.key?(action)
           sel = H.selection
           ents = H.model.active_entities.to_a
@@ -51,7 +53,7 @@ module LAVIStudio
         end
 
         Registry.register(:smart_select, name: 'Seleção inteligente', tab: :base, package: :base, handler: self,
-                                         desc: 'Seleciona tudo do mesmo material, etiqueta ou componente, inverte e acha sujeira.',
+                                         desc: 'Seleciona pelo mesmo material, etiqueta ou componente, acha sujeira e troca componentes.',
                                          steps: ['Selecione uma referência', 'Escolha o critério', 'Pronto'])
       end
     end

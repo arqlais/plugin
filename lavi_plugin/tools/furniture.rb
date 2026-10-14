@@ -9,6 +9,7 @@ module LAVIStudio
       module Furniture
         extend self
         H = Helpers
+        # (v0.12: faz parte de outra ferramenta do painel, sem botão próprio)
         D = 'plane_item'.freeze
         DEF_KEYS = %w[nome marca cor codigo link preco obs].freeze
 
@@ -148,9 +149,6 @@ module LAVIStudio
           path
         end
 
-        Registry.register(:furniture, name: 'Ficha de mobiliário', tab: :quant, package: :quant, handler: self,
-                                      desc: 'Marca, cor, link e preço de cada móvel; relatório e caderno de especificação com foto.',
-                                      steps: ['Selecione o móvel', 'Preencha e aplique', 'Gere relatório ou caderno'])
       end
     end
   end

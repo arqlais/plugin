@@ -306,7 +306,7 @@ scene('17-dwg-aberturas') do
   m.entities.add_edges(pt(150, 300), pt(150, 180), pt(260, 180))
   m.entities.add_line(pt(262, 180), pt(400, 180.5))
   sel(m.entities.grep(Sketchup::Edge))
-  run(:dwg_clean, 'clean', 'tol' => 1.5)
+  run(:dwg_walls, 'clean', 'tol' => 1.5)
   render('17-dwg-aberturas', 'Limpar DWG: fechou o canto aberto e os encontros em T; a abertura de 2 cm ficou marcada', view: :top)
 end
 

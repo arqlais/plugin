@@ -11,6 +11,8 @@ module LAVIStudio
         WINDOW_RX = /jan|janela|window|win|esq|caixilho/i
 
         def handle(action, p)
+          # etapa 1 (limpar a planta) mora em dwg_clean.rb
+          return DwgClean.handle(action, p.merge('z' => p['z_achatar'] || 0)) if %w[clean gaps].include?(action)
           return H.err('Ação desconhecida.') unless %w[analyze build].include?(action)
           segs = collect_segments(H.selection.to_a, IDENTITY)
           return H.err('Selecione as linhas da planta importada (pode selecionar o bloco inteiro do DWG).') if segs.size < 2
@@ -204,9 +206,9 @@ module LAVIStudio
           g
         end
 
-        Registry.register(:dwg_walls, name: 'DWG → Paredes', tab: :arq, package: :arq, handler: self,
-                                      desc: 'Transforma a planta importada do AutoCAD em paredes 3D com vergas e peitoris.',
-                                      steps: ['Importe o DWG e selecione as linhas', 'Clique em Analisar', 'Clique em Levantar paredes'])
+        Registry.register(:dwg_walls, name: 'DWG: limpar e levantar paredes', tab: :arq, package: :arq, handler: self,
+                                      desc: 'Limpa a planta importada, fecha as aberturas e levanta as paredes com vergas e peitoris.',
+                                      steps: ['Importe e limpe a planta', 'Selecione as linhas', 'Levantar paredes'])
       end
     end
   end

@@ -7,6 +7,7 @@ module LAVIStudio
       module DwgClean
         extend self
         H = Helpers
+        # (v0.12: faz parte de outra ferramenta do painel, sem botão próprio)
 
         def handle(action, p)
           return gaps_only(p) if action == 'gaps'
@@ -194,9 +195,6 @@ module LAVIStudio
           marks.concat(found)
         end
 
-        Registry.register(:dwg_clean, name: 'Limpar DWG', tab: :arq, package: :arq, handler: self,
-                                      desc: 'Achata a planta importada, tira textos e cotas, apaga sujeira e fecha as faces.',
-                                      steps: ['Selecione o DWG importado', 'Escolha o que limpar', 'Limpar'])
       end
     end
   end

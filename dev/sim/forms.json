@@ -31,6 +31,16 @@
  {
   "id": "dwg_walls",
   "defaults": {
+   "etapa": "limpar",
+   "achatar": true,
+   "z_achatar": 0,
+   "anotacoes": true,
+   "minimo": 1,
+   "explodir": false,
+   "fechar": true,
+   "tol": 2,
+   "faces": true,
+   "marcar": true,
    "espmin": 8,
    "espmax": 30,
    "minlen": 10,
@@ -44,6 +54,8 @@
    "vergas": true
   },
   "acts": [
+   "clean",
+   "gaps",
    "build",
    "analyze"
   ]
@@ -80,24 +92,6 @@
   },
   "acts": [
    "build"
-  ]
- },
- {
-  "id": "urban_index",
-  "defaults": {
-   "to_max": 70,
-   "ca_max": 2,
-   "tp_min": 15,
-   "colorir": true
-  },
-  "acts": [
-   "calc",
-   "csv",
-   "clear",
-   "assign:terreno",
-   "assign:projecao",
-   "assign:construida",
-   "assign:permeavel"
   ]
  },
  {
@@ -263,8 +257,11 @@
   ]
  },
  {
-  "id": "furniture",
+  "id": "takeoff",
   "defaults": {
+   "parte": "quant",
+   "escopo": "modelo",
+   "marcenaria": false,
    "nome": "",
    "ambiente": "",
    "marca": "",
@@ -278,22 +275,13 @@
    "so_fichados": true
   },
   "acts": [
+   "run",
+   "csv",
    "apply",
    "read",
    "report",
-   "csv",
+   "moveis_csv",
    "sheet"
-  ]
- },
- {
-  "id": "takeoff",
-  "defaults": {
-   "escopo": "modelo",
-   "marcenaria": false
-  },
-  "acts": [
-   "run",
-   "csv"
   ]
  },
  {
@@ -321,17 +309,6 @@
   ]
  },
  {
-  "id": "replace",
-  "defaults": {
-   "def": ""
-  },
-  "acts": [
-   "replace",
-   "select_same",
-   "list"
-  ]
- },
- {
   "id": "measure",
   "defaults": {
    "dentro": true
@@ -349,24 +326,6 @@
    "isolate",
    "restore",
    "xray"
-  ]
- },
- {
-  "id": "dwg_clean",
-  "defaults": {
-   "achatar": true,
-   "z": 0,
-   "anotacoes": true,
-   "minimo": 1,
-   "explodir": false,
-   "fechar": true,
-   "tol": 2,
-   "faces": true,
-   "marcar": true
-  },
-  "acts": [
-   "clean",
-   "gaps"
   ]
  },
  {
@@ -414,7 +373,9 @@
  },
  {
   "id": "smart_select",
-  "defaults": {},
+  "defaults": {
+   "def": ""
+  },
   "acts": [
    "inverter",
    "material",
@@ -422,7 +383,9 @@
    "componente",
    "soltas",
    "costas",
-   "escondidos"
+   "escondidos",
+   "replace",
+   "list"
   ]
  },
  {

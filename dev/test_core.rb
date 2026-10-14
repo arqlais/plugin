@@ -40,9 +40,9 @@ G = P::Geom2
 class TestCore < Minitest::Test
   def test_all_tools_registered
     ids = P::Registry.all.map { |t| t[:id] }
-    %i[walls openings dwg_walls stairs roofs urban_index tiling baseboard ceiling
-       cut_list countertop takeoff model_health align replace auto_tags
-       scenes export_images room_tags furniture measure isolate].each do |id|
+    %i[walls openings dwg_walls stairs roofs tiling baseboard ceiling
+       cut_list countertop takeoff model_health align smart_select auto_tags
+       scenes export_images room_tags measure isolate].each do |id|
       assert_includes ids, id
     end
     P::Registry.all.each { |t| assert t[:handler].respond_to?(:handle), "#{t[:id]} sem handle" }

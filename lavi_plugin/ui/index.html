@@ -362,7 +362,6 @@ const IC = {
   dwg_walls:'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5',
   stairs:'M3 20h5v-5h5v-5h5V5h3',
   roofs:'M2 12l10-8 10 8M5 10v10h14V10M10 20v-5h4v5',
-  urban_index:'M3 3h18v18H3zM7 17L17 7M8 8h.01M16 16h.01',
   tiling:'M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18',
   baseboard:'M5 3v18h16M5 17h14v4M9 8h6',
   ceiling:'M3 4h18M5 4v3h14V4M12 7v3M8.5 14a3.5 3.5 0 0 1 7 0zM12 16.5v1',
@@ -577,12 +576,27 @@ const FORMS = {
     acts:[['place','Clicar na parede','pin',1]], prev: p => prevOpening(p),
     hint:'Da ponta da parede: clique em qualquer lugar da parede e o vão fica na distância certa da ponta (esquerda ou direita, olhando a parede de frente). De um ponto: clique num batente, canto ou eixo. Também dá para digitar a distância no campo de medidas do SketchUp antes de clicar.' },
   dwg_walls:{ secs:[
-      {t:'Leitura da planta', f:[
+      {t:'Etapa', f:[
+        {k:'etapa',type:'cards',full:1,def:'limpar',opts:[['limpar','1 · Limpar a planta','dwg_clean'],['paredes','2 · Levantar paredes','dwg_walls']]}]},
+
+      {t:'Limpeza', when:p=>(p.etapa||'limpar')==='limpar', f:[
+        {k:'achatar',type:'tg',label:'Achatar tudo na mesma altura',def:true,full:1},
+        {k:'z_achatar',type:'num',label:'Altura',unit:'cm',def:0,when:p=>p.achatar!==false},
+        {k:'anotacoes',type:'tg',label:'Tirar textos, cotas e guias',def:true,full:1},
+        {k:'minimo',type:'num',label:'Apagar linhas menores que',unit:'mm',def:1,step:.5},
+        {k:'explodir',type:'tg',label:'Explodir os blocos',def:false,full:1}]},
+      {t:'Fechar geometria', when:p=>(p.etapa||'limpar')==='limpar', f:[
+        {k:'fechar',type:'tg',label:'Ligar as pontas soltas (linhas que não se encontram)',def:true,full:1},
+        {k:'tol',type:'num',label:'Ligar se a distância for até',unit:'cm',def:2,chips:[1,2,5,10],step:.5,when:p=>p.fechar!==false},
+        {k:'faces',type:'tg',label:'Fechar as faces',def:true,full:1},
+        {k:'marcar',type:'tg',label:'Marcar e selecionar o que ficou aberto',def:true,full:1},
+        {type:'acts',full:1,acts:[['gaps','Só mostrar onde está aberto','search']]}]},
+      {t:'Leitura da planta', when:p=>p.etapa==='paredes', f:[
         {k:'espmin',type:'num',label:'Parede mais fina',unit:'cm',def:8},
         {k:'espmax',type:'num',label:'Parede mais grossa',unit:'cm',def:30},
         {k:'minlen',type:'num',label:'Ignorar linhas menores que',unit:'cm',def:10},
         {k:'z',type:'num',label:'Nível do piso',unit:'cm',def:0}]},
-      {t:'Alturas', f:[
+      {t:'Alturas', when:p=>p.etapa==='paredes', f:[
         {k:'alt',type:'num',label:'Pé-direito',unit:'cm',def:280},
         {k:'altporta',type:'num',label:'Altura das portas',unit:'cm',def:210},
         {k:'altjanela',type:'num',label:'Topo das janelas',unit:'cm',def:210},
@@ -590,8 +604,8 @@ const FORMS = {
         {k:'vaomin',type:'num',label:'Vão mínimo',unit:'cm',def:50},
         {k:'vaomax',type:'num',label:'Vão máximo',unit:'cm',def:400},
         {k:'vergas',type:'tg',label:'Fechar vergas e peitoris nos vãos',def:true,full:1}]}],
-    acts:[['build','Levantar paredes','play',1],['analyze','Analisar','eye']],
-    hint:'Importe o DWG (Arquivo › Importar), selecione as linhas da planta e clique em Analisar. Janelas são reconhecidas pela camada ou bloco com "JAN" no nome.' },
+    acts:p=>p.etapa==='paredes'?[['build','Levantar paredes','play',1],['analyze','Analisar','eye']]:[['clean','Limpar planta','dwg_clean',1]], allActs:['clean','gaps','build','analyze'],
+    hint:'1 · Logo depois de importar (Arquivo › Importar): achata, tira textos e cotas, liga as pontas soltas e mostra onde ficou aberto. 2 · Selecione as linhas e levante as paredes; janelas são reconhecidas pela camada ou bloco com "JAN" no nome.' },
   stairs:{ secs:[
       {t:'Escada', f:[
         {k:'tipo',type:'cards',full:1,def:'macica',opts:[['macica','Maciça','macica'],['flutuante','Flutuante','flutuante']]},
@@ -619,14 +633,6 @@ const FORMS = {
         {k:'elev',type:'num',label:'Subir a partir da face',unit:'cm',def:0}]}],
     acts:[['build','Gerar telhado','play',1]], prev: p => prevRoof(p),
     hint:'Selecione a face com o contorno da cobertura (vista de cima). O telhado segue o lado mais comprido.' },
-  urban_index:{ secs:[
-      {t:'Limites da lei', f:[
-        {k:'to_max',type:'num',label:'Taxa de ocupação máx.',unit:'%',def:70},
-        {k:'ca_max',type:'num',label:'Coef. aproveitamento máx.',unit:'×',def:2,step:.1},
-        {k:'tp_min',type:'num',label:'Permeabilidade mín.',unit:'%',def:15},
-        {k:'colorir',type:'tg',label:'Colorir o que eu marcar',def:true}]},
-      {t:'Marcar a seleção como', f:[{type:'acts',full:1,acts:[['assign:terreno','Terreno','#E8E2DA'],['assign:projecao','Projeção','#FFB3D1'],['assign:construida','Construída','#C9B3FF'],['assign:permeavel','Permeável','#9FD8C2']]}]}],
-    acts:[['calc','Calcular índices','refresh',1],['csv','Planilha','file'],['clear','Desmarcar seleção','x']] },
   tiling:{ secs:[
       {t:'Superfície', f:[{type:'html',html:surfHtml}]},
       {t:'Padrão de paginação', f:[
@@ -775,8 +781,14 @@ const FORMS = {
         {k:'nome',type:'text',label:'Nome do ambiente',def:'SALA',full:1,when:p=>!p.perguntar}]}],
     acts:[['place','Clicar nos ambientes','pin',1],['update','Atualizar áreas','refresh']],
     more:[['list','Ver quadro de áreas','eye'],['csv','Quadro de áreas (Excel)','file']], prev:p=>prevRoom(p) },
-  furniture:{ secs:[
-      {t:'Ficha do móvel', f:[
+  takeoff:{ secs:[
+      {t:'Parte', f:[
+        {k:'parte',type:'cards',full:1,def:'quant',opts:[['quant','Quantitativo','takeoff'],['moveis','Mobiliário','furniture']]}]},
+      {t:'O que medir', when:p=>(p.parte||'quant')==='quant', f:[
+        {k:'escopo',type:'seg',label:'Medir',def:'modelo',full:1,opts:[['modelo','Modelo inteiro'],['selecao','Só a seleção']]},
+        {k:'marcenaria',type:'tg',label:'Somar faces da marcenaria nas áreas',def:false,full:1}]},
+
+      {t:'Ficha do móvel', when:p=>p.parte==='moveis', f:[
         {k:'nome',type:'text',label:'Item',def:''},
         {k:'ambiente',type:'text',label:'Ambiente',def:''},
         {k:'marca',type:'text',label:'Marca / loja',def:''},
@@ -785,20 +797,15 @@ const FORMS = {
         {k:'preco',type:'num',label:'Preço unitário',unit:'R$',def:''},
         {k:'link',type:'text',label:'Link do produto',def:'',full:1},
         {k:'obs',type:'area',label:'Observação',def:'',full:1}]},
-      {t:'Relatório e caderno', closed:1, f:[
+      {t:'Relatório e caderno', when:p=>p.parte==='moveis', closed:1, f:[
         {k:'projeto',type:'text',label:'Projeto',def:''},
         {k:'cliente',type:'text',label:'Cliente',def:''},
         {k:'so_fichados',type:'tg',label:'Só móveis com ficha',def:true,full:1}]}],
-    acts:[['apply','Aplicar na seleção','check',1],['read','Ler','read']],
-    more:[['report','Ver relatório','eye'],['csv','Excel','file'],['sheet','Caderno de especificação','file']],
-    render:r=>renderItems(r),
-    hint:'Cópias do mesmo componente dividem a mesma ficha; o ambiente fica em cada cópia. O caderno abre no navegador com a foto de cada item: imprima como PDF.' },
-  takeoff:{ secs:[
-      {t:'O que medir', f:[
-        {k:'escopo',type:'seg',label:'Medir',def:'modelo',full:1,opts:[['modelo','Modelo inteiro'],['selecao','Só a seleção']]},
-        {k:'marcenaria',type:'tg',label:'Somar faces da marcenaria nas áreas',def:false,full:1}]}],
-    acts:[['run','Gerar quantitativo','play',1],['csv','Excel','file']], render:r=>renderTakeoff(r),
-    hint:'Pinte o modelo com materiais (piso, pintura, revestimento): cada material vira uma linha com m² de piso, parede e teto.' },
+    acts:p=>p.parte==='moveis'?[['apply','Aplicar na seleção','check',1],['read','Ler','read']]:[['run','Gerar quantitativo','play',1],['csv','Excel','file']],
+    more:p=>p.parte==='moveis'?[['report','Ver relatório','eye'],['moveis_csv','Excel','file'],['sheet','Caderno de especificação','file']]:[],
+    allActs:['run','csv','apply','read','report','moveis_csv','sheet'],
+    render:r=>r.items?renderItems(r):renderTakeoff(r),
+    hint:'Quantitativo: pinte o modelo com materiais, cada material vira uma linha com m² de piso, parede e teto. Mobiliário: marca, cor, link e preço de cada móvel; cópias do mesmo componente dividem a ficha. O caderno abre no navegador com a foto de cada item (imprima como PDF).' },
   model_health:{ secs:[
       {t:'Ao corrigir', f:[
         {k:'purge',type:'tg',label:'Limpar itens sem uso',def:true,full:1},
@@ -812,9 +819,6 @@ const FORMS = {
         {k:'modo',type:'cards',label:'Como',def:'min',full:1,opts:[['min','Início','emin'],['centro','Centro','ecen'],['max','Fim','emax'],['distribuir','Distribuir','edist']]},
         {k:'espaco',type:'num',label:'Espaço fixo (vazio = igual)',unit:'cm',def:'',when:p=>p.modo==='distribuir',full:1}]}],
     acts:[['run','Aplicar','check',1]] },
-  replace:{ secs:[
-      {t:'Trocar por', f:[{k:'def',type:'select',label:'Componente novo',def:'',full:1,opts:[],dyn:'defs'}]}],
-    acts:[['replace','Substituir selecionados','refresh',1],['select_same','Selecionar iguais','eye']], more:[['list','Atualizar lista','refresh']] },
   measure:{ secs:[
       {t:'Opções', f:[{k:'dentro',type:'tg',label:'Somar também o que está dentro de grupos',def:true,full:1}]}],
     acts:[['run','Medir seleção','measure',1]],
@@ -822,21 +826,6 @@ const FORMS = {
   isolate:{ secs:[
       {t:'Opções', f:[{k:'zoom',type:'tg',label:'Aproximar na seleção ao isolar',def:true,full:1}]}],
     acts:[['isolate','Isolar','isolate',1],['restore','Mostrar tudo','eye']], more:[['xray','Raio X liga/desliga','sparkle']] },
-  dwg_clean:{ secs:[
-      {t:'Limpeza', f:[
-        {k:'achatar',type:'tg',label:'Achatar tudo na mesma altura',def:true,full:1},
-        {k:'z',type:'num',label:'Altura',unit:'cm',def:0,when:p=>p.achatar!==false},
-        {k:'anotacoes',type:'tg',label:'Tirar textos, cotas e guias',def:true,full:1},
-        {k:'minimo',type:'num',label:'Apagar linhas menores que',unit:'mm',def:1,step:.5},
-        {k:'explodir',type:'tg',label:'Explodir os blocos',def:false,full:1}]},
-      {t:'Fechar geometria', f:[
-        {k:'fechar',type:'tg',label:'Ligar as pontas soltas (linhas que não se encontram)',def:true,full:1},
-        {k:'tol',type:'num',label:'Ligar se a distância for até',unit:'cm',def:2,chips:[1,2,5,10],step:.5,when:p=>p.fechar!==false},
-        {k:'faces',type:'tg',label:'Fechar as faces',def:true,full:1},
-        {k:'marcar',type:'tg',label:'Marcar e selecionar o que ficou aberto',def:true,full:1},
-        {type:'acts',full:1,acts:[['gaps','Só mostrar onde está aberto','search']]}]}],
-    acts:[['clean','Limpar planta','dwg_clean',1]],
-    hint:'Use logo depois de importar o DWG. Achatar resolve as linhas em alturas diferentes que impedem de fechar faces.' },
   dims:{ secs:[
       {t:'O que cotar', f:[
         {k:'externas',type:'tg',label:'Contorno externo',def:true,full:1},
@@ -870,8 +859,12 @@ const FORMS = {
     hint:'Sem nada selecionado, corrige o modelo inteiro (entra em grupos e componentes). Faça antes de renderizar.' },
   smart_select:{ secs:[
       {t:'A partir da seleção', f:[{type:'acts',full:1,acts:[['material','Mesmo material','grid'],['etiqueta','Mesma etiqueta','auto_tags'],['componente','Mesmo componente','replace']]}]},
-      {t:'No modelo', f:[{type:'acts',full:1,acts:[['soltas','Linhas soltas','dims'],['costas','Pisos de costas','fix_faces'],['escondidos','Escondidos','eye']]}]}],
-    acts:[['inverter','Inverter seleção','refresh',1]] },
+      {t:'No modelo', f:[{type:'acts',full:1,acts:[['soltas','Linhas soltas','dims'],['costas','Pisos de costas','fix_faces'],['escondidos','Escondidos','eye']]}]},
+      {t:'Trocar componente', f:[
+        {k:'def',type:'select',label:'Trocar por',def:'',full:1,opts:[],dyn:'defs'},
+        {type:'acts',full:1,acts:[['replace','Trocar os selecionados','replace'],['list','Atualizar lista','refresh']]}]}],
+    acts:[['inverter','Inverter seleção','refresh',1]], onopen:'list',
+    hint:'Para trocar: selecione uma cópia, use Mesmo componente para pegar todas, escolha o novo e clique em Trocar. A posição, o giro e a escala ficam iguais.' },
   shape:{ secs:[
       {t:'O que fazer', f:[
         {k:'modo',type:'cards',full:1,def:'tudo',opts:[['tudo','Todas as arestas','sh_tudo'],['cantos','Cantos','sh_cantos'],['bordas','Bordas','sh_bordas'],['curvar','Curvar','sh_curvar']]}]},
@@ -1317,7 +1310,8 @@ function viewTool(id){
     h+= s.closed ? `<details class="panel"><summary>${esc(s.t)}${opt}${ic('down')}</summary>${body}</details>`
                  : `<div class="panel"><h3>${esc(s.t)}${opt}</h3>${body}</div>`;
   });
-  if(spec.more) h+=`<div class="more">${spec.more.map(a=>`<button class="btn ghost" data-act="${a[0]}">${ic(a[2])}${esc(a[1])}</button>`).join('')}</div>`;
+  const more=actsOf(spec.more,p);
+  if(more.length) h+=`<div class="more">${more.map(a=>`<button class="btn ghost" data-act="${a[0]}">${ic(a[2])}${esc(a[1])}</button>`).join('')}</div>`;
   if(spec.hint) h+=`<div class="hint">${ic('info')}<div>${esc(spec.hint)}</div></div>`;
   h+=`<div id="result">${S.results[id]?resultHtml(id,S.results[id]):''}</div></div>`;
   return h;
@@ -1362,12 +1356,17 @@ function render(){
   else if(S.route.startsWith('tool:')) html=viewTool(S.tool);
   m.innerHTML=html;
   const spec = S.route.startsWith('tool:') && !S.q ? FORMS[S.tool] : null;
-  if(spec){ acts.hidden=false; acts.innerHTML=spec.acts.map(a=>`<button class="btn ${a[3]?'primary':'ghost'}" data-act="${a[0]}">${ic(a[2])}${a[3]?esc(a[1]):`<span>${esc(a[1])}</span>`}</button>`).join(''); }
-  else { acts.hidden=true; acts.innerHTML=''; }
+  if(spec) renderActs(); else { acts.hidden=true; acts.innerHTML=''; }
+}
+function actsOf(a,p){ return typeof a==='function' ? a(p||{}) : (a||[]); }
+function renderActs(){
+  const spec=FORMS[S.tool], acts=$('#actions'); if(!spec) return;
+  acts.hidden=false; acts.innerHTML=actsOf(spec.acts,S.params[S.tool]).map(a=>`<button class="btn ${a[3]?'primary':'ghost'}" data-act="${a[0]}">${ic(a[2])}${a[3]?esc(a[1]):`<span>${esc(a[1])}</span>`}</button>`).join('');
 }
 function refreshTool(keepScroll){
   const m=$('#main'), y=m.scrollTop, open=$$('details.panel',m).map(d=>d.open);
   m.innerHTML=viewTool(S.tool);
+  if(typeof FORMS[S.tool].acts==='function') renderActs();
   $$('details.panel',m).forEach((d,i)=>{ if(open[i]) d.open=true; });
   $$('.view',m).forEach(v=>v.style.animation='none');
   if(keepScroll!==false) m.scrollTop=y;
@@ -1380,7 +1379,6 @@ function go(route, tool){
   S.route=route; S.tool=tool||null; S.q=''; $('#q').value='';
   if(tool && !S.params[tool]) S.params[tool]=Object.assign(defaults(tool), store.get('p:'+tool,{}));
   render(); $('#main').scrollTop=0;
-  if(tool==='replace' && !S.dyn.defs) runAct('list', true);
   if(tool && FORMS[tool] && FORMS[tool].onopen) runAct(FORMS[tool].onopen, true);
   if(tool && FORMS[tool] && FORMS[tool].est) scheduleEst(true);
 }
@@ -1410,7 +1408,7 @@ async function runAct(action, silent, btn){
   if(silent===false&&!res.stats&&res.ok&&(a==='add_image'||a==='edit')){ toast(res.msg); refreshTool(); return; }
   if(res.settings && Object.keys(res.settings).length){ Object.assign(S.params[id], res.settings); store.set('p:'+id,S.params[id]); }
   if(res.mats){ S.dyn.mats=[['','— sem material —']].concat(res.mats.map(m=>[m[0],m[1]])); if(silent&&res.ok&&S.tool===id) refreshTool(); }
-  if(res.defs){ S.dyn.defs=res.defs.map(d=>[d[0],`${d[0]} (${d[1]})`]); if(!S.params.replace.def&&res.defs[0]) S.params.replace.def=res.defs[0][0]; }
+  if(res.defs){ S.dyn.defs=res.defs.map(d=>[d[0],`${d[0]} (${d[1]})`]); if(!S.params[id].def&&res.defs[0]) S.params[id].def=res.defs[0][0]; if(silent&&res.ok&&S.tool===id) refreshTool(); }
   if(res.picking){ toast(res.msg); if(res.stats){ S.results[id]=res; } refreshTool(); return; }
   if(!(silent&&res.ok)) { S.results[id]=res; refreshTool(); const r=$('#result'); if(r&&r.firstChild) r.scrollIntoView({behavior:'smooth',block:'nearest'}); }
   if(!res.ok && res.locked) toast(res.msg);
@@ -1509,30 +1507,26 @@ const MOCK = {
   tools:[
     ['walls','Paredes','arq','arq','Desenhe clicando os cantos ou gere a partir das linhas da planta.',['Escolha espessura e altura','Clique os cantos no modelo','Enter para terminar']],
     ['openings','Portas e janelas','arq','arq','Clique na parede para abrir o vão e já colocar a porta ou a janela.',['Escolha o tipo e as medidas','Clique na parede','Esc para terminar']],
-    ['dwg_walls','DWG → Paredes','arq','arq','Transforma a planta importada do AutoCAD em paredes 3D com vergas e peitoris.',['Importe o DWG e selecione as linhas','Clique em Analisar','Clique em Levantar paredes']],
+    ['dwg_walls','DWG: limpar e levantar paredes','arq','arq','Limpa a planta importada, fecha as aberturas e levanta as paredes com vergas e peitoris.',['Importe e limpe a planta','Selecione as linhas','Levantar paredes']],
     ['stairs','Escada','arq','arq','Blondel, maciça ou flutuante, com guarda-corpo de vidro, montantes, cabos, mureta ou só corrimão.',['Informe o pé-direito','Escolha o guarda-corpo','Clique início e direção']],
     ['roofs','Telhado','arq','arq','1, 2 ou 4 águas com beiral, inclinação e contagem de telhas.',['Selecione o contorno da cobertura','Escolha águas e inclinação','Gerar']],
-    ['urban_index','Índices urbanísticos','arq','arq','TO, CA e permeabilidade conferidos com a lei do seu terreno.',['Selecione faces','Marque terreno, projeção, construída, permeável','Compare com a lei']],
     ['tiling','Revestimento','rev','rev','Paginação de piso e parede: 8 padrões, junta, texturas variadas e estimativa ao vivo.',['Selecione a face','Escolha padrão, peça e posição','Gerar paginação']],
     ['baseboard','Rodapé','rev','rev','Modelos reto, chanfrado, boleado, frisado e clássico; pula portas e calcula as barras.',['Selecione o piso','Shift + clique nas linhas das portas','Gerar rodapé']],
     ['ceiling','Forro e moldura','rev','rev','Forro rebaixado com tabica e cortineiro, sanca aberta ou fechada, ou só moldura de teto.',['Selecione o piso (e a linha da janela)','Escolha o tipo e as medidas','Gerar']],
     ['scenes','Cenas automáticas','pres','pres','Plantas por nível, cobertura, cortes AA/BB, 4 fachadas e perspectiva num clique.',['Informe os níveis','Marque o que quer','Criar cenas']],
     ['export_images','Exportar imagens','pres','pres','Salva todas as cenas em PNG ou JPG de uma vez, na resolução que você escolher.',['Escolha tamanho e formato','Escolha a pasta','Pronto']],
     ['room_tags','Ambientes e quadro de áreas','pres','pres','Clica no piso e escreve nome, área e pé-direito; gera o quadro de áreas.',['Escolha o estilo','Clique no piso de cada ambiente','Exporte o quadro de áreas']],
-    ['furniture','Ficha de mobiliário','quant','quant','Marca, cor, link e preço de cada móvel; relatório e caderno de especificação com foto.',['Selecione o móvel','Preencha e aplique','Gere relatório ou caderno']],
     ['measure','Medir seleção','base','base','Soma na hora área, comprimento, volume e medidas do que está selecionado.',['Selecione o que quer medir','Clique em Medir']],
     ['isolate','Isolar seleção','base','base','Esconde todo o resto para trabalhar numa parte; Mostrar tudo devolve.',['Selecione o que quer ver','Isolar','Mostrar tudo para voltar']],
     ['cut_list','Lista de peças e plano de corte','marc','marc','Peças com medidas reais, chapas encaixadas, fita de borda e ferragens.',['Selecione os móveis','Gerar lista','Ver plano de corte e exportar']],
     ['countertop','Recorte de cuba e cooktop','marc','marc','Coloque o bloco da cuba ou do cooktop no tampo: o furo sai no formato dele, sozinho.',['Coloque o bloco em cima do tampo','O recorte sai sozinho','Ou selecione e clique em Recortar']],
-    ['takeoff','Quantitativo','quant','quant','m² de piso, parede e teto por material, itens e componentes, em planilha.',['Pinte o modelo com materiais','Gerar quantitativo','Exportar para Excel']],
+    ['takeoff','Quantitativo e mobiliário','quant','quant','m² por material, itens, ficha de cada móvel, relatório e caderno de especificação.',['Pinte o modelo ou selecione o móvel','Gerar ou aplicar a ficha','Excel ou caderno']],
     ['model_health','Saúde do modelo','base','base','Encontra o que pesa e bagunça o arquivo e corrige com um clique.',['Analisar','Marcar o que corrigir','Corrigir']],
     ['align','Alinhar e distribuir','base','base','Alinha pela borda ou centro e distribui com espaço igual.',['Selecione os objetos','Escolha eixo e modo','Aplicar']],
-    ['replace','Selecionar e substituir','base','base','Seleciona todas as cópias e troca por outro componente mantendo a posição.',['Selecione um componente','Selecionar iguais','Escolha o novo e troque']],
-    ['dwg_clean','Limpar DWG','arq','arq','Achata a planta importada, tira textos e cotas, apaga sujeira e fecha as faces.',['Selecione o DWG importado','Escolha o que limpar','Limpar']],
     ['dims','Cotas automáticas','arq','arq','Cota o contorno dos pisos e das paredes, por dentro e por fora, e as medidas totais.',['Selecione pisos ou paredes','Escolha o que cotar','Cotar']],
     ['array','Copiar em grade ou caminho','base','base','Espalha cópias numa face (luminárias no forro) ou ao longo de linhas (cadeiras, postes).',['Selecione o objeto e a face ou as linhas','Escolha o espaçamento','Copiar']],
     ['fix_faces','Corrigir faces invertidas','base','base','Vira para fora as faces de costas (azuis) e passa a pintura do verso para a frente.',['Selecione (ou nada = modelo todo)','Corrigir','Pronto para render']],
-    ['smart_select','Seleção inteligente','base','base','Seleciona tudo do mesmo material, etiqueta ou componente, inverte e acha sujeira.',['Selecione uma referência','Escolha o critério','Pronto']],
+    ['smart_select','Seleção inteligente','base','base','Seleciona pelo mesmo material, etiqueta ou componente, acha sujeira e troca componentes.',['Selecione uma referência','Escolha o critério','Pronto']],
     ['shape','Arredondar, chanfrar e curvar','base','base','Arredonda ou chanfra todas as arestas da peça, cantos, bordas, e curva peças em arco.',['Selecione o grupo ou a face','Escolha raio e acabamento','Aplicar']],
     ['edges','Arestas e linhas','render','pres','Suaviza curvas, esconde as linhas de blocos com muitas arestas e tira as linhas do estilo.',['Selecione os blocos (ou nada = tudo)','Suavizar ou esconder','Pronto para render']],
     ['materials','Materiais','render','pres','Conta-gotas, trocar material na cena toda, limpar bloco e materiais prontos (vidros, espelho, metais).',['Pegue o material com o conta-gotas','Escolha o novo','Trocar na cena toda']],
@@ -1557,16 +1551,15 @@ const MOCK = {
     if(tool==='scenes') return {ok:true,msg:'10 cenas criadas. Veja as abas no topo da tela do SketchUp.',stats:[['Cenas','10'],['Níveis','2'],['Altura do corte','120 cm']]};
     if(tool==='export_images') return {ok:true,msg:'10 imagem(ns) salva(s) em C:\\Projetos\\Casa Nicole\\imagens.',stats:[['Imagens','10'],['Tamanho','1920 × 1080 px'],['Formato','PNG']]};
     if(tool==='room_tags'&&action!=='place') return {ok:true,msg:'Quadro de áreas.',stats:[['COZINHA','12,30 m²'],['ESTAR / JANTAR','28,75 m²'],['SUÍTE','14,20 m²'],['BANHO','4,10 m²'],['TOTAL','59,35 m²']]};
-    if(tool==='furniture'&&action==='report') return {ok:true,msg:'4 item(ns) no relatório.',stats:[['Itens diferentes','4'],['Peças','9'],['Total','R$ 14.380,00']],items:[['Estar','Sofá Lisboa 3 lugares','Tok&Stok',1,5890],['Estar','Poltrona Mole','Sergio Rodrigues',1,4200],['Jantar','Cadeira Eames','Etel',6,2940],['Jantar','Pendente Cobre','Lumini',1,1350]]};
+    if(tool==='takeoff'&&action==='report') return {ok:true,msg:'4 item(ns) no relatório.',stats:[['Itens diferentes','4'],['Peças','9'],['Total','R$ 14.380,00']],items:[['Estar','Sofá Lisboa 3 lugares','Tok&Stok',1,5890],['Estar','Poltrona Mole','Sergio Rodrigues',1,4200],['Jantar','Cadeira Eames','Etel',6,2940],['Jantar','Pendente Cobre','Lumini',1,1350]]};
     if(tool==='measure') return {ok:true,msg:'Medidas da seleção.',stats:[['Área total','86,40 m²'],['Piso (faces p/ cima)','42,10 m²'],['Paredes (faces em pé)','38,60 m²'],['Faces','214'],['Volume (sólidos)','1,284 m³'],['Caixa (L × P × A)','845,0 × 520,0 × 280,0 cm']]};
     if(tool==='takeoff') return {ok:true,msg:'6 materiais, 4 itens e 5 componentes.',stats:[['Piso','62,30 m²'],['Parede','188,75 m²'],['Teto','58,10 m²'],['Inclinado','0,00 m²']],
       materials:[['Pintura branco neve',0,152.4,58.1,0,210.5],['Porcelanato 90×90',48.2,0,0,0,48.2],['Revestimento subway',0,22.6,0,0,22.6],['Madeira freijó',14.1,0,0,0,14.1],['Cimento queimado',0,13.75,0,0,13.75]],
       items:[['Paginação de piso',48.2,'m²'],['Rodapé',38.6,'m'],['Portas',7,'un'],['Janelas',5,'un']],components:[['Cadeira Eames',6],['Sofá 3 lugares',1],['Pendente cobre',3]]};
     if(tool==='model_health') return {ok:true,msg:'2 ponto(s) de atenção.',score:76,stats:[['Faces','48.210',null],['Arestas','96.533',null],['Componentes sem uso','37',false],['Materiais sem uso','12',false],['Linhas soltas','0',true],['Faces pintadas só no verso','0',true],['Profundidade de grupos','4',true],['Tamanho do arquivo','38,2 MB',true]]};
-    if(tool==='urban_index') return {ok:true,msg:'Índices atualizados.',stats:[['Terreno','300,00 m²'],['Projeção','168,00 m²'],['Área construída','312,50 m²'],['Área permeável','48,00 m²'],['Taxa de ocupação','56,0 %',true],['Coef. de aproveitamento','1,04',true],['Taxa de permeabilidade','16,0 %',true]]};
     if(tool==='auto_tags') return {ok:true,msg:'42 objetos organizados em 6 etiquetas.',tags:[['Mobiliário',true,18],['Vegetação',true,9],['Iluminação',true,7],['lavi · Paredes',true,1],['lavi · Marcenaria',false,9],['Pessoas',true,3]]};
     if(tool==='materials'&&(action==='list'||action==='apply')) return {ok:true,msg:action==='list'?'':'Aplicado.',mats:[['Madeira freijó','Madeira freijó','#B88A62'],['Porcelanato 90x90','Porcelanato 90x90','#E9E3DC'],['Cor_#3E4B57','Azul ardósia','#3E4B57'],['lavi Vidro incolor','lavi Vidro incolor','#CFE3E8']]};
-    if(tool==='replace'&&action==='list') return {ok:true,msg:'3 componentes.',defs:[['Cadeira Eames',6],['Cadeira Wishbone',0],['Pendente cobre',3]]};
+    if(tool==='smart_select'&&action==='list') return {ok:true,msg:'3 componentes.',defs:[['Cadeira Eames',6],['Cadeira Wishbone',0],['Pendente cobre',3]]};
     if(action==='place'||action==='draw'||action==='insert') return {ok:true,picking:true,msg:'Clique no modelo (prévia: fora do SketchUp).'};
     return {ok:true,msg:'Feito (prévia fora do SketchUp).'};
   },
@@ -1588,7 +1581,7 @@ const MOCK = {
 
 // só para os testes (dev/forms_dump.js): formulários e valores padrão de cada ferramenta
 if(!window.sketchup || window.__MOCK__) window.__LAVI__={ forms:()=>Object.keys(FORMS).map(id=>{ const f=FORMS[id], acts=[];
-  (f.acts||[]).forEach(a=>acts.push(a[0])); (f.more||[]).forEach(a=>acts.push(a[0]));
+  (f.allActs||[]).forEach(a=>acts.push(a)); actsOf(f.acts).forEach(a=>acts.push(a[0])); actsOf(f.more).forEach(a=>acts.push(a[0]));
   f.secs.forEach(s=>s.f.forEach(x=>{ if(x.type==='acts') x.acts.forEach(a=>acts.push(a[0])); if(x.live) acts.push(x.live); }));
   if(f.est) acts.push('estimate','surface');
   return {id, defaults:defaults(id), acts:[...new Set(acts)]}; }) };

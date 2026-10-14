@@ -6,6 +6,7 @@ module LAVIStudio
       module Replace
         extend self
         H = Helpers
+        # (v0.12: faz parte de outra ferramenta do painel, sem botão próprio)
 
         def handle(action, p)
           case action
@@ -35,9 +36,6 @@ module LAVIStudio
           end
         end
 
-        Registry.register(:replace, name: 'Selecionar e substituir', tab: :base, package: :base, handler: self,
-                                    desc: 'Seleciona todas as cópias e troca por outro componente mantendo a posição.',
-                                    steps: ['Selecione um componente', 'Selecionar iguais', 'Escolha o novo e troque'])
       end
     end
   end

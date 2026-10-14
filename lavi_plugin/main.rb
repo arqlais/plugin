@@ -17,7 +17,7 @@ module LAVIStudio
       %i[edges materials texmap lights],
       %i[walls openings dwg_walls stairs roofs dims],
       %i[tiling baseboard ceiling],
-      %i[takeoff furniture],
+      %i[takeoff cut_list],
       %i[measure isolate shape array fix_faces model_health]
     ].freeze
 
@@ -50,7 +50,7 @@ module LAVIStudio
       safe_require('core', f)
     end
     %w[
-      walls openings dwg_walls stairs roofs urban_index
+      walls openings dwg_walls stairs roofs
       tiling baseboard ceiling
       cut_list countertop
       scenes export_images room_tags

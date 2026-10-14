@@ -248,22 +248,6 @@ check('roofs · 1, 2 e 4 águas') do
 end
 
 # === Índices urbanísticos
-check('urban_index · marcar e calcular') do
-  t = m.entities.add_face(pt(0, 0), pt(1000, 0), pt(1000, 2500), pt(0, 2500))
-  pr = m.entities.add_face(pt(200, 300, 1), pt(800, 300, 1), pt(800, 1500, 1), pt(200, 1500, 1))
-  pe = m.entities.add_face(pt(0, 2000, 1), pt(1000, 2000, 1), pt(1000, 2500, 1), pt(0, 2500, 1))
-  sel(t); ok!(run(:urban_index, 'assign:terreno'))
-  sel(pr); ok!(run(:urban_index, 'assign:projecao'))
-  pav = m.entities.add_face(pt(200, 300, 300), pt(800, 300, 300), pt(800, 1500, 300), pt(200, 1500, 300))
-  sel(pav); ok!(run(:urban_index, 'assign:construida'))
-  sel(pe); ok!(run(:urban_index, 'assign:permeavel'))
-  r = ok!(run(:urban_index, 'calc'))
-  ok!(run(:urban_index, 'csv'))
-  ok!(run(:urban_index, 'clear'))
-  r['stats'].map { |s| "#{s[0]} #{s[1]}" }.join(', ')
-end
-
-# === Revestimento
 check('tiling · todos os padrões no piso com pilar') do
   f = floor
   sel(f)
@@ -519,13 +503,13 @@ check('furniture · ficha, relatório, CSV e caderno') do
   a = component('Sofá 3 lugares', 220, 90, 80, pt(50, 50))
   b = component('Mesa de centro', 80, 80, 40, pt(150, 160))
   sel(a)
-  ok!(run(:furniture, 'apply', 'nome' => 'Sofá Bia', 'fornecedor' => 'Loja X', 'preco' => 4500, 'qtd' => 1))
+  ok!(run(:takeoff, 'apply', 'nome' => 'Sofá Bia', 'fornecedor' => 'Loja X', 'preco' => 4500, 'qtd' => 1))
   sel(a)
-  rd = ok!(run(:furniture, 'read'))
+  rd = ok!(run(:takeoff, 'read'))
   sel(a, b)
-  rp = ok!(run(:furniture, 'report'))
-  ok!(run(:furniture, 'csv'))
-  ok!(run(:furniture, 'sheet'))
+  rp = ok!(run(:takeoff, 'report'))
+  ok!(run(:takeoff, 'moveis_csv'))
+  ok!(run(:takeoff, 'sheet'))
   "#{rp['msg']}"
 end
 
@@ -567,11 +551,11 @@ check('replace · listar, selecionar iguais e substituir') do
   a1 = component('Cadeira A', 45, 50, 90, pt(0, 0))
   a2 = component('Cadeira A', 45, 50, 90, pt(100, 0))
   component('Cadeira B', 50, 55, 85, pt(0, 200))
-  l = ok!(run(:replace, 'list'))
+  l = ok!(run(:smart_select, 'list'))
   sel(a1)
-  ok!(run(:replace, 'select_same'))
+  ok!(run(:smart_select, 'select_same'))
   expect(m.selection.size == 2, "selecionou #{m.selection.size}")
-  r = ok!(run(:replace, 'replace', 'def' => 'Cadeira B'))
+  r = ok!(run(:smart_select, 'replace', 'def' => 'Cadeira B'))
   expect(m.entities.grep(Sketchup::ComponentInstance).count { |i| i.definition.name == 'Cadeira B' } == 3, 'não substituiu')
   "#{l['defs'].size} componentes · #{r['msg']}"
 end
@@ -620,7 +604,7 @@ check('dwg_clean · achatar, tirar anotações, sujeira e fechar faces') do
   e.add_text('SALA', pt(200, 150))
   e.add_dimension_linear(pt(0, 0), pt(400, 0), Geom::Vector3d.new(0, -20, 0))
   sel(g)
-  r = ok!(run(:dwg_clean, 'clean'))
+  r = ok!(run(:dwg_walls, 'clean'))
   st = r['stats'].map { |a, b| [a, b.to_i] }.to_h
   expect(st['Anotações removidas'] == 2, "anotações #{st['Anotações removidas']}")
   expect(st['Linhas minúsculas'] == 1, "linhas minúsculas #{st['Linhas minúsculas']}")
@@ -636,13 +620,13 @@ check('dwg_clean · fechar aberturas e marcar o que ficou aberto') do
   m.entities.add_line(pt(600, 0), pt(600, 100))
   m.entities.add_edges(pt(150, 300), pt(150, 180), pt(400, 180)) # parede interna encostando em T
   sel(es + m.entities.grep(Sketchup::Edge))
-  r = ok!(run(:dwg_clean, 'clean', 'tol' => 2))
+  r = ok!(run(:dwg_walls, 'clean', 'tol' => 2))
   st = r['stats'].map { |a, b| [a, b.to_i] }.to_h
   expect(st['Aberturas fechadas'] >= 1, 'não fechou a abertura de 1 cm')
   expect(m.entities.grep(Sketchup::Face).size >= 2, "encontro em T não fechou os dois ambientes (#{m.entities.grep(Sketchup::Face).size} faces)")
   expect(st['Pontas ainda abertas'] == 2, "pontas abertas #{st['Pontas ainda abertas']}")
   expect(m.entities.grep(Sketchup::ConstructionPoint).size == 2, 'não marcou as pontas abertas')
-  g = ok!(run(:dwg_clean, 'gaps'))
+  g = ok!(run(:dwg_walls, 'gaps'))
   "#{r['msg'][0, 60]}… · mostrar: #{g['msg'][0, 40]}"
 end
 
