@@ -1,6 +1,6 @@
 {
-  "version": "0.7.1",
+  "version": "0.8.0",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "93fdf4e079442754bc19e294e679940530c1282cda9913d3b9b5635ffcd9acb6",
-  "notes": ["Aviso de versão nova no canto do SketchUp, mesmo com o painel fechado","Procura atualização de novo a cada 3 horas"]
+  "sha256": "02455c03765e8b9a1d1151859fa30ce0bfd1f57daab5997b89b7ae9013790b38",
+  "notes": ["Revestimento novo (piso e parede numa ferramenta só): 8 padrões, incluindo chevron, espinha e pedra orgânica","Junta seca, espessura, peças em 3D, ponto inicial e giro clicando no modelo","Várias imagens sorteadas por peça e estimativa ao vivo","Editar uma paginação já feita"]
 }

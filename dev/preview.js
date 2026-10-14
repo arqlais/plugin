@@ -26,7 +26,7 @@ const url = 'file://' + path.join(__dirname, '..', 'lavi_plugin', 'ui', 'index.h
     console.log('print', name);
   };
   const tool = async id => { if (await page.$('[data-back]')) await page.click('.thead [data-back]'); await page.click(`.tool[data-tool="${id}"]`); };
-  const TABS = { walls: 'arq', openings: 'arq', stairs: 'arq', roofs: 'arq', dwg_walls: 'arq', urban_index: 'arq', tiling: 'rev', wall_tiling: 'rev', baseboard: 'rev', ceiling: 'rev', scenes: 'pres', export_images: 'pres', room_tags: 'pres', furniture: 'quant', measure: 'base', isolate: 'base', cut_list: 'marc', countertop: 'marc', takeoff: 'quant', model_health: 'base', align: 'base', replace: 'base', auto_tags: 'base' };
+  const TABS = { walls: 'arq', openings: 'arq', stairs: 'arq', roofs: 'arq', dwg_walls: 'arq', urban_index: 'arq', tiling: 'rev', baseboard: 'rev', ceiling: 'rev', scenes: 'pres', export_images: 'pres', room_tags: 'pres', furniture: 'quant', measure: 'base', isolate: 'base', cut_list: 'marc', countertop: 'marc', takeoff: 'quant', model_health: 'base', align: 'base', replace: 'base', auto_tags: 'base' };
 
   await shot('01-inicio');
   await page.click('[data-upd="install"]'); await page.waitForTimeout(900); await shot('01b-atualizado');
@@ -36,10 +36,12 @@ const url = 'file://' + path.join(__dirname, '..', 'lavi_plugin', 'ui', 'index.h
   await tool('room_tags'); await shot('04-ambientes', true);
 
   await tool('tiling');
-  await page.click('.card[data-set="padrao"][data-v="meia"]');
+  await page.click('.card[data-set="padrao"][data-v="espinha"]');
   await page.click('[data-preset="4"]');
+  await page.click('[data-act="add_image"]'); await page.waitForTimeout(600);
+  await page.click('[data-act="add_image"]'); await page.waitForTimeout(600);
   await page.click('[data-act="build"]');
-  await shot('05-piso', true);
+  await shot('05-revestimento', true);
 
   await tool('stairs'); await shot('06-escada');
   await tool('cut_list'); await page.click('[data-act="list"]'); await page.waitForTimeout(700); await shot('07-plano-de-corte', true);

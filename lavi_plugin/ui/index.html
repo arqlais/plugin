@@ -216,7 +216,7 @@ textarea.ta{width:100%;min-height:70px;border:1px solid var(--line);border-radiu
 .hint svg.i{color:var(--mul);width:18px;height:18px;margin-top:1px}
 :root[data-theme="dark"] .hint svg.i{color:var(--orchid)}
 
-.preview{background:var(--card2);border:0;border-radius:10px;padding:10px;display:grid;place-items:center;min-height:150px;position:relative;overflow:hidden}
+.preview{background:var(--card2);border:0;border-radius:10px;padding-top:26px!important;padding:10px;display:grid;place-items:center;min-height:150px;position:relative;overflow:hidden}
 .preview svg{max-width:100%;height:auto}
 .preview .tagline{position:absolute;left:10px;top:8px;font:500 10px var(--mono);color:var(--muted);letter-spacing:.04em}
 .meter{margin-top:10px}
@@ -286,6 +286,29 @@ textarea.ta{width:100%;min-height:70px;border:1px solid var(--line);border-radiu
 .toast.out{opacity:0;transition:opacity .3s}
 .toast i{width:7px;height:7px;border-radius:50%;background:var(--lime);flex:none}
 
+.surf{display:flex;align-items:center;gap:12px;width:100%}
+.surf>div{flex:1;min-width:0}
+.surf b{display:block;font-weight:500;font-size:13px}
+.surf small,.tex small.muted{display:block;color:var(--muted);font-size:11.5px}
+.btn.sm{height:34px;font-size:12px;padding:0 12px;border-radius:9px;flex:none}
+.btn.sm svg.i{width:16px;height:16px}
+.btn.sm em{font:600 10.5px var(--mono);font-style:normal;color:var(--muted)}
+.tex{display:flex;flex-direction:column;gap:10px;width:100%}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.th{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card2)}
+.th img,.th .swatch{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.th span{display:block;font-size:10px;color:var(--muted);padding:3px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:6px;background:var(--card);display:grid;place-items:center;color:var(--ink2)}
+.th button svg.i{width:13px;height:13px}
+.texbtns{display:flex;flex-wrap:wrap;gap:8px}
+.estbox{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--mul);color:#fff;border-radius:12px;padding:12px;width:100%}
+.estbox div{background:rgba(255,255,255,.08);border-radius:9px;padding:9px 11px}
+.estbox small{display:block;font-size:10.5px;opacity:.75}
+.estbox b{font:600 17px var(--mono);color:var(--tidal)}
+.estbox.empty{display:block;font-size:12px;opacity:.9}
+:root[data-theme="dark"] .estbox{background:#3A0620}
+.estmore{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-size:11.5px;color:var(--muted)}
+.estmore b{color:var(--ink);font-family:var(--mono);font-weight:500}
 .pk{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card2);margin-bottom:8px}
 .pk .ticon{width:34px;height:34px}
 .pk b{font-weight:600;font-size:13px}
@@ -341,7 +364,6 @@ const IC = {
   roofs:'M2 12l10-8 10 8M5 10v10h14V10M10 20v-5h4v5',
   urban_index:'M3 3h18v18H3zM7 17L17 7M8 8h.01M16 16h.01',
   tiling:'M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18',
-  wall_tiling:'M3 3h18v18H3zM3 8h18M3 13h18M3 18h18M8 3v5M14 8v5M8 13v5M14 18v3',
   baseboard:'M4 3v17h17M4 15h17M8 15v5M14 15v5',
   ceiling:'M2 5h20M5 5v3h14V5M12 8v4M9 12h6l-1 3h-4z',
   pres:'M3 4h18v12H3zM8 20h8M12 16v4',
@@ -380,6 +402,8 @@ const IC = {
   minus:'M5 12h14',
   read:'M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0zM12 8v4l3 2',
   grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  rotate:'M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4',
+  target:'M12 3v4M12 17v4M3 12h4M17 12h4M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',
   pin:'M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12zM12 6.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z'
 };
 const ic = (k, cls) => `<svg class="i ${cls||''}" viewBox="0 0 24 24" aria-hidden="true"><path d="${IC[k]||IC.sparkle}"/></svg>`;
@@ -457,6 +481,7 @@ const store = {
 };
 
 /* ---------------- estado ---------------- */
+const TILE_PATS=[['horizontal','Horizontal'],['vertical','Vertical'],['diagonal','Diagonal'],['tijolo','Tijolinho'],['damas','Damas'],['chevron','Chevron'],['espinha','Espinha'],['organica','Pedra orgânica']];
 const S = { state:null, route:'home', tool:null, params:{}, results:{}, reqs:{}, seq:0, update:null, q:'' };
 
 /* ---------------- ponte com o Ruby ---------------- */
@@ -542,9 +567,34 @@ const FORMS = {
         {k:'colorir',type:'tg',label:'Colorir o que eu marcar',def:true}]},
       {t:'Marcar a seleção como', f:[{type:'acts',full:1,acts:[['assign:terreno','Terreno','#E8E2DA'],['assign:projecao','Projeção','#FFB3D1'],['assign:construida','Construída','#C9B3FF'],['assign:permeavel','Permeável','#9FD8C2']]}]}],
     acts:[['calc','Calcular índices','refresh',1],['csv','Planilha','file'],['clear','Desmarcar seleção','x']] },
-  tiling:{ secs:tileSecs({pc:60,pl:60,rej:2,cor:'#E9E3DC',correj:'#BDB6AE',caixa:1.44}), acts:[['build','Paginar piso','play',1]], prev:p=>prevTiles(p),
-    hint:'Selecione a face do piso (pode ser dentro de um grupo). Pilares viram furos e são respeitados.' },
-  wall_tiling:{ secs:tileSecs({pc:7.5,pl:30,rej:2,cor:'#F3F1EC',correj:'#D8D2CA',caixa:1.0,padrao:'meia'}), acts:[['build','Paginar parede','play',1]], prev:p=>prevTiles(p) },
+  tiling:{ secs:[
+      {t:'Superfície', f:[{type:'html',html:surfHtml}]},
+      {t:'Padrão de paginação', f:[
+        {k:'padrao',type:'cards',full:1,def:'horizontal',opts:TILE_PATS.map(x=>[x[0],x[1],'pat_'+x[0]])},
+        {k:'amarr',type:'seg',label:'Amarração',def:'meia',full:1,opts:[['meia','½ peça'],['terco','⅓ peça']],when:p=>p.padrao==='tijolo'}]},
+      {t:'Peça e junta', f:[
+        {type:'chips',full:1,label:'Formatos comuns',set:[['60×60',{pc:60,pl:60}],['90×90',{pc:90,pl:90}],['120×60',{pc:120,pl:60}],['120×20',{pc:120,pl:20}],['60×15',{pc:60,pl:15}],['30×7,5',{pc:30,pl:7.5}],['20×20',{pc:20,pl:20}]]},
+        {k:'pc',type:'num',label:'Largura',unit:'cm',def:60},
+        {k:'pl',type:'num',label:'Altura',unit:'cm',def:60},
+        {k:'rej',type:'num',label:'Junta',unit:'mm',def:2,chips:[1,2,3,5],step:.5,when:p=>!p.seca},
+        {k:'esp',type:'num',label:'Espessura da peça',unit:'mm',def:9},
+        {k:'seca',type:'tg',label:'Junta seca (sem espaço entre as peças)',def:false,full:1},
+        {k:'mostrar_rej',type:'tg',label:'Mostrar rejunte',def:true,full:1,when:p=>!p.seca},
+        {k:'correj',type:'color',label:'Cor do rejunte',def:'#BDB6AE',when:p=>!p.seca&&p.mostrar_rej!==false},
+        {k:'relevo',type:'tg',label:'Peças em 3D (com espessura)',def:false,full:1}]},
+      {t:'Posicionamento', f:[
+        {k:'ang',type:'num',label:'Ângulo',unit:'°',def:0,chips:[0,45,90],step:5},
+        {k:'inicio',type:'seg',label:'Começar em',def:'canto',full:1,opts:[['canto','Canto'],['centro','Centro'],['ponto','Ponto escolhido']]},
+        {type:'acts',full:1,acts:[['rotate','Girar pelo modelo','rotate'],['origin','Escolher ponto inicial','pin'],['center','Centralizar','target']]}]},
+      {t:'Aparência', f:[
+        {k:'cor',type:'color',label:'Cor da peça',def:'#E9E3DC',when:p=>!(p.texturas||[]).length},
+        {k:'cor2',type:'color',label:'Segunda cor (damas)',def:'#5C0632',when:p=>p.padrao==='damas'&&!(p.texturas||[]).length},
+        {type:'html',full:1,html:texHtml}]},
+      {t:'Estimativa', f:[{type:'html',full:1,html:p=>`<div id="est">${estHtml()}</div>`}]},
+      {t:'Compra', opt:1, closed:1, f:[
+        {k:'perda',type:'num',label:'Perda',unit:'%',def:10,chips:[5,10,15]},
+        {k:'caixa',type:'num',label:'m² por caixa',unit:'m²',def:1.44,step:.01}]}],
+    acts:[['build','Gerar paginação','play',1],['edit','Editar paginação','pen']], prev:p=>prevTiles(p), est:1 },
   baseboard:{ secs:[
       {t:'Rodapé', f:[
         {k:'alt',type:'num',label:'Altura',unit:'cm',def:7,chips:[5,7,10,15]},
@@ -682,26 +732,6 @@ const FORMS = {
     acts:[['organize','Organizar modelo','sparkle',1],['list','Ver etiquetas','eye']], render:r=>renderTags(r) }
 };
 
-function tileSecs(d){
-  return [
-    {t:'Peça', f:[
-      {type:'chips',full:1,label:'Formatos comuns',set:[['60×60',{pc:60,pl:60}],['90×90',{pc:90,pl:90}],['60×120',{pc:120,pl:60}],['20×120',{pc:120,pl:20}],['30×60',{pc:60,pl:30}],['7,5×30',{pc:30,pl:7.5}],['10×10',{pc:10,pl:10}]]},
-      {k:'pc',type:'num',label:'Comprimento',unit:'cm',def:d.pc},
-      {k:'pl',type:'num',label:'Largura',unit:'cm',def:d.pl},
-      {k:'rej',type:'num',label:'Rejunte',unit:'mm',def:d.rej,chips:[1,2,3,5],step:.5},
-      {k:'esp',type:'num',label:'Espessura da peça',unit:'mm',def:8}]},
-    {t:'Paginação', f:[
-      {k:'padrao',type:'cards',full:1,def:d.padrao||'reto',opts:[['reto','Reta','reto'],['meia','Amarração ½','meia'],['terco','Amarração ⅓','terco']]},
-      {k:'ang',type:'seg',label:'Ângulo',def:0,opts:[[0,'0°'],[45,'45°'],[90,'90°']]},
-      {k:'inicio',type:'seg',label:'Começar',def:'canto',opts:[['canto','Canto'],['centro','Centro']]},
-      {k:'cor',type:'color',label:'Cor da peça',def:d.cor},
-      {k:'correj',type:'color',label:'Cor do rejunte',def:d.correj}]},
-    {t:'Compra', f:[
-      {k:'perda',type:'num',label:'Perda',unit:'%',def:10,chips:[5,10,15]},
-      {k:'caixa',type:'num',label:'m² por caixa',unit:'m²',def:d.caixa,step:.01},
-      {k:'preco',type:'num',label:'Preço por m²',unit:'R$',def:0}]}
-  ];
-}
 
 /* ---------------- prévias ao vivo (SVG) ---------------- */
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -737,21 +767,83 @@ function prevCabinet(p){
   return `<span class="tagline">VISTA FRONTAL · cm</span><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${g}</svg>`;
 }
 
-function prevTiles(p){
-  const W=300,H=170, roomW=400, roomH=240, s=Math.min(W/roomW,H/roomH);
-  const pc=Math.max(1,num(p.pc,60)), pl=Math.max(1,num(p.pl,60)), j=num(p.rej,2)/10;
-  const sh={meia:.5,terco:1/3}[p.padrao]||0, ang=num(p.ang,0);
-  let tiles=''; const sx=pc+j, sy=pl+j, diag=Math.hypot(roomW,roomH);
-  const n=Math.ceil(diag/sx)+2, m=Math.ceil(diag/sy)+2;
-  if(n*m<6000){ for(let r=-m;r<m;r++){ const off=((r%3+3)*sh%1)*sx; for(let c=-n;c<n;c++){ const x=c*sx-off, y=r*sy;
-      tiles+=`<rect x="${(x*s).toFixed(1)}" y="${(y*s).toFixed(1)}" width="${(pc*s).toFixed(2)}" height="${(pl*s).toFixed(2)}"/>`; } } }
-  const ox=p.inicio==='centro'?roomW*s/2-pc*s/2:0, oy=p.inicio==='centro'?roomH*s/2-pl*s/2:0;
-  return `<span class="tagline">AMOSTRA 4,00 × 2,40 m</span><svg viewBox="0 0 ${roomW*s} ${roomH*s}" width="${roomW*s}" height="${roomH*s}">
-    <defs><clipPath id="room"><rect width="${roomW*s}" height="${roomH*s}" rx="6"/></clipPath></defs>
-    <g clip-path="url(#room)"><rect width="${roomW*s}" height="${roomH*s}" fill="${p.correj||'#bbb'}"/>
-    <g fill="${p.cor||'#eee'}" transform="translate(${ox} ${oy}) rotate(${ang} ${roomW*s/2-ox} ${roomH*s/2-oy})">${tiles}</g></g>
-    <rect width="${roomW*s}" height="${roomH*s}" rx="6" fill="none" stroke="var(--ink2)"/></svg>`;
+/* ---- revestimento: o mesmo gerador de padrões do Ruby (tools/tiling.rb) ---- */
+function tileRnd(a,b,s){ let x=(Math.imul(a,374761393)+Math.imul(b,668265263)+Math.imul(s,2147483647))>>>0;
+  x=Math.imul(x^(x>>>16),0x85ebca6b)>>>0; x=Math.imul(x^(x>>>13),0xc2b2ae35)>>>0; return ((x^(x>>>16))>>>0)/4294967296; }
+function tileUnit(pat,w,h,j,amarr){
+  const R=(x,y,a,b)=>[[x,y],[x+a,y],[x+a,y+b],[x,y+b]], sx=w+j, sy=h+j;
+  if(pat==='vertical') return {t1:[h+j,0],t2:[0,w+j],tiles:[R(0,0,h,w)],base:0};
+  if(pat==='diagonal') return {t1:[sx,0],t2:[0,sy],tiles:[R(0,0,w,h)],base:45};
+  if(pat==='tijolo') return {t1:[sx,0],t2:[sx*(amarr==='terco'?1/3:.5),sy],tiles:[R(0,0,w,h)],base:0};
+  if(pat==='chevron'){ const ca=Math.SQRT1_2, cw=w*ca, hv=h/ca, x0=cw+j;
+    return {t1:[2*cw+2*j,0],t2:[0,hv+j/ca],tiles:[[[0,0],[cw,cw],[cw,cw+hv],[0,hv]],[[x0,cw],[x0+cw,0],[x0+cw,hv],[x0,cw+hv]]],base:0}; }
+  if(pat==='espinha') return {t1:[h+j,h+j],t2:[w+j,-(w+j)],tiles:[R(0,0,w,h),R(0,h+j,h,w)],base:-45};
+  return {t1:[sx,0],t2:[0,sy],tiles:[R(0,0,w,h)],base:0};
 }
+function tileHalf(poly,n,c){ const out=[]; poly.forEach((a,i)=>{ const b=poly[(i+1)%poly.length], da=a[0]*n[0]+a[1]*n[1]-c, db=b[0]*n[0]+b[1]*n[1]-c;
+  if(da<=0) out.push(a); if((da<=0)!==(db<=0)){ const t=da/(da-db); out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]); } }); return out; }
+function tileStone(a,b,w,h,j,seed){
+  const site=(i,k)=>[i*(w+j)+(tileRnd(i,k,1+seed)-.5)*.7*w, k*(h+j)+(tileRnd(i,k,2+seed)-.5)*.7*h];
+  const s=site(a,b), r=2.5*Math.max(w,h); let cell=[[s[0]-r,s[1]-r],[s[0]+r,s[1]-r],[s[0]+r,s[1]+r],[s[0]-r,s[1]+r]];
+  for(let di=-3;di<=3;di++) for(let dk=-3;dk<=3;dk++){ if(!di&&!dk) continue; const q=site(a+di,b+dk), n=[q[0]-s[0],q[1]-s[1]], d=Math.hypot(n[0],n[1]);
+    const m=[(s[0]+q[0])/2,(s[1]+q[1])/2]; cell=tileHalf(cell,n,m[0]*n[0]+m[1]*n[1]-j/2*d); if(cell.length<3) return null; }
+  return cell;
+}
+// peças (sem recorte) que cobrem o quadrado [-D, D]², já com a origem o
+function tilePieces(p,D,o){
+  const pat=p.padrao||'horizontal', w=Math.max(.5,num(p.pc,60)), h=Math.max(.5,num(p.pl,60)), j=p.seca?0:Math.max(0,num(p.rej,2))/10, seed=num(p.seed,0)|0;
+  const u=tileUnit(pat,w,h,j,p.amarr); let t1=u.t1,t2=u.t2; if(pat==='organica'){ t1=[w+j,0]; t2=[0,h+j]; }
+  const det=t1[0]*t2[1]-t1[1]*t2[0], out=[]; let A=[1e9,-1e9],B=[1e9,-1e9];
+  [[-D,-D],[D,-D],[D,D],[-D,D]].forEach(q=>{ const d=[q[0]-o[0],q[1]-o[1]], a=(d[0]*t2[1]-d[1]*t2[0])/det, b=(t1[0]*d[1]-t1[1]*d[0])/det;
+    A=[Math.min(A[0],a),Math.max(A[1],a)]; B=[Math.min(B[0],b),Math.max(B[1],b)]; });
+  const m=Math.ceil((Math.max(w,h)*3)/Math.min(Math.hypot(...t1),Math.hypot(...t2)))+1;
+  if((A[1]-A[0]+2*m)*(B[1]-B[0]+2*m)>9000) return {pieces:[],base:u.base};
+  for(let a=Math.floor(A[0])-m;a<=Math.ceil(A[1])+m;a++) for(let b=Math.floor(B[0])-m;b<=Math.ceil(B[1])+m;b++){
+    const bx=o[0]+a*t1[0]+b*t2[0], by=o[1]+a*t1[1]+b*t2[1];
+    const tiles=pat==='organica'?[tileStone(a,b,w,h,j,seed)].filter(Boolean):u.tiles;
+    tiles.forEach((t,ti)=>{ const pts=pat==='organica'?t.map(q=>[q[0]+o[0],q[1]+o[1]]):t.map(q=>[q[0]+bx,q[1]+by]);
+      if(pts.every(q=>q[0]<-D)||pts.every(q=>q[0]>D)||pts.every(q=>q[1]<-D)||pts.every(q=>q[1]>D)) return;
+      out.push({pts,k:((a+b)%2+2)%2,r:tileRnd(a*3+ti,b,9+seed)}); }); }
+  return {pieces:out,base:u.base};
+}
+function tilePict(pat){
+  const p={padrao:pat,pc:pat==='damas'?10:pat==='organica'?11:pat==='chevron'||pat==='espinha'?14:16,pl:pat==='damas'?10:pat==='organica'?9:pat==='chevron'||pat==='espinha'?4:7,rej:12,amarr:'meia'};
+  const r=tilePieces(p,40,[-23,-20]), a=num(r.base,0);
+  const polys=r.pieces.map(t=>`<polygon points="${t.pts.map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' ')}"${pat==='damas'&&t.k?' fill="currentColor" fill-opacity=".35"':''}/>`).join('');
+  return `<svg class="pic" viewBox="0 0 46 40" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"><defs><clipPath id="pc_${pat}"><rect x="5" y="5" width="36" height="30" rx="3"/></clipPath></defs><g clip-path="url(#pc_${pat})"><g transform="translate(23 20) rotate(${-a}) scale(1 -1)">${polys}</g></g></svg>`;
+}
+TILE_PATS.forEach(x=>{ P['pat_'+x[0]]=tilePict(x[0]); });
+function prevTiles(p){
+  const W=300,H=170, rw=400, rh=240, s=Math.min(W/rw,H/rh);
+  const ang=num(p.ang,0), tex=(p.texturas||[]);
+  const o=p.inicio==='centro'?[-num(p.pc,60)/2,-num(p.pl,60)/2]:[-rw/2,-rh/2];
+  const r=tilePieces(p,Math.hypot(rw,rh)/2+10,o);
+  const fill=t=>tex.length?`url(#tx${Math.floor(t.r*tex.length)%tex.length})`:(p.padrao==='damas'&&t.k?(p.cor2||'#5C0632'):(p.cor||'#E9E3DC'));
+  const defs=tex.map((f,i)=>`<pattern id="tx${i}" patternContentUnits="objectBoundingBox" width="1" height="1"><rect width="1" height="1" fill="${['#C9B49A','#B89C7E','#D8C6AE','#A88B6E'][i%4]}"/>${window.__MOCK__?'':`<image href="file:///${esc(f)}" width="1" height="1" preserveAspectRatio="none"/>`}</pattern>`).join('');
+  const polys=r.pieces.map(t=>`<polygon points="${t.pts.map(q=>(q[0]*s).toFixed(1)+','+(q[1]*s).toFixed(1)).join(' ')}" fill="${fill(t)}" stroke="${p.seca?'rgba(0,0,0,.25)':(p.correj||'#BDB6AE')}" stroke-width="${p.seca?.5:1}" stroke-opacity="${p.seca?1:.9}"/>`).join('');
+  const bg=p.seca?'#999':(p.mostrar_rej===false?'#ddd':(p.correj||'#BDB6AE'));
+  return `<span class="tagline">${r.pieces.length?'AMOSTRA 4,00 × 2,40 m':'PEÇA PEQUENA DEMAIS PARA A PRÉVIA'}</span><svg viewBox="0 0 ${rw*s} ${rh*s}" width="${rw*s}" height="${rh*s}">
+    <defs><clipPath id="room"><rect width="${rw*s}" height="${rh*s}" rx="6"/></clipPath>${defs}</defs>
+    <g clip-path="url(#room)"><rect width="${rw*s}" height="${rh*s}" fill="${bg}"/>
+    <g transform="translate(${rw*s/2} ${rh*s/2}) scale(1 -1) rotate(${ang+num(r.base,0)})">${polys}</g></g>
+    <rect width="${rw*s}" height="${rh*s}" rx="6" fill="none" stroke="var(--ink2)"/></svg>`;
+}
+function surfHtml(){ const sf=S.dyn.surface;
+  const t=!sf?'Procurando…':sf.faces?(sf.editing?'Editando paginação existente':(sf.faces>1?sf.faces+' faces selecionadas':'Face selecionada')):'Nenhuma face selecionada';
+  return `<div class="surf" id="surf"><div><b>${t}</b><small>${sf&&sf.faces?sf.area+' m²':'Selecione no modelo ou clique em Selecionar'}</small></div><button class="btn ghost sm" data-act="pick">${ic('pin')}Selecionar</button></div>`; }
+function texHtml(p){ const tx=p.texturas||[];
+  return `<div class="tex">${tx.length?`<div class="thumbs">${tx.map((f,i)=>`<div class="th">${window.__MOCK__?`<i class="swatch" style="background:${['#C9B49A','#B89C7E','#D8C6AE','#A88B6E'][i%4]}"></i>`:`<img src="file:///${esc(f)}" alt="" onerror="this.style.visibility='hidden'">`}<span>${esc(f.split('/').pop())}</span><button data-texdel="${i}" aria-label="Tirar imagem" title="Tirar">${ic('x')}</button></div>`).join('')}</div>`:''}
+   <div class="texbtns"><button class="btn ghost sm" data-act="add_image">${ic('plus')}Adicionar imagem</button>${tx.length>1?`<button class="btn ghost sm" data-act="vary">${ic('refresh')}Variar combinação <em>${num(p.seed,0)+1}</em></button>`:''}</div>
+   <small class="muted">${tx.length?'Cada peça recebe uma das imagens, sorteada. A imagem ocupa a peça inteira.':'JPG ou PNG da peça (foto do porcelanato, madeira, pedra). Pode pôr várias para variar.'}</small></div>`; }
+function estHtml(){ const e=S.dyn.est; if(!e) return `<div class="estbox empty">${S.dyn.estErr?esc(S.dyn.estErr):'Selecione a face para ver a estimativa.'}</div>`;
+  const big=e.slice(0,4), rest=e.slice(4);
+  return `<div class="estbox">${big.map(x=>`<div><small>${esc(x[0])}</small><b>${esc(x[1])}</b></div>`).join('')}</div>${rest.length?`<div class="estmore">${rest.map(x=>`<span>${esc(x[0])} <b>${esc(x[1])}</b></span>`).join('')}</div>`:''}`; }
+function tileEstimateMock(p){ const a=14.08, pc=num(p.pc,60)/100, pl=num(p.pl,60)/100, n=Math.ceil(a/(pc*pl)), cut=Math.round(n*.18)+4;
+  return [['Área revestida','14,08 m²'],['Peças inteiras',(n-cut+4)+' un'],['Peças recortadas',cut+' un'],['Total estimado',(n+4)+' un'],['Comprar (+'+num(p.perda,10)+'%)',br(a*(1+num(p.perda,10)/100))+' m²']]; }
+let estTimer=null;
+function scheduleEst(now){ clearTimeout(estTimer); estTimer=setTimeout(async()=>{ if(S.tool!=='tiling') return;
+  const r=await call('tiling','estimate',Object.assign({},S.params.tiling)); S.dyn.est=r.ok?r.est:null; S.dyn.estErr=r.ok?'':r.msg; if(r.surface) S.dyn.surface=r.surface;
+  const e=$('#est'); if(e) e.innerHTML=estHtml(); const sf=$('#surf'); if(sf) sf.outerHTML=surfHtml(); }, now?0:350); }
 
 function stairCalc(p){ const alt=num(p.alt,280), alvo=num(p.espelho,17.5); const n=Math.max(Math.round(alt/alvo),2), e=alt/n;
   const piso=Math.min(32,Math.max(25,64-2*e)); return {n,e,piso,bl:2*e+piso,comp:(n-1)*piso,ang:Math.atan2(e,piso)*180/Math.PI}; }
@@ -938,6 +1030,7 @@ function fieldHtml(f, p, id){
     case 'range': return `<div class="f row wide${full}">${lab}<div class="rng"><input type="range" data-k="${f.k}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${esc(v)}" aria-label="${esc(f.label)}"><input class="rv" data-k="${f.k}" inputmode="decimal" value="${esc(v)}" aria-label="${esc(f.label)}"><span class="ru">${esc(f.unit||'')}</span></div></div>`;
     case 'color': return `<div class="f row${full}">${lab}<div class="color"><input type="color" data-k="${f.k}" value="${esc(v)}"><span class="mono" style="font-size:11px;color:var(--muted)">${esc(String(v).toUpperCase())}</span></div></div>`;
     case 'select': { const opts = f.dyn ? (S.dyn[f.dyn]||[]) : f.opts; return `<div class="f row wide${full}">${lab}<div class="inp"><select id="f_${f.k}" data-k="${f.k}">${opts.length?'':'<option value="">— clique em Atualizar lista —</option>'}${opts.map(o=>`<option value="${esc(o[0])}" ${String(v)===String(o[0])?'selected':''}>${esc(o[1])}</option>`).join('')}</select>${ic('down')}</div></div>`; }
+    case 'html': return `<div class="f${full}">${f.html(p)}</div>`;
     case 'chips': return `<div class="f${full}">${lab}<div class="chips">${f.set.map((c,i)=>`<button class="chip" data-preset="${i}" data-fk="${esc(JSON.stringify(c[1]))}">${c[0]}</button>`).join('')}</div></div>`;
     case 'acts': return `<div class="f${full}"><div class="more" style="margin:0">${f.acts.map(a=>`<button class="btn ghost" data-act="${a[0]}">${a[2]&&a[2][0]==='#'?`<i style="width:12px;height:12px;border-radius:4px;background:${a[2]}"></i>`:ic(a[2]||'play')}${esc(a[1])}</button>`).join('')}</div></div>`;
   }
@@ -1024,12 +1117,14 @@ function go(route, tool){
   if(tool && !S.params[tool]) S.params[tool]=Object.assign(defaults(tool), store.get('p:'+tool,{}));
   render(); $('#main').scrollTop=0;
   if(tool==='replace' && !S.dyn.defs) runAct('list', true);
+  if(tool && FORMS[tool] && FORMS[tool].est) scheduleEst(true);
 }
 function setParam(k, v, full){
   const p=S.params[S.tool]; p[k]=v; store.set('p:'+S.tool,p);
   const f=findField(S.tool,k); if(f&&f.onchange) f.onchange(p,v);
   if(f&&f.live) call(S.tool, f.live, Object.assign({},p));
   if(full) refreshTool(); else refreshPreview();
+  if(FORMS[S.tool]&&FORMS[S.tool].est) scheduleEst();
 }
 function findField(id,k){ let r=null; (FORMS[id]?FORMS[id].secs:[]).forEach(s=>s.f.forEach(f=>{ if(f.k===k) r=f; })); return r; }
 
@@ -1037,11 +1132,16 @@ function findField(id,k){ let r=null; (FORMS[id]?FORMS[id].secs:[]).forEach(s=>s
 async function runAct(action, silent, btn){
   const id=S.tool; let p=Object.assign({}, S.params[id]);
   let a=action;
+  if(action==='center'){ setParam('inicio','centro',true); toast('Paginação centralizada na face.'); return; }
+  if(action==='vary'){ setParam('seed',num(S.params[id].seed,0)+1,true); return; }
   if(action.startsWith('assign:')){ p.cat=action.slice(7); a='assign'; }
   if(btn) btn.classList.add('busy');
   const res=await call(id, a, p);
   if(btn) btn.classList.remove('busy');
   if(res.values){ Object.assign(S.params[id], res.values); store.set('p:'+id,S.params[id]); }
+  if(res.surface) S.dyn.surface=res.surface;
+  if(FORMS[id]&&FORMS[id].est&&(res.values||a==='build')) scheduleEst();
+  if(silent===false&&!res.stats&&res.ok&&(a==='add_image'||a==='edit')){ toast(res.msg); refreshTool(); return; }
   if(res.settings && Object.keys(res.settings).length){ Object.assign(S.params[id], res.settings); store.set('p:'+id,S.params[id]); }
   if(res.defs){ S.dyn.defs=res.defs.map(d=>[d[0],`${d[0]} (${d[1]})`]); if(!S.params.replace.def&&res.defs[0]) S.params.replace.def=res.defs[0][0]; }
   if(res.picking){ toast(res.msg); if(res.stats){ S.results[id]=res; } refreshTool(); return; }
@@ -1075,7 +1175,8 @@ document.addEventListener('click', e=>{
   if(d.set){ const f=findField(S.tool,d.set); let v=d.v; if(f&&(f.type==='num'||typeof f.def==='number')) v=num(v); setParam(d.set, v, true); return; }
   if(d.step){ const k=d.k, f=findField(S.tool,k); const st=(f&&f.step)||1; let v=+(num(S.params[S.tool][k])+st*(+d.step)).toFixed(3);
     if(f&&f.min!=null) v=Math.max(f.min,v); if(f&&f.max!=null) v=Math.min(f.max,v); setParam(k,v,true); return; }
-  if(d.preset!==undefined){ const o=JSON.parse(d.fk); Object.assign(S.params[S.tool],o); store.set('p:'+S.tool,S.params[S.tool]); refreshTool(); return; }
+  if(d.preset!==undefined){ const o=JSON.parse(d.fk); Object.assign(S.params[S.tool],o); store.set('p:'+S.tool,S.params[S.tool]); refreshTool(); if(FORMS[S.tool].est) scheduleEst(); return; }
+  if(d.texdel!==undefined){ const p=S.params[S.tool], t=(p.texturas||[]).slice(); t.splice(+d.texdel,1); setParam('texturas',t,true); return; }
   if(d.act){ runAct(d.act,false,el.classList.contains('btn')?el:null); return; }
   if(d.upd){
     if(d.upd==='install'){ S.updClicked=true; S.update=Object.assign({},S.update,{state:'downloading'}); renderUpdate(); }
@@ -1098,12 +1199,14 @@ document.addEventListener('input', e=>{
     if(f&&f.type==='range'){ v=num(el.value); $$('[data-k="'+k+'"]').forEach(x=>{ if(x!==el) x.value=v; }); }
     const p=S.params[S.tool]; p[k]=v; store.set('p:'+S.tool,p);
     if(f&&f.live) call(S.tool, f.live, Object.assign({},p));
+    if(FORMS[S.tool]&&FORMS[S.tool].est) scheduleEst();
     if(el.type==='checkbox'||el.type==='color'||(f&&f.onchange)) { if(f&&f.onchange) f.onchange(p,v); refreshTool(); }
     else { refreshPreview(); $$('[data-set="'+k+'"]').forEach(c=>c.classList.toggle('on', num(c.dataset.v)===num(v))); }
     return; }
   if(el.id==='autoUpd'){ S.state.auto_update=el.checked; send('update', el.checked?'auto_on':'auto_off'); }
 });
 document.addEventListener('change', e=>{ const el=e.target; if(el.tagName==='SELECT'&&el.dataset.k&&S.tool){ setParam(el.dataset.k, el.value, true); } });
+window.addEventListener('focus', ()=>{ if(S.tool&&FORMS[S.tool]&&FORMS[S.tool].est) scheduleEst(true); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'&&S.route!=='home'){ go('home'); } });
 
 function setTheme(t){ document.documentElement.dataset.theme=t; $('#btnTheme').innerHTML=ic(t==='dark'?'sun':'moon'); }
@@ -1119,7 +1222,11 @@ window.PLN = {
   },
   onResult([req, res]){ const r=S.reqs[req]; delete S.reqs[req]; if(r) r(res||{ok:false,msg:'Sem resposta.'}); },
   on(ev, data){
-    if(ev==='result'){ const id=data.tool; S.results[id]=data; if(S.tool===id){ refreshTool(); } toast(data.msg); }
+    if(ev==='result'){ const id=data.tool;
+      if(data.values&&S.params[id]){ Object.assign(S.params[id],data.values); store.set('p:'+id,S.params[id]); }
+      if(data.surface) S.dyn.surface=data.surface;
+      if(data.stats) S.results[id]=data;
+      if(S.tool===id){ refreshTool(); if(FORMS[id]&&FORMS[id].est) scheduleEst(true); } toast(data.msg); }
     else if(ev==='favorites'){ S.state.favorites=data; }
     else if(ev==='update'){ S.update=data; renderUpdate(); if(S.route==='license') render(); if(data.state==='installed'||(data.state==='error'&&S.updClicked)) toast(updMsg(data)); }
     else if(ev==='license'){ toast(data.msg); }
@@ -1138,8 +1245,7 @@ const MOCK = {
     ['stairs','Escada','arq','arq','Calcula degraus pela fórmula de Blondel e desenha maciça ou flutuante.',['Informe o pé-direito','Confira o conforto','Clique início e direção']],
     ['roofs','Telhado','arq','arq','1, 2 ou 4 águas com beiral, inclinação e contagem de telhas.',['Selecione o contorno da cobertura','Escolha águas e inclinação','Gerar']],
     ['urban_index','Índices urbanísticos','arq','arq','TO, CA e permeabilidade conferidos com a lei do seu terreno.',['Selecione faces','Marque terreno, projeção, construída, permeável','Compare com a lei']],
-    ['tiling','Paginação de piso','rev','rev','Peças com rejunte, amarração ½ ou ⅓, ângulo, recortes e compra em caixas.',['Selecione o piso','Escolha peça e rejunte','Paginar']],
-    ['wall_tiling','Paginação de parede','rev','rev','Revestimento de parede com a mesma lógica do piso: azulejo, porcelanato, subway.',['Selecione a parede','Escolha peça e rejunte','Paginar']],
+    ['tiling','Revestimento','rev','rev','Paginação de piso e parede: 8 padrões, junta, texturas variadas e estimativa ao vivo.',['Selecione a face','Escolha padrão, peça e posição','Gerar paginação']],
     ['baseboard','Rodapé','rev','rev','Contorna o piso e os pilares, pula as portas e calcula as barras.',['Selecione o piso','Shift + clique nas linhas das portas','Gerar rodapé']],
     ['ceiling','Forro e sanca','rev','rev','Forro de gesso no pé-direito certo, com sanca e conta de placas.',['Selecione o piso','Informe o pé-direito','Gerar forro']],
     ['scenes','Cenas automáticas','pres','pres','Plantas por nível, cobertura, cortes AA/BB, 4 fachadas e perspectiva num clique.',['Informe os níveis','Marque o que quer','Criar cenas']],
@@ -1162,7 +1268,12 @@ const MOCK = {
   run(tool, action, p){
     const R=window.__MOCK_RUN__&&window.__MOCK_RUN__[tool+':'+action]; if(R) return R(p);
     if(tool==='stairs'){ const c=stairCalc(p); return {ok:true,msg:'Escada com '+c.n+' degraus criada.',stats:[['Degraus',String(c.n)],['Espelho',br(c.e,1)+' cm'],['Piso',br(c.piso,1)+' cm'],['Blondel',br(c.bl,1)+' cm'],['Comprimento',br(c.comp/100)+' m'],['Inclinação',br(c.ang,0)+'°']]}; }
-    if(tool==='tiling'||tool==='wall_tiling') return {ok:true,msg:'Paginação pronta em 1 face(s).',stats:[['Área','18,40 m²'],['Peças inteiras','44'],['Peças recortadas','12'],['Comprar (+10%)','20,24 m²'],['Caixas','15 cx de 1,44 m²'],['Rejunte','3,1 kg']]};
+    if(tool==='tiling'&&action==='surface') return {ok:true,msg:'',surface:{faces:1,area:'14,08',editing:false}};
+    if(tool==='tiling'&&action==='estimate'){ const e=tileEstimateMock(p); return {ok:true,msg:'',est:e,surface:{faces:1,area:'14,08',editing:false}}; }
+    if(tool==='tiling'&&action==='add_image'){ const n=(p.texturas||[]).length+1; return {ok:true,msg:'Imagem adicionada.',values:{texturas:(p.texturas||[]).concat(['C:/Texturas/madeira_0'+n+'.jpg'])}}; }
+    if(tool==='tiling'&&action==='edit') return {ok:true,msg:'Opções carregadas. Mude o que quiser e clique em Gerar paginação.',values:{padrao:'espinha',pc:60,pl:15},surface:{faces:1,area:'14,08',editing:true}};
+    if(tool==='tiling'&&(action==='pick'||action==='origin'||action==='rotate')) return {ok:true,picking:true,msg:'Clique no modelo.'};
+    if(tool==='tiling') return {ok:true,msg:'Paginação pronta em 1 face(s).',stats:tileEstimateMock(p).concat([['Caixas','11 cx de 1,44 m²'],['Rejunte','3,1 kg']])};
     if(tool==='cut_list') return MOCK.cut();
     if(tool==='scenes') return {ok:true,msg:'10 cenas criadas. Veja as abas no topo da tela do SketchUp.',stats:[['Cenas','10'],['Níveis','2'],['Altura do corte','120 cm']]};
     if(tool==='export_images') return {ok:true,msg:'10 imagem(ns) salva(s) em C:\\Projetos\\Casa Nicole\\imagens.',stats:[['Imagens','10'],['Tamanho','1920 × 1080 px'],['Formato','PNG']]};

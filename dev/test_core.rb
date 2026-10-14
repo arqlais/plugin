@@ -40,7 +40,7 @@ G = P::Geom2
 class TestCore < Minitest::Test
   def test_all_tools_registered
     ids = P::Registry.all.map { |t| t[:id] }
-    %i[walls openings dwg_walls stairs roofs urban_index tiling wall_tiling baseboard ceiling
+    %i[walls openings dwg_walls stairs roofs urban_index tiling baseboard ceiling
        cut_list countertop takeoff model_health align replace auto_tags
        scenes export_images room_tags furniture measure isolate].each do |id|
       assert_includes ids, id
@@ -70,11 +70,32 @@ class TestCore < Minitest::Test
     r = P::Tools::Tiling.layout(room, [], 'pc' => 60, 'pl' => 60, 'rej' => 0)
     assert_equal 15, r[:full]
     assert_equal 5, r[:cut]
-    total = r[:pieces].sum { |p| G.area(p) }
-    assert_in_delta G.area(room), total, 1
-    r2 = P::Tools::Tiling.layout(room, [], 'pc' => 60, 'pl' => 30, 'rej' => 2, 'padrao' => 'meia', 'ang' => 45)
+    r2 = P::Tools::Tiling.layout(room, [], 'pc' => 60, 'pl' => 30, 'rej' => 2, 'padrao' => 'tijolo', 'ang' => 45)
     assert r2[:pieces].size > 30
-    assert r2[:pieces].sum { |p| G.area(p) } < G.area(room)
+    assert r2[:pieces].sum { |p| G.area(p[:poly]) } < G.area(room)
+  end
+
+  # todos os padrões cobrem o ambiente inteiro sem sobrar nem sobrepor (junta zero)
+  def test_tiling_patterns_cover_room
+    room = G.ccw([[0, 0], [410.cm, 0], [410.cm, 150.cm], [250.cm, 150.cm], [250.cm, 290.cm], [0, 290.cm]]) # em L
+    P::Tools::Tiling::PATTERNS.each do |pat|
+      [0, 30].each do |ang|
+        %w[canto centro].each do |ini|
+          r = P::Tools::Tiling.layout(room, [], 'padrao' => pat, 'pc' => 60, 'pl' => 20, 'seca' => true, 'ang' => ang, 'inicio' => ini)
+          sum = r[:pieces].sum { |p| G.area(p[:poly]) }
+          assert_in_delta G.area(room), sum, G.area(room) * 0.002, "#{pat} #{ang}° #{ini}: soma #{sum} ≠ área"
+          assert_equal r[:pieces].size, r[:full] + r[:cut]
+        end
+      end
+      r = P::Tools::Tiling.layout(room, [], 'padrao' => pat, 'pc' => 60, 'pl' => 20, 'rej' => 3)
+      assert r[:pieces].sum { |p| G.area(p[:poly]) } < G.area(room) * 0.995, "#{pat}: junta não abriu espaço"
+    end
+    # ponto inicial escolhido desloca a grade
+    a = P::Tools::Tiling.layout(room, [], 'pc' => 60, 'pl' => 60, 'seca' => true, 'inicio' => 'ponto')
+    b = P::Tools::Tiling.layout(room, [], 'pc' => 60, 'pl' => 60, 'seca' => true, 'inicio' => 'ponto', 'x' => 1)
+    assert_equal a[:full], b[:full]
+    c = P::Tools::Tiling.layout(room, [], { 'pc' => 60, 'pl' => 60, 'seca' => true, 'inicio' => 'ponto' }, [10.cm, 10.cm])
+    refute_equal a[:cut], c[:cut]
   end
 
   def test_nesting

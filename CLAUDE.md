@@ -55,7 +55,7 @@ docs/                           prints das telas
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.7.1; nada de geometria testado por ela ainda)
+## Ferramentas — status (v0.8.0; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria; digitar "5" = 5 m, unidade escolhível) | arq |
@@ -64,7 +64,7 @@ Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA
 | stairs | Escada reta Blondel, maciça ou flutuante, corrimão | arq |
 | roofs | Telhado 1/2/4 águas, beiral, telhas | arq |
 | urban_index | TO, CA, permeabilidade vs. limites da lei | arq |
-| tiling / wall_tiling | Paginação de piso e de parede (rejunte, ½ ⅓, ângulo, furos, caixas, rejunte kg) | rev |
+| tiling | **Revestimento** (v0.8, um só para piso e parede; referência dela = plugin REVEST, só a ideia): 8 padrões (horizontal, vertical, diagonal, tijolinho ½/⅓, damas, chevron, espinha, pedra orgânica = Voronoi), junta/junta seca, espessura e peças 3D, rejunte com cor, ângulo + girar pelos 2 pontos no modelo, ponto inicial clicado, centralizar, várias imagens sorteadas por peça (`position_material` com a imagem ocupando a peça, "Variar combinação" = `seed`), estimativa ao vivo (ação `estimate`), Editar paginação (grupo guarda `params`, `face_pid`, `face_tr`). Gerador de padrões igual em Ruby (`Tiling.layout/unit`) e JS (`tilePieces`), mesmo sorteio (`rnd`/`tileRnd`). Teste: soma das peças = área em todos os padrões | rev |
 | baseboard | Rodapé (pula linhas de porta selecionadas com Shift, pilares) | rev |
 | ceiling | Forro com sanca, placas | rev |
 | cut_list | Lista de peças + plano de corte + fita + ferragens + CSV | marc |
