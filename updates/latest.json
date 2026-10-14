@@ -1,6 +1,6 @@
 {
-  "version": "0.11.0",
+  "version": "0.11.1",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "1de31314ae3a6461e076edef9185cffd08a64bdee4af4859bcedad1363b89804",
+  "sha256": "ef37f9894845d1409d1312076f62497ee201d53c6937addb4bf25547ce694d23",
   "notes": ["Arredondar ou chanfrar todas as arestas da peça de uma vez (cubo, puff, tampo, prateleira, peça em L)"]
 }
