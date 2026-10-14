@@ -8,11 +8,11 @@ module LAVIStudio
   module Plugin
     PLUGIN_ID   = 'lavi_plugin'.freeze
     PLUGIN_NAME = 'LAVI'.freeze
-    VERSION     = '0.6.1'.freeze
+    VERSION     = '0.7.0'.freeze
 
     unless file_loaded?(__FILE__)
       ext = SketchupExtension.new(PLUGIN_NAME, File.join(PLUGIN_ID, 'main'))
-      ext.description = 'Paredes, vãos, revestimentos, marcenaria em blocos dinâmicos, quantitativo e orçamento.'
+      ext.description = 'Paredes, vãos, revestimentos, cenas, exportação de imagens, marcenaria e quantitativo.'
       ext.version     = VERSION
       ext.creator     = 'Laís A. Vieira · LAVI'
       ext.copyright   = "© #{Time.now.year} Laís A. Vieira"

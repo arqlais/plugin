@@ -128,7 +128,7 @@ module LAVIStudio
             <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Caderno de especificação</title>
             <style>
             @page{size:A4;margin:14mm}
-            body{font-family:Montserrat,Arial,sans-serif;color:#3E4B57;margin:0;padding:28px}
+            body{font-family:Poppins,Arial,sans-serif;color:#3E4B57;margin:0;padding:28px}
             header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #5C0632;padding-bottom:14px;margin-bottom:8px}
             header svg{width:48px;height:48px} h1{margin:0;font-size:22px} .sub{color:#8B939A;font-size:12px}
             h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#5C0632;margin:22px 0 10px}

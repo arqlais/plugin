@@ -25,8 +25,8 @@ const url = 'file://' + path.join(__dirname, '..', 'lavi_plugin', 'ui', 'index.h
     if (full) await page.evaluate(() => { const st = document.querySelectorAll('style'); st[st.length - 1].remove(); });
     console.log('print', name);
   };
-  const tool = async id => { await page.click(`.ri[data-tool="${id}"]`); };
-  const TABS = { walls: 'arq', openings: 'arq', stairs: 'arq', roofs: 'arq', dwg_walls: 'arq', urban_index: 'arq', tiling: 'rev', wall_tiling: 'rev', baseboard: 'rev', ceiling: 'rev', scenes: 'pres', export_images: 'pres', room_tags: 'pres', furniture: 'quant', measure: 'base', isolate: 'base', cut_list: 'marc', countertop: 'marc', takeoff: 'quant', budget: 'quant', model_health: 'base', align: 'base', replace: 'base', auto_tags: 'base' };
+  const tool = async id => { if (await page.$('[data-back]')) await page.click('.thead [data-back]'); await page.click(`.tool[data-tool="${id}"]`); };
+  const TABS = { walls: 'arq', openings: 'arq', stairs: 'arq', roofs: 'arq', dwg_walls: 'arq', urban_index: 'arq', tiling: 'rev', wall_tiling: 'rev', baseboard: 'rev', ceiling: 'rev', scenes: 'pres', export_images: 'pres', room_tags: 'pres', furniture: 'quant', measure: 'base', isolate: 'base', cut_list: 'marc', countertop: 'marc', takeoff: 'quant', model_health: 'base', align: 'base', replace: 'base', auto_tags: 'base' };
 
   await shot('01-inicio');
   await page.click('[data-upd="install"]'); await page.waitForTimeout(900); await shot('01b-atualizado');
@@ -43,7 +43,6 @@ const url = 'file://' + path.join(__dirname, '..', 'lavi_plugin', 'ui', 'index.h
 
   await tool('stairs'); await shot('06-escada');
   await tool('cut_list'); await page.click('[data-act="list"]'); await page.waitForTimeout(700); await shot('07-plano-de-corte', true);
-  await tool('budget'); await page.click('[data-act="load"]'); await page.waitForTimeout(700); await shot('08-orcamento', true);
   await tool('model_health'); await page.click('[data-act="scan"]'); await page.waitForTimeout(700); await shot('09-saude');
   await tool('openings'); await page.click('.card[data-set="tipo"][data-v="janela"]'); await shot('10-janelas');
   await tool('roofs'); await shot('11-telhado');
@@ -52,7 +51,7 @@ const url = 'file://' + path.join(__dirname, '..', 'lavi_plugin', 'ui', 'index.h
   for (const id of Object.keys(TABS)) { await tool(id); await page.waitForTimeout(80); }
 
   await page.click('#btnTheme');
-  await page.click('[data-tab="home"]');
+  await page.click('.brand');
   await shot('12-inicio-escuro');
   await tool('export_images'); await shot('13-exportar-escuro');
   await page.click('#btnLic'); await shot('14-licenca-escuro');

@@ -18,6 +18,8 @@ module LAVIStudio
       def show(tool = nil)
         @open_tool = tool && tool.to_s
         if @dlg && @dlg.visible?
+          # volta ao tamanho padrão (se estava minimizado ou em tela cheia)
+          @dlg.set_size(430, 760) if @dlg.respond_to?(:set_size)
           @dlg.bring_to_front
           push('open', id: @open_tool) if @open_tool
           return

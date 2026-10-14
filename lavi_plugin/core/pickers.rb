@@ -7,8 +7,10 @@ module LAVIStudio
       # Enter ou duplo clique termina · clicar no 1º ponto fecha · Backspace volta · Esc cancela
       # Digitar um número no campo de medidas posiciona o próximo ponto naquela distância.
       class PointPicker
-        def initialize(hint, single: false, max: nil, &on_done)
+        # unit: como ler um número digitado sem unidade ('m', 'cm', 'mm' ou nil = unidade do modelo)
+        def initialize(hint, single: false, max: nil, unit: nil, &on_done)
           @hint = hint
+          @unit = unit
           @single = single
           @max = single ? 1 : max
           @on_done = on_done
@@ -72,10 +74,32 @@ module LAVIStudio
           @ip_prev.copy!(@ip)
         end
 
+        # sem isto o SketchUp não deixa digitar no campo de medidas
+        def enableVCB?
+          !@single
+        end
+
+        # "5" vira 5 m (ou cm/mm, conforme a escolha no painel); "5cm", "50mm", "5,5" também funcionam
+        def parse_length(text)
+          t = text.to_s.strip.tr(',', '.')
+          return nil if t.empty?
+          if @unit && t =~ /\A\d+(\.\d+)?\z/
+            v = t.to_f
+            return { 'm' => v * 100, 'cm' => v, 'mm' => v / 10.0 }[@unit].to_f.cm
+          end
+          text.to_s.strip.to_l
+        rescue ArgumentError
+          nil
+        end
+
         def onUserText(text, view)
-          return if @pts.empty?
-          dist = text.to_l rescue nil
-          return unless dist && @ip.valid?
+          if @pts.empty?
+            UI.beep
+            Sketchup.status_text = 'Clique primeiro o ponto de partida; depois digite a medida e aponte a direção com o mouse.'
+            return
+          end
+          dist = parse_length(text)
+          return UI.beep unless dist && dist.to_f > 0 && @ip.valid?
           dir = @ip.position - @pts[-1]
           return unless dir.valid?
           dir.length = dist

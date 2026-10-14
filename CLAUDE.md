@@ -11,11 +11,12 @@ Plugin para SketchUp (Ruby + painel HTML) que a Laís está criando para **vende
 - Ela testa no próprio SketchUp e manda prints. Este ambiente não tem SketchUp: **a parte 3D nunca foi executada de verdade**. Trate tudo que mexe em geometria como "precisa de teste".
 
 ## Identidade visual (decidida por ela na v0.6 — não mudar sem ela pedir)
-- Nome **LAVI** (wordmark em Bodoni Moda 600, caixa alta, espaçado). Símbolo = **planta com porta** (quadrado + parede + giro de porta), `IC.lavi`.
+- Nome **LAVI** (wordmark em Bodoni Moda 600, caixa alta, espaçado). Símbolo = **planta com porta** (quadrado + parede + giro de porta), `IC.lavi`, **sem fundo**: planta em vinho e giro da porta em pink (v0.7: ela rejeitou o fundo lima, "já existe muito plugin assim").
 - **NUNCA usar degradê**, em nada (ela pediu explicitamente). Só cores sólidas.
-- Paleta das referências dela: cinza `#EFEFEF` (fundo), orquídea `#EAA2E5` (seleção), lima `#D3DC2A` (só o ícone principal), lima claro `#EBF5A0` (texto sobre vinho, selo grátis), vinho/mulberry `#5C0632` (marca, botão principal, texto forte), pink `#E1146C` (detalhes: números, destaque no título), areia `#E3E2D7` (dicas).
-- Fontes embutidas: **Anton** (títulos, caixa alta), **Bodoni Moda** (nome LAVI), **Montserrat** (interface), **JetBrains Mono** (medidas). Em `lavi_plugin/ui/fonts/`.
-- Layout: marca + **barra de ícones** (como a referência dela: só o ícone principal colorido em lima, o resto traço fino neutro, grupos separados) + lista limpa por grupo. Barra do SketchUp igual: ícone LAVI colorido + um botão monocromático por ferramenta principal (`TOOLBAR` em main.rb; ícones gerados por `python3 dev/make_icons.py` a partir de `IC` no index.html).
+- Paleta das referências dela: cinza `#EFEFEF` (fundo), orquídea `#EAA2E5` (seleção), lima `#D3DC2A` (não usar mais no ícone), lima claro `#EBF5A0` (texto sobre vinho, selo grátis), vinho/mulberry `#5C0632` (marca, botão principal, texto forte), pink `#E1146C` (detalhes: números, destaque no título), areia `#E3E2D7` (dicas).
+- Fontes embutidas: **Poppins** (interface, a mesma do site dela lais3d.com.br), **Bodoni Moda** (nome LAVI), **JetBrains Mono** (medidas). Em `lavi_plugin/ui/fonts/`. Anton e Montserrat saíram na v0.7 (ela achou feio).
+- Layout (v0.7, referência dela = painel do HeyPrint + sites lais3d.com.br/souplane.com.br): fundo claro quente, marca + 2 botões quadrados vinho, busca, lista por grupo (só ícone + nome + estrela, sem descrição). Títulos de seção pequenos, caixa alta, espaçados. Na ferramenta: voltar + título, campos numa caixa branca **uma linha por campo** (rótulo à esquerda, controle à direita), chaves liga/desliga, régua deslizante (`type:'range'`), seção `opt:1` mostra "opcional". Ela achou a versão anterior "poluída": não encher de caixas, badges e textos.
+- Barra do SketchUp: ícone LAVI colorido + um botão monocromático por ferramenta principal (`TOOLBAR` em main.rb; ícones gerados por `python3 dev/make_icons.py` a partir de `IC`, desenho a 80% e traço fino ~1,2 px, porque ela achou grande e grosso).
 - Modo claro padrão + escuro (lua). Ela quer intuitivo, organizado, ícones para tudo.
 - **Rejeitado por ela:** laranja neon; verde/lima neon como cor dominante (lima só no ícone principal veio da referência dela); petróleo/rosé/areia com serifa; preto + amarelo; "LAVI Tools"/símbolo antigo; "Planê Plugin", símbolo de laço e qualquer degradê.
 
@@ -57,7 +58,7 @@ Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA
 ## Ferramentas — status (v0.6.1; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
-| walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria) | arq |
+| walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria; digitar "5" = 5 m, unidade escolhível) | arq |
 | openings | Portas e janelas (clica na parede, abre o vão, põe folha/vidro) | arq |
 | dwg_walls | DWG → Paredes (pares paralelos, vergas e peitoris nos vãos) | arq |
 | stairs | Escada reta Blondel, maciça ou flutuante, corrimão | arq |
@@ -69,9 +70,8 @@ Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA
 | cut_list | Lista de peças + plano de corte + fita + ferragens + CSV | marc |
 | countertop | Recorte de cuba/cooktop no tampo | marc |
 | takeoff | Quantitativo por material (piso/parede/teto) + itens + CSV | quant |
-| budget | Orçamento (preços salvos no .skp), MO, BDI, proposta HTML→PDF | quant |
 | scenes | Cenas automáticas: plantas por nível (corte 1,20), cobertura, cortes AA/BB, 4 fachadas, perspectiva | pres |
-| export_images | Exportar todas as cenas em PNG/JPG (largura, proporção, transparente) | pres |
+| export_images | Exportar cenas em PNG/JPG (formatos feed/story/A4…), moldura + grade de terços na tela (Overlay, SU 2023+), atalhos de câmera (altura, abertura, 2 pontos, vista) | pres |
 | room_tags | Etiqueta de ambiente (texto 3D no piso ou rótulo) + quadro de áreas CSV; guarda persistent_id da face | pres |
 | furniture | Ficha de mobiliário (dict `plane_item`), relatório por ambiente, CSV, caderno HTML com miniaturas | quant |
 | model_health, align, replace, auto_tags, measure, isolate | Essenciais (grátis) | base |
@@ -107,6 +107,8 @@ Próximo nível que ela quer (imagens de referência): catálogo detalhado como 
 - **Precisa de repositório público** (ou mover `updates/` para um host público, ex. o LAVI APP). Se o repo ficar privado, a atualização para de funcionar.
 
 ## Regras
+- Ela pediu: **nada de funcionalidade desnecessária**, só o que é útil no SketchUp em si (por isso o Orçamento saiu na v0.7). Perguntar antes de inventar ferramenta nova.
+- Referências de terceiros (HeyPrint, LIA etc.) servem só de ideia de interface: nunca copiar código.
 - **Código 100% original.** Projetos antigos dela tinham plugins de terceiros modificados para remover licença: nada disso entra aqui.
 - Antes de vender: `DEV_MODE = false` em `core/license.rb` e trocar o `SECRET` (o `keygen.rb` lê de lá). Com o repo público, o SECRET fica visível: o ideal é validar a chave online pelo app dela (Next.js + Redis + Mercado Pago PIX, já existente).
 - Toda alteração geométrica dentro de `Helpers.operation` (um Ctrl+Z desfaz tudo).

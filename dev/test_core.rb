@@ -41,7 +41,7 @@ class TestCore < Minitest::Test
   def test_all_tools_registered
     ids = P::Registry.all.map { |t| t[:id] }
     %i[walls openings dwg_walls stairs roofs urban_index tiling wall_tiling baseboard ceiling
-       cut_list countertop takeoff budget model_health align replace auto_tags
+       cut_list countertop takeoff model_health align replace auto_tags
        scenes export_images room_tags furniture measure isolate].each do |id|
       assert_includes ids, id
     end

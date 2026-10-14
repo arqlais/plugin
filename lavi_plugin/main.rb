@@ -16,7 +16,7 @@ module LAVIStudio
       %i[scenes export_images room_tags],
       %i[walls openings dwg_walls stairs roofs],
       %i[tiling baseboard ceiling],
-      %i[takeoff budget furniture],
+      %i[takeoff furniture],
       %i[measure isolate model_health]
     ].freeze
 
@@ -53,7 +53,7 @@ module LAVIStudio
       tiling baseboard ceiling
       cut_list countertop
       scenes export_images room_tags
-      takeoff budget furniture
+      takeoff furniture
       model_health align replace auto_tags measure isolate
     ].each { |f| safe_require('tools', f) }
 

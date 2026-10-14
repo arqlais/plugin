@@ -8,11 +8,17 @@ module LAVIStudio
         H = Helpers
         G = Geom2
 
+        # unidade usada quando ela digita só o número no campo de medidas
+        def unit_of(p)
+          u = p['unid'].to_s
+          %w[m cm mm].include?(u) ? u : nil
+        end
+
         def handle(action, p)
           case action
           when 'draw'
             Sketchup.active_model.select_tool(
-              Pickers::PointPicker.new('Paredes: clique os cantos') { |pts, closed| build_async(pts, closed, p) }
+              Pickers::PointPicker.new('Paredes: clique os cantos (ou digite a medida)', unit: unit_of(p)) { |pts, closed| build_async(pts, closed, p) }
             )
             H.ok('Clique os cantos da parede no modelo. Enter termina, clicar no 1º ponto fecha o ambiente.', picking: true)
           when 'from_edges'
