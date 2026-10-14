@@ -126,6 +126,7 @@ def render(name, title, view: :iso, az: -55, el: 32, w: 860, h: 560)
 end
 
 def scene(name)
+  return if ENV['ONLY'] && !name.include?(ENV['ONLY'])
   fresh
   yield
 rescue StandardError => e
@@ -338,6 +339,18 @@ scene('23-arredondar-arestas') do
   tp = box(150, 100, 30, 120, 50, 4, name: 'Prateleira', mat: m.materials.add('Madeira').tap { |x| x.color = Sketchup::Color.new(184, 138, 98) })
   sel(tp); run(:shape, 'apply', 'modo' => 'tudo', 'acab' => 'redondo', 'raio' => 1.5, 'seg' => 4)
   render('23-arredondar-arestas', 'Todas as arestas: arredondado, chanfrado, original · puff e prateleira', az: -55, el: 28)
+end
+
+scene('24-ripado') do
+  f = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))
+  f.reverse! if f.normal.y > 0
+  h = m.entities.add_face(pt(110, 0, 0.0001), pt(190, 0, 0.0001), pt(190, 0, 210), pt(110, 0, 210))
+  h.erase! if h && h.valid? && !h.equal?(f)
+  sel(f); run(:ripado, 'build', 'larg' => 4, 'vao' => 2, 'prof' => 2, 'cor_ripa' => '#B88A62')
+  f2 = m.entities.add_face(pt(360, 0, 0), pt(560, 0, 0), pt(560, 0, 260), pt(360, 0, 260))
+  f2.reverse! if f2.normal.y > 0
+  sel(f2); run(:ripado, 'build', 'larg' => 7, 'vao' => 1.5, 'prof' => 2, 'sentido' => 'horizontal', 'fundo' => true, 'cor_ripa' => '#C9A27C', 'cor_fundo' => '#3E4B57', 'recuo' => 10)
+  render('24-ripado', 'Ripado em pé com o vão da porta livre · ripado deitado com fundo e recuo', az: -110, el: 18)
 end
 
 scene('20-luzes') do

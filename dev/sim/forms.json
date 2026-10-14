@@ -141,6 +141,26 @@
   ]
  },
  {
+  "id": "ripado",
+  "defaults": {
+   "sentido": "vertical",
+   "larg": 4,
+   "vao": 2,
+   "prof": 2,
+   "cor_ripa": "#B88A62",
+   "alinhar": "centro",
+   "recuo": 0,
+   "fundo": false,
+   "fundo_esp": 1.5,
+   "cor_fundo": "#3E4B57",
+   "barra": 300
+  },
+  "acts": [
+   "build",
+   "pick"
+  ]
+ },
+ {
   "id": "ceiling",
   "defaults": {
    "tipo": "rebaixado",

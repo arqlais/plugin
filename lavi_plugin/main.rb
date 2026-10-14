@@ -16,7 +16,7 @@ module LAVIStudio
       %i[scenes export_images room_tags],
       %i[edges materials texmap lights],
       %i[walls openings dwg_walls stairs roofs dims],
-      %i[tiling baseboard ceiling],
+      %i[tiling ripado baseboard ceiling],
       %i[takeoff cut_list],
       %i[measure isolate shape array fix_faces model_health]
     ].freeze
@@ -51,7 +51,7 @@ module LAVIStudio
     end
     %w[
       walls openings dwg_walls stairs roofs
-      tiling baseboard ceiling
+      tiling baseboard ceiling ripado
       cut_list countertop
       scenes export_images room_tags
       takeoff furniture

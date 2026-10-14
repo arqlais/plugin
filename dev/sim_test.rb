@@ -752,6 +752,34 @@ check('stairs · guarda-corpo de vidro, montantes, cabos, mureta, corrimão') do
   out.join(', ')
 end
 
+check('ripado · parede com porta, em pé e deitado, fundo, barras') do
+  fresh
+  f = m.entities.add_face(pt(0, 0, 0), pt(300, 0, 0), pt(300, 0, 260), pt(0, 0, 260))
+  f.reverse! if f.normal.y > 0
+  h = m.entities.add_face(pt(110, 0, 0.0001), pt(190, 0, 0.0001), pt(190, 0, 210), pt(110, 0, 210))
+  h.erase! if h && h.valid? && !h.equal?(f)
+  expect(f.loops.size == 1 || f.loops.size == 2, 'face da parede')
+  sel(f)
+  r = ok!(run(:ripado, 'build', 'larg' => 4, 'vao' => 2, 'prof' => 2, 'sentido' => 'vertical', 'alinhar' => 'centro'))
+  g = m.entities.grep(Sketchup::Group).last
+  ins = g.entities.grep(Sketchup::ComponentInstance)
+  defs = ins.map(&:definition).uniq
+  n = ins.size
+  expect(n >= 40 && n <= 55, "#{n} ripas (esperava ~50)")
+  expect(defs.size <= 3, "#{defs.size} componentes diferentes (devia reaproveitar)")
+  ys = ins.map { |i| i.transformation.origin.y * 2.54 }.uniq.map { |y| y.round(2) }
+  expect(ys.all? { |y| y <= 0.01 }, "ripas no lado de fora da parede: y #{ys.inspect}")
+  bars = r['stats'].find { |x| x[0].start_with?('Barras') }[1].to_i
+  expect(bars > 0, 'conta de barras')
+  sel(f)
+  r2 = ok!(run(:ripado, 'build', 'larg' => 7, 'vao' => 1, 'sentido' => 'horizontal', 'fundo' => true, 'fundo_esp' => 1.5))
+  g2 = m.entities.grep(Sketchup::Group).last
+  fundo = g2.entities.grep(Sketchup::Group).first
+  expect(fundo && fundo.entities.grep(Sketchup::Face).size >= 6, 'fundo do ripado')
+  m2 = g2.entities.grep(Sketchup::ComponentInstance).size
+  "em pé: #{n} ripas, #{defs.size} componente(s), #{bars} barras · deitado com fundo: #{m2} ripas"
+end
+
 check('shape · todas as arestas: cubo arredondado, chanfrado e peça em L deitada') do
   fresh
   b = box(0, 0, 0, 50, 50, 50, name: 'Cubo')

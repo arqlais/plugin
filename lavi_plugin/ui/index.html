@@ -364,6 +364,7 @@ const IC = {
   roofs:'M2 12l10-8 10 8M5 10v10h14V10M10 20v-5h4v5',
   tiling:'M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18',
   baseboard:'M5 3v18h16M5 17h14v4M9 8h6',
+  ripado:'M4 3v18M8 3v18M12 3v18M16 3v18M20 3v18',
   ceiling:'M3 4h18M5 4v3h14V4M12 7v3M8.5 14a3.5 3.5 0 0 1 7 0zM12 16.5v1',
   pres:'M3 4h18v12H3zM8 20h8M12 16v4',
   scenes:'M3 5h18v14H3zM3 9h18M7 5l2 4M12 5l2 4M17 5l2 4',
@@ -515,6 +516,8 @@ P.gc_vidro=GC('<path d="M6 32V20L38 2v12z" fill="currentColor" fill-opacity=".15
 P.gc_montantes=GC('<path d="M6 20L38 2" stroke-width="2"/><path d="M9 32V18.5M15 28V15M21 26V11.5M27 22V8M33 18V5" stroke-width="1"/>');
 P.gc_cabos=GC('<path d="M6 20L38 2" stroke-width="2"/><path d="M6 24l32-18M6 28l32-18M6 32l32-18" stroke-width=".8"/><path d="M6 34V20M38 16V2" stroke-width="1.5"/>');
 P.gc_mureta=GC('<path d="M6 34V20L38 2v14z" fill="currentColor" fill-opacity=".3"/>');
+P.rip_v=PIC('<path d="M10 8v32M17 8v32M24 8v32M31 8v32M38 8v32"/>');
+P.rip_h=PIC('<path d="M6 12h36M6 19h36M6 26h36M6 33h36"/>');
 P.sh_tudo=PIC('<path d="M10 16a6 6 0 0 1 6-6h18a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6z" fill="currentColor" fill-opacity=".15"/><path d="M14 13l4-4M36 13l3-3M14 33l4-4" stroke-dasharray="1.5 2"/>');
 P.sh_chanfro=PIC('<path d="M10 15l5-5h20l5 5v16l-5 5H15l-5-5z" fill="currentColor" fill-opacity=".15"/><path d="M15 10v26M35 10v26M10 15h30M10 31h30" stroke-dasharray="1.5 2"/>');
 P.sh_cantos=PIC('<path d="M8 32V14a6 6 0 0 1 6-6h24v24z" fill="currentColor" fill-opacity=".15"/>');
@@ -683,6 +686,23 @@ const FORMS = {
         {k:'perda',type:'num',label:'Perda',unit:'%',def:10}]}],
     acts:[['build','Gerar rodapé','play',1]], prev:p=>prevRod(p),
     hint:'Selecione o piso. Para pular as portas, segure Shift e clique também nas linhas das portas.' },
+  ripado:{ secs:[
+      {t:'Ripas', f:[
+        {k:'sentido',type:'cards',full:1,def:'vertical',opts:[['vertical','Em pé','rip_v'],['horizontal','Deitadas','rip_h']]},
+        {k:'larg',type:'num',label:'Largura da ripa',unit:'cm',def:4,chips:[2,3,4,5,7],step:.5},
+        {k:'vao',type:'num',label:'Espaço entre ripas',unit:'cm',def:2,chips:[1,1.5,2,3,5],step:.5},
+        {k:'prof',type:'num',label:'Espessura (saliência)',unit:'cm',def:2,chips:[1.5,2,3,4],step:.5},
+        {k:'cor_ripa',type:'color',label:'Cor da ripa',def:'#B88A62'}]},
+      {t:'Acabamento', f:[
+        {k:'alinhar',type:'seg',label:'Começar',def:'centro',full:1,opts:[['centro','Centralizado'],['inicio','Do canto']]},
+        {k:'recuo',type:'num',label:'Recuo das bordas',unit:'cm',def:0,chips:[0,2,5,10],step:.5},
+        {k:'fundo',type:'tg',label:'Painel de fundo',def:false,full:1},
+        {k:'fundo_esp',type:'num',label:'Espessura do fundo',unit:'cm',def:1.5,step:.5,when:p=>p.fundo},
+        {k:'cor_fundo',type:'color',label:'Cor do fundo',def:'#3E4B57',when:p=>p.fundo}]},
+      {t:'Compra', opt:1, closed:1, f:[
+        {k:'barra',type:'num',label:'Ripa comprada com',unit:'cm',def:300,chips:[240,270,300]}]}],
+    acts:[['build','Criar na seleção','ripado',1],['pick','Escolher a face','target']], prev:p=>prevRipado(p),
+    hint:'Funciona em parede, forro, porta ou tampo (a face, ou o grupo com ela). Vãos de porta e janela ficam livres. Cada medida de ripa vira um componente só, então o modelo continua leve.' },
   ceiling:{ secs:[
       {t:'Tipo', f:[
         {k:'tipo',type:'cards',full:1,def:'rebaixado',opts:[['rebaixado','Rebaixado','forro_rebaixado'],['sanca','Sanca','forro_sanca'],['moldura','Só moldura','forro_moldura']]}]},
@@ -1109,6 +1129,15 @@ function prevRoof(p){
    <path d="M${W/2-run+20} ${H-26}V${H-14}M${W/2+run-20} ${H-26}V${H-14}" stroke="var(--ink2)" stroke-width="2"/>
    <text x="${W/2}" y="14" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="var(--ink2)">${br(i,0)}% · ${br(ang,1)}°</text>${warn}</svg>`;
 }
+function prevRipado(p){
+  const W=300,H=260, k=.5, larg=Math.max(.5,num(p.larg,4)), vao=Math.max(0,num(p.vao,2)), rec=num(p.recuo,0), v=p.sentido!=='horizontal';
+  const A=(v?W:H)-2*rec, pitch=larg+vao, n=A>=larg?Math.floor((A-larg)/pitch)+1:0, st=p.alinhar==='inicio'?rec:rec+(A-(n-1)*pitch-larg)/2;
+  const x0=(300-W*k)/2, y0=10; let g=`<rect x="${x0}" y="${y0}" width="${W*k}" height="${H*k}" fill="${p.fundo?(p.cor_fundo||'#3E4B57'):'var(--card)'}" stroke="var(--ink2)"/>`;
+  for(let i=0;i<Math.min(n,400);i++){ const a=st+i*pitch;
+    g+=v?`<rect x="${(x0+a*k).toFixed(2)}" y="${y0+rec*k}" width="${(larg*k).toFixed(2)}" height="${(H-2*rec)*k}" fill="${p.cor_ripa||'#B88A62'}"/>`
+        :`<rect x="${x0+rec*k}" y="${(y0+H*k-(a+larg)*k).toFixed(2)}" width="${(W-2*rec)*k}" height="${(larg*k).toFixed(2)}" fill="${p.cor_ripa||'#B88A62'}"/>`; }
+  return `<span class="tagline">PAREDE DE 3,00 × 2,60 m · ${n} RIPAS</span><svg viewBox="0 0 300 150" width="300" height="150">${g}</svg>`;
+}
 function prevShape(p){
   const m=p.modo||'tudo', r=num(p.raio,2), sg=Math.max(1,num(p.seg,6)|0);
   if(m==='tudo'){ const ch=p.acab==='chanfro', k=Math.min(Math.max(r*5,4),34), n=ch?1:Math.max(2,sg);
@@ -1512,6 +1541,7 @@ const MOCK = {
     ['roofs','Telhado','arq','arq','1, 2 ou 4 águas com beiral, inclinação e contagem de telhas.',['Selecione o contorno da cobertura','Escolha águas e inclinação','Gerar']],
     ['tiling','Revestimento','rev','rev','Paginação de piso e parede: 8 padrões, junta, texturas variadas e estimativa ao vivo.',['Selecione a face','Escolha padrão, peça e posição','Gerar paginação']],
     ['baseboard','Rodapé','rev','rev','Modelos reto, chanfrado, boleado, frisado e clássico; pula portas e calcula as barras.',['Selecione o piso','Shift + clique nas linhas das portas','Gerar rodapé']],
+    ['ripado','Ripado','rev','rev','Ripas na parede, forro, porta ou painel, com fundo, recuo e conta de barras.',['Selecione ou clique na face','Escolha ripa, espaço e sentido','Criar ripado']],
     ['ceiling','Forro e moldura','rev','rev','Forro rebaixado com tabica e cortineiro, sanca aberta ou fechada, ou só moldura de teto.',['Selecione o piso (e a linha da janela)','Escolha o tipo e as medidas','Gerar']],
     ['scenes','Cenas automáticas','pres','pres','Plantas por nível, cobertura, cortes AA/BB, 4 fachadas e perspectiva num clique.',['Informe os níveis','Marque o que quer','Criar cenas']],
     ['export_images','Exportar imagens','pres','pres','Salva todas as cenas em PNG ou JPG de uma vez, na resolução que você escolher.',['Escolha tamanho e formato','Escolha a pasta','Pronto']],
