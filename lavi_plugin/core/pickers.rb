@@ -139,10 +139,10 @@ module LAVIStudio
           @ip.draw(view) if @ip.valid?
           return if @pts.empty?
           view.line_width = 3
-          view.drawing_color = Sketchup::Color.new(225, 20, 108)
+          view.drawing_color = Sketchup::Color.new(168, 138, 128)
           line = @pts + (@ip.valid? ? [@ip.position] : [])
           view.draw(GL_LINE_STRIP, line) if line.size >= 2
-          view.draw_points(@pts, 8, 2, Sketchup::Color.new(92, 6, 50))
+          view.draw_points(@pts, 8, 2, Sketchup::Color.new(62, 75, 87))
         end
 
         def getExtents

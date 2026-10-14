@@ -133,7 +133,7 @@ module LAVIStudio
               end
               view.line_width = 1
               view.line_stipple = ''
-              view.drawing_color = Sketchup::Color.new(225, 20, 108)
+              view.drawing_color = Sketchup::Color.new(168, 138, 128)
               [1, 2].each do |k|
                 view.draw2d(GL_LINES, [pt.call(x0 + w * k / 3.0, y0), pt.call(x0 + w * k / 3.0, y0 + h)])
                 view.draw2d(GL_LINES, [pt.call(x0, y0 + h * k / 3.0), pt.call(x0 + w, y0 + h * k / 3.0)])

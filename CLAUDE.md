@@ -10,15 +10,16 @@ Plugin para SketchUp (Ruby + painel HTML) que a Laís está criando para **vende
 - Fala português. Responda e escreva textos de interface em **português do Brasil**.
 - Ela testa no próprio SketchUp e manda prints. Este ambiente não tem SketchUp: **a parte 3D nunca foi executada de verdade**. Trate tudo que mexe em geometria como "precisa de teste".
 
-## Identidade visual (decidida por ela na v0.6 — não mudar sem ela pedir)
-- Nome **LAVI** (wordmark em Bodoni Moda 600, caixa alta, espaçado). Símbolo = **planta com porta** (quadrado + parede + giro de porta), `IC.lavi`, **sem fundo**: planta em vinho e giro da porta em pink (v0.7: ela rejeitou o fundo lima, "já existe muito plugin assim").
-- **NUNCA usar degradê**, em nada (ela pediu explicitamente). Só cores sólidas.
-- Paleta das referências dela: cinza `#EFEFEF` (fundo), orquídea `#EAA2E5` (seleção), lima `#D3DC2A` (não usar mais no ícone), lima claro `#EBF5A0` (texto sobre vinho, selo grátis), vinho/mulberry `#5C0632` (marca, botão principal, texto forte), pink `#E1146C` (detalhes: números, destaque no título), areia `#E3E2D7` (dicas).
-- Fontes embutidas: **Poppins** (interface, a mesma do site dela lais3d.com.br), **Bodoni Moda** (nome LAVI), **JetBrains Mono** (medidas). Em `lavi_plugin/ui/fonts/`. Anton e Montserrat saíram na v0.7 (ela achou feio).
+## Identidade visual (v0.8.1: igual aos sites dela lais3d.com.br e souplane.com.br — não mudar sem ela pedir)
+- Nome **LAVI** com ponto rosé: `LAVI.` em **Poppins 600** (como a marca dos sites). Ela não gostou da Bodoni (removida na v0.8.1). Símbolo = **planta com porta** (`IC.lavi`), **sem fundo**: planta em ardósia e giro da porta em rosé.
+- **NUNCA usar degradê**, em nada. Só cores sólidas.
+- Paleta dos sites dela (v0.8.1; ela rejeitou a anterior vinho/pink/orquídea/lima): creme `#F5F1EE` (fundo), branco (caixas), `#FAF7F5` (campos), ardósia `#3E4B57` (texto, marca, botão principal), cinza `#8B939A` (texto suave), linhas `#EBE1DC`, rosé `#D6B3AB` (seleção), rosé escuro `#A88A80` (detalhes: estrela, números, ponto da marca), rosé clarinho `#F4E8E5` (fundo de destaque), `#EFE5E1` (dicas). Escuro: fundo `#1C2126`, caixas `#252B31`, botão rosé.
+- Traços finos e médios (ela pediu): ícones do painel 1,3–1,4 px, barra do SketchUp ~1,2 px.
+- Fontes embutidas: **Poppins** (tudo) e **JetBrains Mono** (medidas). Em `lavi_plugin/ui/fonts/`.
 - Layout (v0.7, referência dela = painel do HeyPrint + sites lais3d.com.br/souplane.com.br): fundo claro quente, marca + 2 botões quadrados vinho, busca, lista por grupo (só ícone + nome + estrela, sem descrição). Títulos de seção pequenos, caixa alta, espaçados. Na ferramenta: voltar + título, campos numa caixa branca **uma linha por campo** (rótulo à esquerda, controle à direita), chaves liga/desliga, régua deslizante (`type:'range'`), seção `opt:1` mostra "opcional". Ela achou a versão anterior "poluída": não encher de caixas, badges e textos.
 - Barra do SketchUp: ícone LAVI colorido + um botão monocromático por ferramenta principal (`TOOLBAR` em main.rb; ícones gerados por `python3 dev/make_icons.py` a partir de `IC`, desenho a 80% e traço fino ~1,2 px, porque ela achou grande e grosso).
 - Modo claro padrão + escuro (lua). Ela quer intuitivo, organizado, ícones para tudo.
-- **Rejeitado por ela:** laranja neon; verde/lima neon como cor dominante (lima só no ícone principal veio da referência dela); petróleo/rosé/areia com serifa; preto + amarelo; "LAVI Tools"/símbolo antigo; "Planê Plugin", símbolo de laço e qualquer degradê.
+- **Rejeitado por ela:** paleta vinho/pink/orquídea/lima (v0.6–0.8) e Bodoni na marca; laranja neon; verde/lima neon como cor dominante (lima só no ícone principal veio da referência dela); petróleo/rosé/areia com serifa; preto + amarelo; "LAVI Tools"/símbolo antigo; "Planê Plugin", símbolo de laço e qualquer degradê.
 
 ## Estrutura
 ```

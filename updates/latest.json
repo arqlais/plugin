@@ -1,6 +1,6 @@
 {
-  "version": "0.8.0",
+  "version": "0.8.1",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "02455c03765e8b9a1d1151859fa30ce0bfd1f57daab5997b89b7ae9013790b38",
-  "notes": ["Revestimento novo (piso e parede numa ferramenta só): 8 padrões, incluindo chevron, espinha e pedra orgânica","Junta seca, espessura, peças em 3D, ponto inicial e giro clicando no modelo","Várias imagens sorteadas por peça e estimativa ao vivo","Editar uma paginação já feita"]
+  "sha256": "eb17710ed57aeb3a2582df5bee16f028c4e74efb9fca9fc6ef13d8d63a19dd4b",
+  "notes": ["Cores e marca iguais aos sites lais3d e souplane: creme, ardósia e rosé, tudo em Poppins","Ícones com traço fino"]
 }

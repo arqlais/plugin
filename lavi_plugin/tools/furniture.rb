@@ -129,13 +129,13 @@ module LAVIStudio
             <style>
             @page{size:A4;margin:14mm}
             body{font-family:Poppins,Arial,sans-serif;color:#3E4B57;margin:0;padding:28px}
-            header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #5C0632;padding-bottom:14px;margin-bottom:8px}
+            header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #3E4B57;padding-bottom:14px;margin-bottom:8px}
             header svg{width:48px;height:48px} h1{margin:0;font-size:22px} .sub{color:#8B939A;font-size:12px}
-            h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#5C0632;margin:22px 0 10px}
+            h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#3E4B57;margin:22px 0 10px}
             section{break-inside:avoid-page}
             article{display:grid;grid-template-columns:120px 1fr;gap:14px;padding:10px;border:1px solid #EEE7EE;border-radius:12px;margin-bottom:8px;break-inside:avoid}
             article img,.noimg{width:120px;height:90px;object-fit:contain;background:#EFEFEF;border-radius:8px}
-            h3{margin:0 0 4px;font-size:15px} p{margin:2px 0;font-size:12px} .obs{color:#8B939A} a{font-size:12px;color:#E1146C}
+            h3{margin:0 0 4px;font-size:15px} p{margin:2px 0;font-size:12px} .obs{color:#8B939A} a{font-size:12px;color:#A88A80}
             footer{margin-top:24px;font-size:12px;display:flex;justify-content:space-between;border-top:1px solid #EEE7EE;padding-top:10px}
             </style></head><body>
             <header>#{logo}<div><h1>Caderno de especificação</h1><div class="sub">#{esc(p['projeto'])} #{p['cliente'].to_s.empty? ? '' : '· ' + esc(p['cliente'])}</div></div></header>

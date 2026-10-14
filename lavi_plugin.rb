@@ -8,7 +8,7 @@ module LAVIStudio
   module Plugin
     PLUGIN_ID   = 'lavi_plugin'.freeze
     PLUGIN_NAME = 'LAVI'.freeze
-    VERSION     = '0.8.0'.freeze
+    VERSION     = '0.8.1'.freeze
 
     unless file_loaded?(__FILE__)
       ext = SketchupExtension.new(PLUGIN_NAME, File.join(PLUGIN_ID, 'main'))

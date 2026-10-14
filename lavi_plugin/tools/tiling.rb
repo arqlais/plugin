@@ -301,7 +301,7 @@ module LAVIStudio
           texs = Array(p['texturas']).select { |f| File.exist?(f.to_s) }
           return texs.map { |f| texture_material(f) } unless texs.empty?
           mats = [H.material("LAVI_Peca_#{p['cor'].to_s.delete('#')}", p['cor'] || 'E9E3DC')]
-          mats << H.material("LAVI_Peca_#{p['cor2'].to_s.delete('#')}", p['cor2'] || '5C0632') if p['padrao'] == 'damas'
+          mats << H.material("LAVI_Peca_#{p['cor2'].to_s.delete('#')}", p['cor2'] || '3E4B57') if p['padrao'] == 'damas'
           mats
         end
 
