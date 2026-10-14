@@ -56,7 +56,7 @@ docs/                           prints das telas
 `base` Essencial (grátis) · `pres` Apresentação · `arq` Arquitetura · `rev` Revestimentos · `marc` Marcenaria · `quant` Quantitativo · chave `PRO` libera todos.
 Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA256(SECRET|pacote|serial).
 
-## Ferramentas — status (v0.8.0; nada de geometria testado por ela ainda)
+## Ferramentas — status (v0.9.0; testadas no SketchUp simulado, `dev/sim_test.rb`; nada de geometria testado por ela ainda)
 | id | ferramenta | pacote |
 |---|---|---|
 | walls | Paredes (clicando cantos ou de linhas selecionadas; meia-esquadria; digitar "5" = 5 m, unidade escolhível) | arq |
@@ -75,6 +75,11 @@ Chave: `LAVI-<ARQ|REV|PRES|MARC|QUANT|PRO>-<5 chars>-<8 hex>`, verificador = SHA
 | export_images | Exportar cenas em PNG/JPG (formatos feed/story/A4…), moldura + grade de terços na tela (Overlay, SU 2023+), atalhos de câmera (altura, abertura, 2 pontos, vista) | pres |
 | room_tags | Etiqueta de ambiente (texto 3D no piso ou rótulo) + quadro de áreas CSV; guarda persistent_id da face | pres |
 | furniture | Ficha de mobiliário (dict `plane_item`), relatório por ambiente, CSV, caderno HTML com miniaturas | quant |
+| dwg_clean | Limpar DWG: achata (transform_by_vectors), tira textos/cotas/guias, apaga linhas minúsculas, explode blocos, fecha faces (find_faces) | arq |
+| dims | Cotas automáticas: contorno juntado dos trechos (arestas usadas por 1 face só), externas/internas/totais, etiqueta "lavi · Cotas", apagar | arq |
+| array | Copiar em grade (numa face: luminárias no forro) ou ao longo de linhas (por distância ou quantidade, girando) | base |
+| fix_faces | Corrigir faces invertidas: orienta por arestas (reversed_in?), vira para fora (volume ou maioria), passa pintura do verso | base |
+| smart_select | Seleção inteligente: mesmo material/etiqueta/componente, inverter, linhas soltas, pisos de costas, escondidos | base |
 | model_health, align, replace, auto_tags, measure, isolate | Essenciais (grátis) | base |
 
 ## Marcenaria dinâmica — PAUSADA (fora do plugin desde a v0.5; código em `extras/marcenaria_dinamica/`)

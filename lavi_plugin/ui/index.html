@@ -379,6 +379,11 @@ const IC = {
   model_health:'M3 12h4l2.5-5 4 10 2.5-5H21',
   align:'M4 3v18M8 6h12v4H8zM8 14h7v4H8z',
   replace:'M4 8h14l-3-3M20 16H6l3 3',
+  dwg_clean:'M5 3h9l5 5v13H5zM14 3v5h5M8.5 14.5l2.5 2.5 4.5-5',
+  dims:'M3 8v8M21 8v8M3 12h18M6 10.5L3 12l3 1.5M18 10.5l3 1.5-3 1.5',
+  array:'M3 20c5 0 7-14 18-16M4.5 18.5h3v3h-3zM10.5 11h3v3h-3zM17 2.5h3v3h-3z',
+  fix_faces:'M4 6h10v12H4zM17.5 8a4.5 4.5 0 0 1 0 8M17.5 16l-2.2-.4M17.5 16l.6-2.1',
+  smart_select:'M3 3h2.5M8.5 3H11M3 3v2.5M3 8.5V11M11 11l8.5 3.5-3.6 1.4-1.4 3.6z',
   auto_tags:'M3 12V4h8l10 10-8 8zM7.5 7.5h.01',
   star:'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z',
   lock:'M6 11h12v10H6zM8.5 11V7.5a3.5 3.5 0 0 1 7 0V11',
@@ -727,6 +732,51 @@ const FORMS = {
   isolate:{ secs:[
       {t:'Opções', f:[{k:'zoom',type:'tg',label:'Aproximar na seleção ao isolar',def:true,full:1}]}],
     acts:[['isolate','Isolar','isolate',1],['restore','Mostrar tudo','eye']], more:[['xray','Raio X liga/desliga','sparkle']] },
+  dwg_clean:{ secs:[
+      {t:'Limpeza', f:[
+        {k:'achatar',type:'tg',label:'Achatar tudo na mesma altura',def:true,full:1},
+        {k:'z',type:'num',label:'Altura',unit:'cm',def:0,when:p=>p.achatar!==false},
+        {k:'anotacoes',type:'tg',label:'Tirar textos, cotas e guias',def:true,full:1},
+        {k:'minimo',type:'num',label:'Apagar linhas menores que',unit:'mm',def:1,step:.5},
+        {k:'faces',type:'tg',label:'Fechar as faces',def:true,full:1},
+        {k:'explodir',type:'tg',label:'Explodir os blocos',def:false,full:1}]}],
+    acts:[['clean','Limpar planta','dwg_clean',1]],
+    hint:'Use logo depois de importar o DWG. Achatar resolve as linhas em alturas diferentes que impedem de fechar faces.' },
+  dims:{ secs:[
+      {t:'O que cotar', f:[
+        {k:'externas',type:'tg',label:'Contorno externo',def:true,full:1},
+        {k:'internas',type:'tg',label:'Medidas internas dos ambientes',def:true,full:1},
+        {k:'total',type:'tg',label:'Medidas totais',def:true,full:1}]},
+      {t:'Ajustes', f:[
+        {k:'dist',type:'num',label:'Distância do desenho',unit:'cm',def:40,chips:[20,40,60]},
+        {k:'minimo',type:'num',label:'Ignorar trechos menores que',unit:'cm',def:10}]}],
+    acts:[['build','Cotar','dims',1],['clear','Apagar cotas','x']],
+    hint:'Selecione as faces do piso ou o grupo das paredes. As cotas ficam na etiqueta "lavi · Cotas", fácil de esconder.' },
+  array:{ secs:[
+      {t:'Modo', f:[
+        {k:'modo',type:'seg',label:'Copiar',def:'grade',full:1,opts:[['grade','Em grade'],['caminho','Ao longo de linhas']]}]},
+      {t:'Espaçamento', f:[
+        {k:'esp_x',type:'num',label:'Entre colunas',unit:'cm',def:120,when:p=>p.modo!=='caminho'},
+        {k:'esp_y',type:'num',label:'Entre linhas',unit:'cm',def:120,when:p=>p.modo!=='caminho'},
+        {k:'margem',type:'num',label:'Margem da borda',unit:'cm',def:60,when:p=>p.modo!=='caminho'},
+        {k:'colunas',type:'num',label:'Colunas (sem face)',unit:'',def:3,when:p=>p.modo!=='caminho'},
+        {k:'linhas',type:'num',label:'Linhas (sem face)',unit:'',def:2,when:p=>p.modo!=='caminho'},
+        {k:'por',type:'seg',label:'Por',def:'espaco',full:1,opts:[['espaco','Distância'],['quantidade','Quantidade']],when:p=>p.modo==='caminho'},
+        {k:'espac',type:'num',label:'A cada',unit:'cm',def:100,when:p=>p.modo==='caminho'&&p.por!=='quantidade'},
+        {k:'qtd',type:'num',label:'Quantidade',unit:'un',def:5,when:p=>p.modo==='caminho'&&p.por==='quantidade'},
+        {k:'girar',type:'tg',label:'Girar seguindo o caminho',def:true,full:1,when:p=>p.modo==='caminho'},
+        {k:'fim',type:'tg',label:'Pôr uma cópia no fim',def:true,full:1,when:p=>p.modo==='caminho'&&p.por!=='quantidade'},
+        {k:'apagar',type:'tg',label:'Apagar o original',def:false,full:1}]}],
+    acts:[['build','Copiar','array',1]],
+    hint:'Grade: selecione o objeto + a face (forro ou piso). Caminho: selecione o objeto + as linhas. Sem face, usa colunas × linhas a partir do objeto.' },
+  fix_faces:{ secs:[
+      {t:'Opções', f:[{k:'pintura',type:'tg',label:'Passar a pintura do verso para a frente',def:true,full:1}]}],
+    acts:[['fix','Corrigir faces','fix_faces',1]],
+    hint:'Sem nada selecionado, corrige o modelo inteiro (entra em grupos e componentes). Faça antes de renderizar.' },
+  smart_select:{ secs:[
+      {t:'A partir da seleção', f:[{type:'acts',full:1,acts:[['material','Mesmo material','grid'],['etiqueta','Mesma etiqueta','auto_tags'],['componente','Mesmo componente','replace']]}]},
+      {t:'No modelo', f:[{type:'acts',full:1,acts:[['soltas','Linhas soltas','dims'],['costas','Pisos de costas','fix_faces'],['escondidos','Escondidos','eye']]}]}],
+    acts:[['inverter','Inverter seleção','refresh',1]] },
   auto_tags:{ secs:[
       {t:'Organizar', f:[{k:'sobrescrever',type:'tg',label:'Refazer as já etiquetadas',def:false,full:1}]}],
     acts:[['organize','Organizar modelo','sparkle',1],['list','Ver etiquetas','eye']], render:r=>renderTags(r) }
@@ -1260,6 +1310,11 @@ const MOCK = {
     ['model_health','Saúde do modelo','base','base','Encontra o que pesa e bagunça o arquivo e corrige com um clique.',['Analisar','Marcar o que corrigir','Corrigir']],
     ['align','Alinhar e distribuir','base','base','Alinha pela borda ou centro e distribui com espaço igual.',['Selecione os objetos','Escolha eixo e modo','Aplicar']],
     ['replace','Selecionar e substituir','base','base','Seleciona todas as cópias e troca por outro componente mantendo a posição.',['Selecione um componente','Selecionar iguais','Escolha o novo e troque']],
+    ['dwg_clean','Limpar DWG','arq','arq','Achata a planta importada, tira textos e cotas, apaga sujeira e fecha as faces.',['Selecione o DWG importado','Escolha o que limpar','Limpar']],
+    ['dims','Cotas automáticas','arq','arq','Cota o contorno dos pisos e das paredes, por dentro e por fora, e as medidas totais.',['Selecione pisos ou paredes','Escolha o que cotar','Cotar']],
+    ['array','Copiar em grade ou caminho','base','base','Espalha cópias numa face (luminárias no forro) ou ao longo de linhas (cadeiras, postes).',['Selecione o objeto e a face ou as linhas','Escolha o espaçamento','Copiar']],
+    ['fix_faces','Corrigir faces invertidas','base','base','Vira para fora as faces de costas (azuis) e passa a pintura do verso para a frente.',['Selecione (ou nada = modelo todo)','Corrigir','Pronto para render']],
+    ['smart_select','Seleção inteligente','base','base','Seleciona tudo do mesmo material, etiqueta ou componente, inverte e acha sujeira.',['Selecione uma referência','Escolha o critério','Pronto']],
     ['auto_tags','Etiquetas automáticas','base','base','Organiza móveis, plantas, luminárias e itens do lavi em etiquetas.',['Organizar','Ligue e desligue cada etiqueta']]
   ],
   state(){ return { name:'lavi', version:'0.6.0', dev:false, update:{state:'available',version:'0.6.1',notes:['Correções nas cenas automáticas','Novo ícone de corte']}, favorites:['scenes','export_images','room_tags','measure'], theme:'light', auto_update:true,

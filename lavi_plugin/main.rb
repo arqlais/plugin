@@ -14,10 +14,10 @@ module LAVIStudio
     LOAD_ERRORS = []
     TOOLBAR = [
       %i[scenes export_images room_tags],
-      %i[walls openings dwg_walls stairs roofs],
+      %i[walls openings dwg_walls stairs roofs dims],
       %i[tiling baseboard ceiling],
       %i[takeoff furniture],
-      %i[measure isolate model_health]
+      %i[measure isolate array fix_faces model_health]
     ].freeze
 
     def self.safe_require(*parts)
@@ -55,6 +55,7 @@ module LAVIStudio
       scenes export_images room_tags
       takeoff furniture
       model_health align replace auto_tags measure isolate
+      dwg_clean dims array fix_faces smart_select
     ].each { |f| safe_require('tools', f) }
 
     unless file_loaded?(__FILE__)

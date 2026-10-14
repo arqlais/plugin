@@ -594,6 +594,7 @@ module Sketchup
       ring = vs.map(&:position)
       vs = vs.reverse if Face.newell(ring).dot(Face.newell(pts)) > 0 # furo gira ao contrário do contorno
       @inner << Loop.new(vs, false, self)
+      vs.each_with_index { |v, i| e = @ents.add_edge_v(v, vs[(i + 1) % vs.size]); e.faces_list << self unless e.faces_list.include?(self) }
     end
     def vertices; check!; loops.flat_map(&:vertices); end
     def edges; check!; loops.flat_map(&:edges).uniq; end
@@ -822,6 +823,7 @@ module Sketchup
 
   class Group < ComponentInstance
     def initialize(defn, tr) super(defn, tr) end
+    def copy; @ents.copy_entity(self, IDENTITY); end
     def entities; make_unique; definition.entities; end
     def group?; true; end
   end
@@ -977,9 +979,30 @@ module Sketchup
       pts.all? { |p| ((p - pts[0]).dot(n)).abs < 1e-3 }
     end
 
+    # menor ciclo de arestas que passa pela aresta e está num plano → vira face (como o SketchUp faz)
     def find_faces_for(edge)
-      # procura um ciclo fechado coplanar pequeno a partir da aresta (suficiente para os testes)
-      0
+      a = edge.start
+      b = edge.end
+      prev = { b => nil }
+      queue = [b]
+      until queue.empty? || prev.key?(a)
+        v = queue.shift
+        v.edges.each do |e|
+          next if e.equal?(edge) || e.ents != self
+          w = e.other_vertex(v)
+          next if prev.key?(w)
+          prev[w] = v
+          queue << w
+        end
+      end
+      return 0 unless prev.key?(a)
+      ring = [a]
+      ring << prev[ring.last] while prev[ring.last]
+      pts = ring.map(&:position)
+      return 0 if pts.size < 3 || !planar?(pts)
+      before = to_a.grep(Face).size
+      add_face(pts) rescue nil
+      to_a.grep(Face).size - before
     end
 
     def add_group(*ents)
@@ -1068,6 +1091,7 @@ module Sketchup
 
     def transform_by_vectors(ents, vecs)
       ents.each_with_index { |v, i| v.set_position(v.position + vecs[i]) if v.is_a?(Vertex) }
+      @verts = @verts.values.select(&:valid?).map { |v| [vkey(v.position), v] }.to_h
       true
     end
 

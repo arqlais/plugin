@@ -1,6 +1,6 @@
 {
-  "version": "0.8.2",
+  "version": "0.9.0",
   "url": "https://raw.githubusercontent.com/arqlais/plugin/HEAD/updates/lavi_plugin.rbz",
-  "sha256": "6646bd9e3ebc9cbafb06d5eb160a8d0ed4e4d1172bf57c576ed53cc641ad6f30",
-  "notes": ["Nome lavi em minúsculas","Ícones com traço mais fino; forro, rodapé, recorte de tampo e isolar redesenhados"]
+  "sha256": "9ee49a96035ad519af843fb5142e66c4bd9bd34445ee68722cc7dee87ff7290f",
+  "notes": ["5 ferramentas novas: Limpar DWG, Cotas automáticas, Copiar em grade ou caminho, Corrigir faces invertidas e Seleção inteligente","Todas as ferramentas testadas num SketchUp simulado","Portas e janelas: acha a parede mesmo com faces invertidas"]
 }

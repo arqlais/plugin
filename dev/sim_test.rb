@@ -526,6 +526,101 @@ check('auto_tags · organizar e listar') do
   "#{r['msg']}"
 end
 
+# === Ferramentas novas (v0.9)
+check('dwg_clean · achatar, tirar anotações, sujeira e fechar faces') do
+  g = m.entities.add_group
+  e = g.entities
+  e.add_line(pt(0, 0, 0), pt(400, 0, 5)); e.add_line(pt(400, 0, 5), pt(400, 300, 0))
+  e.add_line(pt(400, 300, 0), pt(0, 300, 3)); e.add_line(pt(0, 300, 3), pt(0, 0, 0))
+  e.add_line(pt(900, 0, 0), pt(900, 0.05, 0))
+  e.add_text('SALA', pt(200, 150))
+  e.add_dimension_linear(pt(0, 0), pt(400, 0), Geom::Vector3d.new(0, -20, 0))
+  sel(g)
+  r = ok!(run(:dwg_clean, 'clean'))
+  st = r['stats'].map { |a, b| [a, b.to_i] }.to_h
+  expect(st['Anotações removidas'] == 2, "anotações #{st['Anotações removidas']}")
+  expect(st['Linhas minúsculas'] == 1, "linhas minúsculas #{st['Linhas minúsculas']}")
+  expect(st['Faces criadas'] >= 1, 'não fechou a face')
+  zs = g.definition.entities.grep(Sketchup::Edge).flat_map { |x| x.vertices.map { |v| v.position.z.round(4) } }.uniq
+  expect(zs == [0.0], "ainda há alturas diferentes: #{zs.inspect}")
+  r['stats'].map { |a, b| "#{a} #{b}" }.join(', ')
+end
+
+check('dims · cotas de paredes (fora, dentro, totais) e de piso') do
+  ok!(run(:walls, 'draw'))
+  click_points([pt(0, 0), pt(400, 0), pt(400, 300), pt(0, 300)], closed: true)
+  w = m.entities.grep(Sketchup::ComponentInstance).first
+  sel(w)
+  r = ok!(run(:dims, 'build'))
+  ds = m.entities.grep(Sketchup::Dimension)
+  expect(ds.size == 10, "esperava 10 cotas (4 fora, 4 dentro, 2 totais), veio #{ds.size}")
+  c = w.bounds.center
+  fora = ds.first(4).all? { |d| mid = Geom.linear_combination(0.5, d.start[1], 0.5, d.end[1]); d.offset_vector.dot(mid - c) > 0 }
+  expect(fora, 'cota externa apontando para dentro')
+  lens = ds.map { |d| (d.length * 2.54).round }.sort
+  expect(lens.include?(385) && lens.include?(285), "faltam as medidas internas: #{lens.inspect}")
+  ok!(run(:dims, 'clear'))
+  expect(m.entities.grep(Sketchup::Dimension).empty?, 'não apagou as cotas')
+  f = floor
+  sel(f)
+  ok!(run(:dims, 'build', 'internas' => false))
+  "paredes: #{lens.uniq.join(' / ')} cm · piso: #{m.entities.grep(Sketchup::Dimension).size} cotas"
+end
+
+check('array · luminárias no forro e cadeiras no caminho') do
+  forro = m.entities.add_face(pt(0, 0, 260), pt(400, 0, 260), pt(400, 300, 260), pt(0, 300, 260))
+  forro.reverse! if forro.normal.z > 0
+  lum = component('Spot', 10, 10, 8, pt(20, 20, 252))
+  sel(lum, forro)
+  r = ok!(run(:array, 'build', 'modo' => 'grade', 'esp_x' => 120, 'esp_y' => 120, 'margem' => 60))
+  spots = m.entities.grep(Sketchup::ComponentInstance).select { |i| i.definition.name == 'Spot' }
+  expect(spots.size == 7, "esperava 6 cópias + original, veio #{spots.size}")
+  tops = spots.drop(1).map { |i| (i.bounds.max.z * 2.54).round(1) }.uniq
+  expect(tops == [260.0], "spots fora do forro: #{tops.inspect}")
+  cad = component('Cadeira', 45, 50, 90, pt(0, 0))
+  es = m.entities.add_edges(pt(0, 400), pt(300, 400), pt(300, 600))
+  sel(cad, es)
+  r2 = ok!(run(:array, 'build', 'modo' => 'caminho', 'espac' => 100))
+  cads = m.entities.grep(Sketchup::ComponentInstance).select { |i| i.definition.name == 'Cadeira' }
+  expect(cads.size == 7, "esperava 6 cadeiras + original, veio #{cads.size}")
+  sel(cad, es)
+  ok!(run(:array, 'build', 'modo' => 'caminho', 'por' => 'quantidade', 'qtd' => 4, 'apagar' => true))
+  "#{r['msg']} · #{r2['msg']}"
+end
+
+check('fix_faces · caixa do avesso e piso de costas pintado') do
+  g = box(0, 0, 0, 100, 100, 100)
+  g.definition.entities.grep(Sketchup::Face).each(&:reverse!)
+  f = m.entities.add_face(pt(200, 0), pt(400, 0), pt(400, 200), pt(200, 200))
+  f.reverse! if f.normal.z > 0
+  f.back_material = m.materials.add('Porcelanato')
+  m.selection.clear
+  r = ok!(run(:fix_faces, 'fix'))
+  fs = g.definition.entities.grep(Sketchup::Face)
+  vol = fs.sum { |x| q = x.vertices[0].position; n = x.normal; x.area * (q.x * n.x + q.y * n.y + q.z * n.z) }
+  expect(vol > 0, 'a caixa continuou do avesso')
+  expect(f.normal.z > 0, 'o piso continuou de costas')
+  expect(f.material && f.material.name == 'Porcelanato', 'a pintura não passou para a frente')
+  r['stats'].map { |a, b| "#{a} #{b}" }.join(', ')
+end
+
+check('smart_select · material, etiqueta, componente, inverter, soltas') do
+  mat = m.materials.add('Madeira')
+  a = box(0, 0, 0, 50, 50, 50, mat: mat); b = box(100, 0, 0, 50, 50, 50, mat: mat); box(200, 0, 0, 50, 50, 50)
+  c1 = component('Vaso', 30, 30, 40, pt(0, 200)); component('Vaso', 30, 30, 40, pt(100, 200))
+  m.entities.add_line(pt(0, 500), pt(100, 500))
+  out = []
+  sel(a); ok!(run(:smart_select, 'material')); out << "material #{m.selection.size}"
+  expect(m.selection.size == 2, 'material errado')
+  sel(c1); ok!(run(:smart_select, 'componente')); out << "componente #{m.selection.size}"
+  expect(m.selection.size == 2, 'componente errado')
+  sel(a); ok!(run(:smart_select, 'etiqueta')); out << "etiqueta #{m.selection.size}"
+  sel(a); ok!(run(:smart_select, 'inverter')); out << "inverter #{m.selection.size}"
+  ok!(run(:smart_select, 'soltas')); out << "soltas #{m.selection.size}"
+  expect(m.selection.size == 1, 'linha solta não achada')
+  out.join(', ')
+end
+
 # === Painel e atualização
 check('painel · abrir e mandar estado') do
   P::Dialog.instance_variable_get(:@dlg).close

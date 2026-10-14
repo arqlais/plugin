@@ -324,6 +324,76 @@
   ]
  },
  {
+  "id": "dwg_clean",
+  "defaults": {
+   "achatar": true,
+   "z": 0,
+   "anotacoes": true,
+   "minimo": 1,
+   "faces": true,
+   "explodir": false
+  },
+  "acts": [
+   "clean"
+  ]
+ },
+ {
+  "id": "dims",
+  "defaults": {
+   "externas": true,
+   "internas": true,
+   "total": true,
+   "dist": 40,
+   "minimo": 10
+  },
+  "acts": [
+   "build",
+   "clear"
+  ]
+ },
+ {
+  "id": "array",
+  "defaults": {
+   "modo": "grade",
+   "esp_x": 120,
+   "esp_y": 120,
+   "margem": 60,
+   "colunas": 3,
+   "linhas": 2,
+   "por": "espaco",
+   "espac": 100,
+   "qtd": 5,
+   "girar": true,
+   "fim": true,
+   "apagar": false
+  },
+  "acts": [
+   "build"
+  ]
+ },
+ {
+  "id": "fix_faces",
+  "defaults": {
+   "pintura": true
+  },
+  "acts": [
+   "fix"
+  ]
+ },
+ {
+  "id": "smart_select",
+  "defaults": {},
+  "acts": [
+   "inverter",
+   "material",
+   "etiqueta",
+   "componente",
+   "soltas",
+   "costas",
+   "escondidos"
+  ]
+ },
+ {
   "id": "auto_tags",
   "defaults": {
    "sobrescrever": false
